@@ -28,6 +28,14 @@ const nextConfig = {
     '@aws-sdk/client-s3',
     'jsonwebtoken',
   ],
+  async rewrites() {
+    return [
+      {
+        source: '/v1/:path*',
+        destination: '/api/v1/:path*',
+      },
+    ];
+  },
 }
 
 export default nextConfig
