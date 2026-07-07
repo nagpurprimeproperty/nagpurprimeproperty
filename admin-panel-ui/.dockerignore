@@ -16,10 +16,6 @@ out
 .gitignore
 
 # Dev tooling
-.eslintrc*
-.prettierrc*
-*.config.ts
-*.config.mjs
 jest.config.*
 
 # Docker files (no need to copy themselves)
