@@ -6,6 +6,13 @@
 const required = (key, fallback) => {
   const value = process.env[key] ?? fallback;
   if (value === undefined || value === null || value === '') {
+    // Prevent Next.js build phase from crashing on missing runtime environment variables
+    const isBuild = process.env.NEXT_PHASE === 'phase-production-build' || process.env.NEXT_PHASE === 'phase-export';
+    if (isBuild) {
+      if (key === 'MONGO_URI') return 'mongodb://127.0.0.1:27017/nagpur-property-dummy';
+      if (key === 'REDIS_URL') return 'redis://127.0.0.1:6379';
+      return 'dummy-build-value';
+    }
     throw new Error(`Missing required env variable: ${key}`);
   }
   return value;
