@@ -92,9 +92,8 @@ export function Header() {
             )}
           </Link>
           <Button
-            variant="outline"
+            className="hidden md:inline-flex gap-1.5 btn-premium-cta"
             size="sm"
-            className="hidden md:inline-flex gap-1.5 btn-add-property-blink"
             onClick={() => setDownloadOpen(true)}
           >
             <Plus className="h-4 w-4" /> Add Property Free
@@ -140,12 +139,14 @@ export function Header() {
             >
               Favorites ({favCount})
             </Link>
-            <button
-              onClick={() => { setOpen(false); setDownloadOpen(true); }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-primary hover:bg-accent btn-add-property-blink"
-            >
-              <Plus className="h-4 w-4" /> Add Property Free
-            </button>
+            <div className="pt-2 px-3">
+              <button
+                onClick={() => { setOpen(false); setDownloadOpen(true); }}
+                className="w-full justify-center gap-2 btn-premium-cta"
+              >
+                <Plus className="h-4 w-4" /> Add Property Free
+              </button>
+            </div>
             {user ? (
               <Link
                 href="/profile"
