@@ -26,13 +26,15 @@ function PopularAreasSkeleton() {
 const PopularAreasSection = memo(function PopularAreasSection({ initial = [] }) {
   const [areas, setAreas] = useState(initial)
   const [loading, setLoading] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(initial && initial.length > 0)
 
   useEffect(() => {
     setAreas(initial)
+    setHasLoaded(initial && initial.length > 0)
   }, [initial])
 
   useEffect(() => {
-    if (areas.length === 0) {
+    if (!hasLoaded) {
       setLoading(true)
       async function load() {
         try {
@@ -45,11 +47,12 @@ const PopularAreasSection = memo(function PopularAreasSection({ initial = [] }) 
           console.error('Failed to load popular areas on client:', err)
         } finally {
           setLoading(false)
+          setHasLoaded(true)
         }
       }
       load()
     }
-  }, [areas])
+  }, [hasLoaded])
 
   const popularAreas = areas.slice(0, 4)
 

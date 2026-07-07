@@ -16,13 +16,15 @@ function FeaturedPropertiesSkeleton() {
 const FeaturedPropertiesSection = memo(function FeaturedPropertiesSection({ initial = [] }) {
   const [properties, setProperties] = useState(initial)
   const [loading, setLoading] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(initial && initial.length > 0)
 
   useEffect(() => {
     setProperties(initial)
+    setHasLoaded(initial && initial.length > 0)
   }, [initial])
 
   useEffect(() => {
-    if (properties.length === 0) {
+    if (!hasLoaded) {
       setLoading(true)
       async function load() {
         try {
@@ -35,11 +37,12 @@ const FeaturedPropertiesSection = memo(function FeaturedPropertiesSection({ init
           console.error('Failed to load featured properties on client:', err)
         } finally {
           setLoading(false)
+          setHasLoaded(true)
         }
       }
       load()
     }
-  }, [properties])
+  }, [hasLoaded])
 
   // Stable memoized list — avoids re-rendering cards when parent re-renders
   const cards = useMemo(

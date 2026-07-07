@@ -33,13 +33,15 @@ function LatestBlogsSkeleton() {
 const LatestBlogsSection = memo(function LatestBlogsSection({ initial = [] }) {
   const [blogs, setBlogs] = useState(initial)
   const [loading, setLoading] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(initial && initial.length > 0)
 
   useEffect(() => {
     setBlogs(initial)
+    setHasLoaded(initial && initial.length > 0)
   }, [initial])
 
   useEffect(() => {
-    if (blogs.length === 0) {
+    if (!hasLoaded) {
       setLoading(true)
       async function load() {
         try {
@@ -52,11 +54,12 @@ const LatestBlogsSection = memo(function LatestBlogsSection({ initial = [] }) {
           console.error('Failed to load latest blogs on client:', err)
         } finally {
           setLoading(false)
+          setHasLoaded(true)
         }
       }
       load()
     }
-  }, [blogs])
+  }, [hasLoaded])
 
   const latestBlogs = blogs.slice(0, 3)
 
