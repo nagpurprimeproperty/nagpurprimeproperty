@@ -1,0 +1,6 @@
+# pnpm v11 configuration to allow native builds for security-isolated packages
+allowBuilds:
+  "@firebase/util": true
+  bcrypt: true
+  protobufjs: true
+  sharp: true
