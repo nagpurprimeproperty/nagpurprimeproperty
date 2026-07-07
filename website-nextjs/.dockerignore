@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+
+# Environment files (inject at runtime, never bake into image)
+.env.*
+!.env.example
+
+# Version control
+.git
+.gitignore
+
+# Dev tooling
+.eslintrc*
+.prettierrc*
+jest.config.*
+
+# Docker files (no need to copy themselves)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# OS / IDE
+.DS_Store
+*.swp
+.vscode
+.idea
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tests
+coverage
+__tests__
+*.test.ts
+*.spec.ts
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# README / docs
+README.md

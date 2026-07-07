@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Database
+  mongo:
+    image: mongo:8
+    container_name: npp-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-production_secure_db_password_change_me}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - npp-network
+
+  # 2. Redis Caching & Queue Service
+  redis:
+    image: redis:7-alpine
+    container_name: npp-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-production_secure_redis_password_change_me}
+    volumes:
+      - redis-data:/data
+    networks:
+      - npp-network
+
+  # 3. Express API Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: npp-backend
+    restart: always
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-production_secure_db_password_change_me}@mongo:27017/nagpur-property?authSource=admin
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-production_secure_redis_password_change_me}@redis:6379
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - npp-network
+
+  # 4. Next.js Public Website
+  website:
+    build:
+      context: ./website-nextjs
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.nagpurprimeproperty.com}
+        - NEXT_PUBLIC_GOOGLE_MAPS_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+    container_name: npp-website
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-production_secure_db_password_change_me}@mongo:27017/nagpur-property?authSource=admin
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-production_secure_redis_password_change_me}@redis:6379
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - npp-network
+
+  # 5. Next.js Admin Panel
+  admin-panel:
+    build:
+      context: ./admin-panel-ui
+      dockerfile: dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.nagpurprimeproperty.com}
+        - NEXT_PUBLIC_GOOGLE_MAPS_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+    container_name: npp-admin
+    restart: always
+    ports:
+      - "3001:3000"  # Map container port 3000 to host port 3001
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-production_secure_db_password_change_me}@mongo:27017/nagpur-property?authSource=admin
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-production_secure_redis_password_change_me}@redis:6379
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - npp-network
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  npp-network:
+    driver: bridge

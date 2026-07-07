@@ -1,0 +1,162 @@
+export const mockUsers = [
+    {
+        _id: "user-1",
+        name: "Rahul Deshmukh",
+        email: "rahul@example.com",
+        mobile: "9876543210",
+        city: "Nagpur",
+        area: "Dighori",
+        address: "Flat 12, Sai Nagar, Dighori, Nagpur",
+        isActive: true,
+        plan: "premium",
+        planExpiry: "2025-06-15",
+        createdAt: "2024-01-10T10:00:00Z",
+        updatedAt: "2024-03-20T10:00:00Z",
+    },
+    {
+        _id: "user-2",
+        name: "Sneha Kulkarni",
+        email: "sneha@example.com",
+        mobile: "9765432109",
+        city: "Nagpur",
+        area: "Koradi",
+        isActive: true,
+        plan: "free",
+        createdAt: "2024-02-05T10:00:00Z",
+        updatedAt: "2024-03-18T10:00:00Z",
+    },
+    {
+        _id: "user-3",
+        name: "Vishal Thakre",
+        email: "vishal@example.com",
+        mobile: "9654321098",
+        city: "Nagpur",
+        area: "Pardi",
+        isActive: true,
+        plan: "basic",
+        planExpiry: "2025-04-30",
+        createdAt: "2024-01-22T10:00:00Z",
+        updatedAt: "2024-03-10T10:00:00Z",
+    },
+    {
+        _id: "user-4",
+        name: "Aarti Bhaware",
+        email: "aarti@example.com",
+        mobile: "9543210987",
+        city: "Nagpur",
+        area: "Beltarodi",
+        isActive: false,
+        plan: "free",
+        createdAt: "2024-03-01T10:00:00Z",
+        updatedAt: "2024-03-15T10:00:00Z",
+    },
+    {
+        _id: "user-5",
+        name: "Nikhil Ware",
+        email: "nikhil@example.com",
+        mobile: "9432109876",
+        city: "Nagpur",
+        area: "Jamtha",
+        isActive: true,
+        plan: "enterprise",
+        planExpiry: "2025-12-31",
+        createdAt: "2023-12-15T10:00:00Z",
+        updatedAt: "2024-03-22T10:00:00Z",
+    },
+    {
+        _id: "user-6",
+        name: "Kavita Meshram",
+        email: "kavita@example.com",
+        mobile: "9321098765",
+        city: "Nagpur",
+        area: "Hingna",
+        isActive: true,
+        plan: "free",
+        createdAt: "2024-03-10T10:00:00Z",
+        updatedAt: "2024-03-20T10:00:00Z",
+    },
+    {
+        _id: "user-7",
+        name: "Deepak Raut",
+        email: "deepak@example.com",
+        mobile: "9210987654",
+        city: "Nagpur",
+        area: "Manish Nagar",
+        isActive: true,
+        plan: "premium",
+        planExpiry: "2025-08-20",
+        createdAt: "2024-02-14T10:00:00Z",
+        updatedAt: "2024-03-19T10:00:00Z",
+    },
+    {
+        _id: "user-8",
+        name: "Priya Shende",
+        email: "priya.shende@example.com",
+        mobile: "9109876543",
+        city: "Nagpur",
+        area: "Trimurti Nagar",
+        isActive: false,
+        plan: "basic",
+        planExpiry: "2024-03-01",
+        createdAt: "2023-11-20T10:00:00Z",
+        updatedAt: "2024-03-01T10:00:00Z",
+    },
+];
+export const mockUserPlans = {
+    "user-1": [
+        { id: "ph-1", planName: "Premium", startDate: "2024-06-15", endDate: "2025-06-15", amount: 2499, status: "active", paymentId: "pay_ABC123" },
+        { id: "ph-2", planName: "Basic", startDate: "2024-01-10", endDate: "2024-06-14", amount: 999, status: "expired", paymentId: "pay_DEF456" },
+    ],
+    "user-3": [
+        { id: "ph-3", planName: "Basic", startDate: "2024-10-30", endDate: "2025-04-30", amount: 999, status: "active", paymentId: "pay_GHI789" },
+    ],
+    "user-5": [
+        { id: "ph-4", planName: "Enterprise", startDate: "2025-01-01", endDate: "2025-12-31", amount: 4999, status: "active", paymentId: "pay_JKL012" },
+        { id: "ph-5", planName: "Premium", startDate: "2024-01-01", endDate: "2024-12-31", amount: 2499, status: "expired", paymentId: "pay_MNO345" },
+    ],
+    "user-7": [
+        { id: "ph-6", planName: "Premium", startDate: "2024-08-20", endDate: "2025-08-20", amount: 2499, status: "active", paymentId: "pay_PQR678" },
+    ],
+    "user-8": [
+        { id: "ph-7", planName: "Basic", startDate: "2023-09-01", endDate: "2024-03-01", amount: 999, status: "expired", paymentId: "pay_STU901" },
+    ],
+};
+export const mockUserQueries = {
+    "user-1": [
+        { id: "q-1", propertyTitle: "3BHK Flat in Dighori", propertyId: "prop-101", ownerName: "Rajesh Kumar", message: "Is this property still available? Can we schedule a visit?", status: "responded", createdAt: "2024-03-15T10:00:00Z" },
+        { id: "q-2", propertyTitle: "Commercial Shop in Sitabuldi", propertyId: "prop-202", ownerName: "Priya Sharma", message: "What is the floor area and monthly rent?", status: "pending", createdAt: "2024-03-20T10:00:00Z" },
+    ],
+    "user-2": [
+        { id: "q-3", propertyTitle: "2BHK Apartment in Koradi", propertyId: "prop-303", ownerName: "Amit Patel", message: "Looking for immediate possession. Is there any furniture included?", status: "closed", createdAt: "2024-02-10T10:00:00Z" },
+    ],
+    "user-5": [
+        { id: "q-4", propertyTitle: "Industrial Plot in Hingna", propertyId: "prop-404", ownerName: "Sunita Reddy", message: "What are the boundary dimensions and road frontage?", status: "responded", createdAt: "2024-03-18T10:00:00Z" },
+        { id: "q-5", propertyTitle: "Office Space in Sadar", propertyId: "prop-505", ownerName: "Vikram Singh", message: "Is this available for long-term lease? What is the lock-in period?", status: "pending", createdAt: "2024-03-22T10:00:00Z" },
+    ],
+};
+export const mockUserProperties = {
+    "user-1": [
+        { id: "up-1", title: "Modern 2BHK in Dighori with Parking", propertyType: "Flat/Apartment", transactionType: "sale", price: 5500000, area: 950, areaUnit: "sqft", city: "Nagpur", locality: "Dighori", status: "active", views: 234, leads: 12, createdAt: "2024-02-20T10:00:00Z" },
+        { id: "up-2", title: "Fully Furnished 1BHK for Rent", propertyType: "Flat/Apartment", transactionType: "rent", price: 12000, area: 600, areaUnit: "sqft", city: "Nagpur", locality: "Dighori", status: "rented", views: 156, leads: 8, createdAt: "2024-01-15T10:00:00Z" },
+    ],
+    "user-3": [
+        { id: "up-3", title: "Commercial Shop Near Pardi Market", propertyType: "Shop", transactionType: "rent", price: 18000, area: 400, areaUnit: "sqft", city: "Nagpur", locality: "Pardi", status: "active", views: 89, leads: 5, createdAt: "2024-03-01T10:00:00Z" },
+    ],
+    "user-5": [
+        { id: "up-4", title: "3BHK Villa with Garden in Jamtha", propertyType: "Villa/Independent House", transactionType: "sale", price: 12000000, area: 2400, areaUnit: "sqft", city: "Nagpur", locality: "Jamtha", status: "active", views: 567, leads: 28, createdAt: "2023-12-20T10:00:00Z" },
+        { id: "up-5", title: "Residential Plot in Jamtha Township", propertyType: "Residential Plot", transactionType: "sale", price: 3500000, area: 1200, areaUnit: "sqft", city: "Nagpur", locality: "Jamtha", status: "active", views: 312, leads: 15, createdAt: "2024-01-05T10:00:00Z" },
+        { id: "up-6", title: "Warehouse in MIDC Hingna", propertyType: "Warehouse/Godown", transactionType: "rent", price: 85000, area: 5000, areaUnit: "sqft", city: "Nagpur", locality: "Hingna", status: "active", views: 198, leads: 9, createdAt: "2024-02-10T10:00:00Z" },
+    ],
+};
+export const mockUserLeads = {
+    "user-1": [
+        { id: "l-1", propertyTitle: "Modern 2BHK in Dighori with Parking", propertyId: "up-1", buyerName: "Amit Sharma", buyerPhone: "9111222333", message: "Interested in this property. Can we meet this weekend?", budget: "50L-60L", status: "contacted", createdAt: "2024-03-10T10:00:00Z" },
+        { id: "l-2", propertyTitle: "Modern 2BHK in Dighori with Parking", propertyId: "up-1", buyerName: "Priya Joshi", buyerPhone: "9222333444", message: "What is the age of building? RERA registered?", status: "new", createdAt: "2024-03-18T10:00:00Z" },
+        { id: "l-3", propertyTitle: "Fully Furnished 1BHK for Rent", propertyId: "up-2", buyerName: "Rohit Verma", buyerPhone: "9333444555", message: "Is pet allowed? Looking for 6-month contract.", status: "closed", createdAt: "2024-01-20T10:00:00Z" },
+    ],
+    "user-5": [
+        { id: "l-4", propertyTitle: "3BHK Villa with Garden in Jamtha", propertyId: "up-4", buyerName: "Sanjay Patil", buyerPhone: "9444555666", message: "Very interested. Please share more photos and floor plan.", budget: "1Cr-1.5Cr", status: "contacted", createdAt: "2024-03-05T10:00:00Z" },
+        { id: "l-5", propertyTitle: "3BHK Villa with Garden in Jamtha", propertyId: "up-4", buyerName: "Meera Deshpande", buyerPhone: "9555666777", message: "Is the price negotiable?", budget: "90L-1.2Cr", status: "new", createdAt: "2024-03-19T10:00:00Z" },
+        { id: "l-6", propertyTitle: "Residential Plot in Jamtha Township", propertyId: "up-5", buyerName: "Rakesh Nair", buyerPhone: "9666777888", message: "Need NA certificate and boundary plan.", status: "new", createdAt: "2024-03-21T10:00:00Z" },
+    ],
+};

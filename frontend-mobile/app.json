@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "nagpurPrimeProperty",
+    "slug": "nagpurPrimeProperty",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/applogo.png",
+    "scheme": "nagpurprimeproperty",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ayushbharne.nagpurPrimeProperty"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/images/applogo.png",
+        "monochromeImage": "./assets/images/applogo.png"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB4rilTPZoZBVoOgZHcOzwmbUp8PfwpgAE"
+        }
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ayushbharne.nagpurPrimeProperty"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/applogo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/applogo.png",
+          "imageWidth": 280,
+          "resizeMode": "contain",
+          "backgroundColor": "#F97316",
+          "dark": {
+            "backgroundColor": "#F97316"
+          }
+        }
+      ],
+      "expo-video"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "877c91e2-5c56-42c8-9d6b-8f363df8c34c"
+      }
+    }
+  }
+}

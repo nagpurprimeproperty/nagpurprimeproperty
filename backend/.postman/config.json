@@ -1,0 +1,15 @@
+{
+  "workspace": {
+    "id": "d181d01a-9f3b-4f36-833a-6706f3648010"
+  },
+  "entities": {
+    "environments": [],
+    "flows": [],
+    "globals": [],
+    "mocks": [],
+    "specs": [],
+    "collections": [
+      "..\\Nagpur_Prime_Property_APIs.postman_collection.json"
+    ]
+  }
+}

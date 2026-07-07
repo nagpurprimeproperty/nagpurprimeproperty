@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js build output
+.next
+out
+
+# Environment files (inject at runtime, never bake into image)
+# .env 
+.env.*
+!.env.example
+
+# Version control
+.git
+.gitignore
+
+# Dev tooling
+.eslintrc*
+.prettierrc*
+*.config.ts
+*.config.mjs
+jest.config.*
+
+# Docker files (no need to copy themselves)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# OS / IDE
+.DS_Store
+*.swp
+.vscode
+.idea
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Tests
+coverage
+__tests__
+*.test.ts
+*.spec.ts
+
+# v0 / Vercel sandbox internals
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+next.user-config.*
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# README / docs (optional — keep if you want)
+README.md

@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-foreground: var(--whatsapp-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.99 0.005 80);
+  --foreground: oklch(0.18 0.02 50);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 50);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 50);
+  --primary: oklch(0.68 0.19 45);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.78 0.17 60);
+  --secondary: oklch(0.96 0.015 70);
+  --secondary-foreground: oklch(0.22 0.03 50);
+  --muted: oklch(0.96 0.01 70);
+  --muted-foreground: oklch(0.5 0.02 60);
+  --accent: oklch(0.95 0.04 60);
+  --accent-foreground: oklch(0.35 0.15 45);
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.65 0.15 150);
+  --success-foreground: oklch(1 0 0);
+  --whatsapp: oklch(0.7 0.16 150);
+  --whatsapp-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 70);
+  --input: oklch(0.93 0.01 70);
+  --ring: oklch(0.68 0.19 45);
+
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+  --gradient-hero: linear-gradient(180deg, oklch(0.18 0.02 50 / 0.1), oklch(0.18 0.02 50 / 0.7));
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0), oklch(0.98 0.01 70));
+  --shadow-soft: 0 1px 2px oklch(0.18 0.02 50 / 0.04), 0 4px 12px oklch(0.18 0.02 50 / 0.06);
+  --shadow-elegant: 0 10px 30px -10px oklch(0.68 0.19 45 / 0.25);
+  --shadow-glow: 0 0 0 1px oklch(0.68 0.19 45 / 0.1), 0 12px 40px -8px oklch(0.68 0.19 45 / 0.35);
+}
+
+.dark {
+  --background: oklch(0.16 0.015 50);
+  --foreground: oklch(0.97 0.005 80);
+  --card: oklch(0.21 0.018 50);
+  --card-foreground: oklch(0.97 0.005 80);
+  --popover: oklch(0.21 0.018 50);
+  --popover-foreground: oklch(0.97 0.005 80);
+  --primary: oklch(0.72 0.18 50);
+  --primary-foreground: oklch(0.16 0.015 50);
+  --primary-glow: oklch(0.8 0.17 65);
+  --secondary: oklch(0.26 0.02 50);
+  --secondary-foreground: oklch(0.97 0.005 80);
+  --muted: oklch(0.26 0.02 50);
+  --muted-foreground: oklch(0.7 0.02 60);
+  --accent: oklch(0.3 0.05 50);
+  --accent-foreground: oklch(0.95 0.05 70);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.7 0.15 150);
+  --whatsapp: oklch(0.72 0.16 150);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.12);
+  --ring: oklch(0.72 0.18 50);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-primary { background-image: var(--gradient-primary); }
+  .bg-gradient-hero { background-image: var(--gradient-hero); }
+  .bg-gradient-card { background-image: var(--gradient-card); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .text-balance { text-wrap: balance; }
+}
+
+/* Fix Google Places Autocomplete dropdown z-index inside Radix Dialog */
+.pac-container {
+  z-index: 99999 !important;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-sans);
+  margin-top: 4px;
+}
+
+.pac-item {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-top: 1px solid var(--color-border);
+}
+
+.pac-item:hover {
+  background-color: var(--color-muted);
+}
+
+.pac-item-query {
+  font-size: 13px;
+  color: var(--color-foreground);
+  font-weight: 500;
+}
+
+.pac-matched {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.pac-icon {
+  display: none; /* Hide default icons, we want clean text-based lists */
+}
+
+/* Rich Text Styling for dynamically loaded HTML static pages */
+.rich-text h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-foreground);
+}
+
+.rich-text h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--color-foreground);
+}
+
+.rich-text h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-foreground);
+}
+
+.rich-text p {
+  font-size: 0.925rem;
+  line-height: 1.625;
+  margin-bottom: 1rem;
+  color: var(--color-foreground);
+  opacity: 0.85;
+}
+
+.rich-text ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.925rem;
+}
+
+.rich-text ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.925rem;
+}
+
+.rich-text li {
+  margin-bottom: 0.35rem;
+  line-height: 1.5;
+  color: var(--color-foreground);
+  opacity: 0.85;
+}
+
+.rich-text a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  transition: opacity 0.2s;
+}
+
+.rich-text a:hover {
+  opacity: 0.8;
+}
+
+.rich-text strong {
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.rich-text em {
+  font-style: italic;
+}
+
+.rich-text blockquote {
+  border-left: 4px solid var(--color-primary);
+  background-color: var(--color-muted);
+  padding: 0.75rem 1rem;
+  margin: 1.25rem 0;
+  font-style: italic;
+  border-radius: 0 0.5rem 0.5rem 0;
+  opacity: 0.9;
+}
+
+/* Quill-specific output elements */
+.rich-text u {
+  text-decoration: underline;
+}
+
+.rich-text s,
+.rich-text strike {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.rich-text pre,
+.rich-text code {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: var(--color-muted);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.875em;
+}
+
+.rich-text pre {
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  display: block;
+}
+
+/* Blog article first-letter drop cap */
+.rich-text > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 0.85;
+  margin-right: 0.1em;
+  margin-top: 0.05em;
+  color: var(--color-primary);
+}
+
+/* Drop-cap only on first section */
+.rich-text-dropcap > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 0.85;
+  margin-right: 0.1em;
+  margin-top: 0.05em;
+  color: var(--color-primary);
+}
+
+/* Make sure keyword links added via admin editor are clickable and styled */
+.rich-text a[href] {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.rich-text a[href]:hover {
+  opacity: 0.75;
+}
+
+/* Add Property button blinking animation */
+@keyframes add-property-blink {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.8);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 140, 0, 0);
+    opacity: 0.8;
+  }
+}
+
+.btn-add-property-blink {
+  animation: add-property-blink 1.4s ease-in-out infinite;
+  border-color: orange !important;
+  color: orange !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+/* ── Skeleton shimmer (matches admin panel) ── */
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-skeleton-shimmer {
+  animation: skeleton-shimmer 1.6s infinite;
+}
+

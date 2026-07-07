@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 18.9.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://nagpur-prime-property.onrender.com/api/v1",
+        "EXPO_PUBLIC_SOCKET_URL": "https://nagpur-prime-property.onrender.com",
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
+        "GOOGLE_SERVICES_INFO_PLIST": "@GOOGLE_SERVICES_INFO_PLIST"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://nagpur-prime-property.onrender.com/api/v1",
+        "EXPO_PUBLIC_SOCKET_URL": "https://nagpur-prime-property.onrender.com",
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
+        "GOOGLE_SERVICES_INFO_PLIST": "@GOOGLE_SERVICES_INFO_PLIST"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

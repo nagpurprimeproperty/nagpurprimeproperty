@@ -1,0 +1,1146 @@
+{
+  "info": {
+    "_postman_id": "548b2c48-4b52-4992-af32-0d906296acad",
+    "name": "Nagpur Prime Property - Complete API Collection",
+    "description": "Comprehensive Postman collection for Nagpur Prime Property application covering all modules: Authentication, User Management, Properties, Leads, Enquiries, Notifications, Subscriptions, Media, and more.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login User",
+          "id": "4451c1fe-0fed-4041-8b94-7dd9f28809ab",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login user with 10-digit mobile number and optional name. Returns OTP."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "id": "1b3a908e-a499-4464-9880-8caeafc1146d",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Verify OTP sent to mobile number. OTP must be exactly 6 digits."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "id": "61bcd511-5527-489b-84f4-1129596b67bb",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout user and invalidate token"
+          },
+          "response": []
+        }
+      ],
+      "id": "189956e8-4a71-4bb1-bcf3-f797ece9112a",
+      "description": "User authentication endpoints"
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "id": "4d03a862-a2b9-4551-a602-ae40bec1a25b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "Get authenticated user's profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "id": "e118a8c8-0ffa-4991-8845-1847bf3994d8",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"john.doe@example.com\",\n  \"city\": \"Nagpur\",\n  \"area\": \"Sitabuldi\",\n  \"address\": \"123 Main Street, Apartment 4B\",\n  \"avatar\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "Update user profile information. Mobile must be 10 digits. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Stats",
+          "id": "fa64a549-05b9-4d35-b155-8c06672b511b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats"
+              ]
+            },
+            "description": "Get user statistics (properties count, leads, etc.)"
+          },
+          "response": []
+        }
+      ],
+      "id": "4b53d3bb-4ea0-4d70-824c-46ec698c3d48",
+      "description": "User profile management endpoints"
+    },
+    {
+      "name": "Properties - Public",
+      "item": [
+        {
+          "name": "Get All Listed Properties",
+          "id": "3ca80b98-e96e-4fc1-80ff-d7bf18f20d8b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties?listingCategory=Resale&propertyType=Flat/Apartment&locality=Sitabuldi&page=1&limit=10&sortBy=-createdAt",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "listingCategory",
+                  "value": "Resale",
+                  "description": "Filter: New, Resale, Rental"
+                },
+                {
+                  "key": "propertyType",
+                  "value": "Flat/Apartment",
+                  "description": "Filter by property type"
+                },
+                {
+                  "key": "locality",
+                  "value": "Sitabuldi",
+                  "description": "Filter by locality"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "-createdAt",
+                  "description": "Sort field (prefix with - for desc)"
+                }
+              ]
+            },
+            "description": "Get all listed properties with optional filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Property by ID",
+          "id": "595585d3-c69d-4600-a9be-4efdb58cc9a8",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties/{{property_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "{{property_id}}"
+              ]
+            },
+            "description": "Get a single property by ID with view tracking"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Similar Properties",
+          "id": "318b8bb6-6f25-409c-bf5f-7fce15a433b8",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties/{{property_id}}/similar-properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "{{property_id}}",
+                "similar-properties"
+              ]
+            },
+            "description": "Get properties similar to the specified property"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Popular Localities",
+          "id": "7addc38d-b259-4f5f-98be-861ee95f9756",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties/get-popular-localities-count?limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "get-popular-localities-count"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "Number of top localities"
+                }
+              ]
+            },
+            "description": "Get count of properties in popular localities"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Search Suggestions",
+          "id": "088f4cab-121a-46ea-8aab-35ef4700e5e0",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties/search/suggestions?q=nagpur",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "search",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "nagpur",
+                  "description": "Search query"
+                }
+              ]
+            },
+            "description": "Get search suggestions"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Amenities",
+          "id": "0a4ee6eb-44ac-4e05-9403-fce230dc3861",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties/amenities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "amenities"
+              ]
+            },
+            "description": "Get list of available amenities"
+          },
+          "response": []
+        }
+      ],
+      "id": "8fe01838-41e6-41eb-a1c8-2b89bce50edc",
+      "description": "Public property listing endpoints"
+    },
+    {
+      "name": "My Properties - Owner",
+      "item": [
+        {
+          "name": "Get My Properties",
+          "id": "cef15bb6-d6ca-400d-97b6-a8283b8449ac",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-properties?page=1&limit=10&status=Active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-properties"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "Active"
+                }
+              ]
+            },
+            "description": "Get all properties of authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Property by ID",
+          "id": "25e2c705-9799-4c76-88dd-3d8302222744",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/properties/me/6a1e81ff066d81ef63f5f7ee",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "me",
+                "6a1e81ff066d81ef63f5f7ee"
+              ]
+            },
+            "description": "Get a specific property of authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Property",
+          "id": "508d8a47-12ff-48f8-b513-db2f797fe390",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Luxury 2 BHK Flat in Prime Location\",\n  \"listingCategory\": \"Resale\",\n  \"propertyType\": \"Flat/Apartment\",\n  \"description\": \"Spacious 2 BHK apartment with modern amenities, ready to move.\",\n  \"location\": {\n    \"locality\": \"Sitabuldi\",\n    \"subLocality\": \"Central Business District\",\n    \"landmark\": \"Near Metro Station\",\n    \"pinCode\": \"440012\",\n    \"coordinates\": {\n      \"type\": \"Point\",\n      \"coordinates\": [79.1289, 21.1458]\n    }\n  },\n  \"amenities\": [\"Gym\", \"Swimming Pool\", \"Security\", \"Parking\"],\n  \"details\": {\n    \"bhk\": 2,\n    \"bathrooms\": 2,\n    \"balconies\": 1,\n    \"floorNumber\": 5,\n    \"totalFloors\": 15,\n    \"carpetArea\": 950,\n    \"builtUpArea\": 1200,\n    \"superBuiltUpArea\": 1350,\n    \"furnishing\": \"Semi-Furnished\",\n    \"facing\": \"East\",\n    \"ageOfProperty\": \"5-10 Years\",\n    \"floorType\": \"Marble\",\n    \"waterSupply\": \"24/7\",\n    \"electricityStatus\": \"Connected\",\n    \"reraRegistered\": true,\n    \"reraNumber\": \"RERA123456\",\n    \"ownershipType\": \"Freehold\",\n    \"readyToMove\": true\n  },\n  \"pricing\": {\n    \"totalPrice\": 3500000,\n    \"pricePerSqft\": 3684,\n    \"priceNegotiable\": true,\n    \"possessionTimeline\": \"Immediate\",\n    \"brokerage\": \"2%\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/my-properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-properties"
+              ]
+            },
+            "description": "Create a new property"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Property",
+          "id": "9daed7e9-180a-4911-aad3-70504e8a11ca",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Luxury 2 BHK Flat - Price Reduced\",\n  \"description\": \"Spacious 2 BHK apartment with modern amenities, ready to move. Recently renovated.\",\n  \"amenities\": [\"Gym\", \"Swimming Pool\", \"Security\", \"Parking\", \"Garden\"],\n  \"details\": {\n    \"furnishing\": \"Fully Furnished\",\n    \"carpetArea\": 950\n  },\n  \"pricing\": {\n    \"totalPrice\": 3200000,\n    \"pricePerSqft\": 3368\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/properties/me/{{property_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "properties",
+                "me",
+                "{{property_id}}"
+              ]
+            },
+            "description": "Update an existing property"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Property",
+          "id": "eae414aa-c5eb-4059-8d70-bf0096673309",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-properties/{{property_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-properties",
+                "{{property_id}}"
+              ]
+            },
+            "description": "Delete a property permanently"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Featured Property",
+          "id": "dcedbb7a-bdc2-45e6-a435-24cdffb7531b",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-properties/{{property_id}}/toggle-featured",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-properties",
+                "{{property_id}}",
+                "toggle-featured"
+              ]
+            },
+            "description": "Toggle featured status of a property"
+          },
+          "response": []
+        }
+      ],
+      "id": "96cd7d26-77b2-4472-80e8-3d44908eabdd",
+      "description": "Authenticated user's property management"
+    },
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "Get All Leads",
+          "id": "9092c667-2a95-4a39-8fe7-45da2d4a1f0a",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads?page=1&limit=20&status=New&sortBy=-createdAt",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "New",
+                  "description": "Filter by lead status"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Get all leads for authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead by ID",
+          "id": "f9262a4c-d4d3-4ac7-8b96-ff1a1edf760e",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads",
+                "{{lead_id}}"
+              ]
+            },
+            "description": "Get a specific lead by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead Status",
+          "id": "1d939b59-d18b-4637-b26e-bd92b18989ec",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Contacted\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}/update-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads",
+                "{{lead_id}}",
+                "update-status"
+              ]
+            },
+            "description": "Update lead status. Valid statuses: 'New', 'Contacted', 'Closed'"
+          },
+          "response": []
+        }
+      ],
+      "id": "94c70791-c66a-4ee1-84a1-efe08386727f",
+      "description": "Lead management endpoints"
+    },
+    {
+      "name": "Enquiries",
+      "item": [
+        {
+          "name": "Get All Enquiries",
+          "id": "1a498b6e-1548-4127-92b3-719a55e2032d",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enquiries?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enquiries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all enquiries for authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Enquiry by ID",
+          "id": "9d47df8e-e7b2-44f7-924c-662109132f6a",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enquiries/{{enquiry_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enquiries",
+                "{{enquiry_id}}"
+              ]
+            },
+            "description": "Get a specific enquiry by ID"
+          },
+          "response": []
+        }
+      ],
+      "id": "0d002d24-a08e-4eea-9b62-0b4926ec4228",
+      "description": "Enquiry management endpoints"
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "id": "a3004fcb-e660-4d2f-a37d-3fdb5e98d94f",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get user notifications"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "id": "61b67f2a-6f6a-43d1-962c-f83a09d53157",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Mark all notifications as read"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "id": "9cca3f23-6cd2-497c-abb4-96d8339ef4ac",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            },
+            "description": "Mark a specific notification as read"
+          },
+          "response": []
+        }
+      ],
+      "id": "0d45ea92-ec05-4108-a070-b3c6e170a7a7",
+      "description": "Notification management endpoints"
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get All Plans",
+          "id": "ddf82183-2b37-4f9f-9128-f8d873421096",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions?page=1&limit=10&isActive=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get all available subscription plans"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan by ID",
+          "id": "c682e558-a7b4-44f2-b08d-52cd5ae52e67",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/{{plan_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "{{plan_id}}"
+              ]
+            },
+            "description": "Get a specific subscription plan by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Purchase Plans",
+          "id": "9f98ae3a-aefc-4aa2-b57d-e0d8d0127e25",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscriptions/purchase?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "subscriptions",
+                "purchase"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get available plans for purchase"
+          },
+          "response": []
+        }
+      ],
+      "id": "db2104ff-c027-44c1-bef2-be2f5523751f",
+      "description": "Subscription and pricing plan endpoints"
+    },
+    {
+      "name": "Media Management",
+      "item": [
+        {
+          "name": "Upload Media (Single File)",
+          "id": "e71be651-7143-4870-b4c6-21b3f5f00f1a",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Upload a single file (photo or video)",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/media/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "media",
+                "upload"
+              ]
+            },
+            "description": "Upload single property photo or video file. Returns URL in response."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Media (Single URL)",
+          "id": "4950325f-57d7-4e13-9dff-14375cd2bf9b",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://s3-noi.aces3.ai/nagpurpropertytest/properties/1780390311433-617726905.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/media",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "media"
+              ]
+            },
+            "description": "Delete single media file by URL"
+          },
+          "response": []
+        }
+      ],
+      "id": "376dba98-b22e-448c-bc44-ef88499f8893",
+      "description": "File upload and deletion endpoints"
+    },
+    {
+      "name": "Static Pages",
+      "item": [
+        {
+          "name": "Get Page by Slug",
+          "id": "44f87a23-5423-4673-b855-f149c8459b41",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/static-pages/about",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "static-pages",
+                "about"
+              ]
+            },
+            "description": "Get static page by slug (about, privacy-policy, terms-of-service, etc.)"
+          },
+          "response": []
+        }
+      ],
+      "id": "71a08c35-b895-422f-9afc-04bb07bb8b6f",
+      "description": "Static content pages (About, Terms, Privacy, etc.)"
+    }
+  ],
+  "variable": [
+    {
+      "id": "a343a6c8-3487-4a2f-bb7d-64186befb1b0",
+      "key": "base_url",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "id": "868544e1-8ba7-41b1-a3f2-f07624adaecc",
+      "key": "access_token",
+      "value": "your_jwt_token_here",
+      "type": "string",
+      "description": "JWT access token for authenticated endpoints"
+    },
+    {
+      "id": "0baaf2e4-cf90-4489-9951-eebe688fe902",
+      "key": "property_id",
+      "value": "property_id_here",
+      "type": "string",
+      "description": "MongoDB ObjectId of the property"
+    },
+    {
+      "id": "7962fc50-27d4-4509-84b0-c9dbbf069b18",
+      "key": "lead_id",
+      "value": "lead_id_here",
+      "type": "string",
+      "description": "MongoDB ObjectId of the lead"
+    },
+    {
+      "id": "8861cd87-49f8-4a86-ac95-42a777e587b8",
+      "key": "enquiry_id",
+      "value": "enquiry_id_here",
+      "type": "string",
+      "description": "MongoDB ObjectId of the enquiry"
+    },
+    {
+      "id": "3dcf2c5b-a3bb-4bf2-ac50-d40f76bbf9fd",
+      "key": "notification_id",
+      "value": "notification_id_here",
+      "type": "string",
+      "description": "MongoDB ObjectId of the notification"
+    },
+    {
+      "id": "5e287de2-e3f2-4108-953c-2e7687365d3a",
+      "key": "plan_id",
+      "value": "plan_id_here",
+      "type": "string",
+      "description": "MongoDB ObjectId of the subscription plan"
+    }
+  ]
+}
