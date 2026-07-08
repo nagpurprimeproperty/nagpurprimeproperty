@@ -14,9 +14,14 @@ export function useGoogleMaps() {
             existing.addEventListener("load", () => setLoaded(true));
             return;
         }
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
+        if (!apiKey) {
+            console.warn("⚠️ NEXT_PUBLIC_GOOGLE_MAPS_KEY is not defined in environment variables");
+            return;
+        }
         const script = document.createElement("script");
         script.id = SCRIPT_ID;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&libraries=places`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
         script.async = true;
         script.onload = () => setLoaded(true);
         document.head.appendChild(script);

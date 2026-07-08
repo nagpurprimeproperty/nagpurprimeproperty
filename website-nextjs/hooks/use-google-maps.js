@@ -32,7 +32,7 @@ export function useGoogleMaps() {
 
         const script = document.createElement("script");
         script.id = SCRIPT_ID;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
         script.async = true;
         script.onload = () => setLoaded(true);
         document.head.appendChild(script);
