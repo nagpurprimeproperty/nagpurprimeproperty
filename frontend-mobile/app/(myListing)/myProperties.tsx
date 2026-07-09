@@ -1,4 +1,4 @@
-import ConfirmationOverlay from "@/components/ui/ConformationOverlay";
+import ConfirmationOverlay from "@/shared/components/ui/ConfirmationOverlay";
 import colors from "@/theme/colors";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,20 +25,20 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { useAddPropertyStore } from "@/store/addPropertyStore";
 import { apiClient } from "@/api/apiClient";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 import {
   useMyProperties,
   useDeleteMyProperty,
   useToggleFeaturedMyProperty,
   useUpdateMyPropertyStatus,
-} from "@/hooks/usePropertyHook";
-import PropertyImageCarousel from "@/components/property/PropertyImageCarousel";
-import { usePagination } from "@/hooks/usePagination";
-import LoadMoreButton from "@/components/common/LoadMoreButton";
+  PropertyImageCarousel,
+} from "@/features/property";
+import { usePagination } from "@/shared/hooks/usePagination";
+import LoadMoreButton from "@/shared/components/LoadMoreButton";
 
 const AnimatedPressable = Animated.createAnimatedComponent(TouchableOpacity);
 

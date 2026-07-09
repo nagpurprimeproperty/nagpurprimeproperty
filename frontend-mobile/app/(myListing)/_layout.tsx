@@ -11,7 +11,7 @@ export default function MyListingLayout() {
       }}
     >
       <Stack.Screen name="myProperties" />
-      <Stack.Screen name="leads" />
+      <Stack.Screen name="leads/index" />
       <Stack.Screen name="leads/[id]" />
     </Stack>
   );

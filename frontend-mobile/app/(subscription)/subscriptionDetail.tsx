@@ -30,10 +30,11 @@ import { useLocalSearchParams } from "expo-router";
 import { toast } from "react-hot-toast/headless";
 import * as Haptics from "expo-haptics";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { usePlanDetail, usePurchasePlan, useMySubscription } from "@/hooks/useSubscriptionHooks";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/features/auth";
+import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ export default function SubscriptionDetailScreen() {
   const [confirmVisible, setConfirmVisible] = useState(false);
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuth        = useAuthStore((s) => s.openAuth);
+  const { openAuth }        = useModal();
 
   const { data, isLoading, isError, error, refetch } = usePlanDetail(id);
   const { data: mySubData }  = useMySubscription(isAuthenticated);

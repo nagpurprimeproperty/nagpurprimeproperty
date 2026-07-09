@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getSocket } from '@/lib/socket';
-import type { NotificationApiItem } from '@/services/notificationService';
-import { useAuthStore } from '@/store/authStore';
+import { getSocket } from '@/config/socket';
+import type { NotificationApiItem } from '@/features/notification/services/notificationService';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
-const NOTIFICATIONS_KEY = ['notifications'];
+import { notificationKeys } from '@/features/notification/keys/notificationKeys';
 
 /**
  * Subscribes to Socket.IO notification events and keeps the React Query
@@ -24,7 +24,7 @@ export const useSocket = () => {
       if (!mountedRef.current) return;
 
       queryClient.setQueriesData(
-        { queryKey: NOTIFICATIONS_KEY, exact: false },
+        { queryKey: notificationKeys.all, exact: false },
         (old: any) => {
           if (!old) return old;
           const exists = old.data?.some((n: any) => n._id === notification._id);
@@ -44,7 +44,7 @@ export const useSocket = () => {
       if (!mountedRef.current) return;
 
       queryClient.setQueriesData(
-        { queryKey: NOTIFICATIONS_KEY, exact: false },
+        { queryKey: notificationKeys.all, exact: false },
         (old: any) => (old ? { ...old, unreadCount: count } : old)
       );
     };
@@ -54,7 +54,7 @@ export const useSocket = () => {
       if (!mountedRef.current) return;
 
       queryClient.setQueriesData(
-        { queryKey: NOTIFICATIONS_KEY, exact: false },
+        { queryKey: notificationKeys.all, exact: false },
         (old: any) => {
           if (!old?.data) return old;
           return {

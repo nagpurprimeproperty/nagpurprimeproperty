@@ -11,17 +11,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
-import SectionDivider from "@/components/common/SectionDivider";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
+import SectionDivider from "@/shared/components/SectionDivider";
 import {
   useNotifications,
   useMarkAllNotificationsAsReadMutation,
   useMarkNotificationAsReadMutation,
-} from "@/hooks/useNotification";
+} from "@/features/notification";
 import colors from "@/theme/colors";
-import { usePagination } from "@/hooks/usePagination";
-import LoadMoreButton from "@/components/common/LoadMoreButton";
+import { usePagination } from "@/shared/hooks/usePagination";
+import LoadMoreButton from "@/shared/components/LoadMoreButton";
 import NotificationSkeleton from "@/components/skeleton/NotificationSkeleton";
 
 type NotificationItem = {

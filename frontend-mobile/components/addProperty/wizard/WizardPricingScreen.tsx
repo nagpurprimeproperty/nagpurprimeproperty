@@ -117,8 +117,24 @@ export default function WizardPricingScreen() {
     updateStep4(key, !step4[key]);
   };
 
+  const normalizeTimelineValue = (value: any) => {
+    if (value === null || value === undefined || value === '') return '';
+    const str = String(value).trim();
+    const normalized = str.toLowerCase();
+    const timelineMap: Record<string, string> = {
+      immediate: 'Immediate',
+      'within 1 month': 'Within 1 Month',
+      '1–3 months': '1–3 Months',
+      '1-3 months': '1–3 Months',
+      '3–6 months': '3–6 Months',
+      '3-6 months': '3–6 Months',
+    };
+    return timelineMap[normalized] || str;
+  };
+
   const handlePriceChange = (key: string, val: any) => {
-    updateStep4(key, val);
+    const normalizedVal = key === 'possessionTimeline' ? normalizeTimelineValue(val) : val;
+    updateStep4(key, normalizedVal);
     if (errors[key]) {
       const updated = { ...errors };
       delete updated[key];
@@ -138,7 +154,7 @@ export default function WizardPricingScreen() {
 
   // Horizontal Scroll Card Selector
   const renderCardSelector = (key: string, label: string, options: string[], isRequired = false) => {
-    const currentVal = step4[key];
+    const currentVal = key === 'possessionTimeline' ? normalizeTimelineValue(step4[key]) : step4[key];
     const hasErr = !!errors[key];
     
     return (
@@ -149,7 +165,9 @@ export default function WizardPricingScreen() {
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
           {options.map((opt) => {
-            const isSel = currentVal === opt;
+            const isSel = key === 'possessionTimeline'
+              ? normalizeTimelineValue(currentVal) === normalizeTimelineValue(opt)
+              : currentVal === opt;
             return (
               <TouchableOpacity
                 key={opt}

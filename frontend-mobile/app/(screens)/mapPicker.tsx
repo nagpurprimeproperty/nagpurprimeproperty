@@ -25,7 +25,7 @@ import MapView, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import colors from "@/theme/colors";
 import { useAddPropertyStore } from "../../store/addPropertyStore";
-import { useLocaltyStore } from "@/store/localtyStore";
+import { useLocalityStore } from "@/store/localityStore";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 // ⚠️  The Google Maps API key is NOT available in JS at all.
@@ -107,7 +107,7 @@ export default function MapPickerScreen() {
   const step2 = useAddPropertyStore((s) => s.step2);
   const updateStep2 = useAddPropertyStore((s) => s.updateStep2);
   const { mode } = useLocalSearchParams<{ mode?: string }>();
-  const setSelectedLocality = useLocaltyStore((s) => s.setSelectedLocality);
+  const setSelectedLocality = useLocalityStore((s) => s.setSelectedLocality);
 
   const mapRef = useRef<MapView>(null);
   const searchRef = useRef<TextInput>(null);

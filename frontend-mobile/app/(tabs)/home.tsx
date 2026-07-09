@@ -1,7 +1,7 @@
 import HomeSkeleton, { PropertyCardSkeleton } from "@/components/skeleton/HomeSkeleton";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
-import SectionDivider from "@/components/common/SectionDivider";
-import SectionHeader from "@/components/common/SectionHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
+import SectionDivider from "@/shared/components/SectionDivider";
+import SectionHeader from "@/shared/components/SectionHeader";
 import ByBudgetSection from "@/components/home/ByBudgetSection";
 import TrendingLocalitiesSection from "@/components/home/TrendingLocalitiesSection";
 import CategoryTabs from "@/components/home/CategoryTabs";
@@ -9,11 +9,15 @@ import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import Header from "@/components/home/Header";
 import NearYouSection from "@/components/home/NearYouSection";
 import RecommendedSection from "@/components/home/RecommendedSection";
-import PropertyCard from "@/components/property/PropertyCard";
-import { usePagination } from "@/hooks/usePagination";
-import { useProperties, useTogglePropertySave, useCreateCallEnquiry } from "@/hooks/usePropertyHook";
-import { useLocaltyStore } from "@/store/localtyStore";
-import { useAuthStore } from "@/store/authStore";
+import {
+  PropertyCard,
+  useProperties,
+  useTogglePropertySave,
+  useCreateCallEnquiry,
+} from "@/features/property";
+import { usePagination } from "@/shared/hooks/usePagination";
+import { useLocalityStore } from "@/store/localityStore";
+import { useAuthStore } from "@/features/auth";
 import colors from "@/theme/colors";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState, useEffect, useMemo, memo, useRef } from "react";
@@ -25,10 +29,10 @@ const EMPTY_ARRAY: any[] = [];
 
 export default function Home() {
   // ─── Read selected locality and hydration globally ─────────────────────────
-  const selectedLocality = useLocaltyStore((s) => s.selectedLocality);
-  const selectedLatitude = useLocaltyStore((s) => s.selectedLatitude);
-  const selectedLongitude = useLocaltyStore((s) => s.selectedLongitude);
-  const isLocalityHydrated = useLocaltyStore((s) => s.isHydrated);
+  const selectedLocality = useLocalityStore((s) => s.selectedLocality);
+  const selectedLatitude = useLocalityStore((s) => s.selectedLatitude);
+  const selectedLongitude = useLocalityStore((s) => s.selectedLongitude);
+  const isLocalityHydrated = useLocalityStore((s) => s.isHydrated);
   const isAuthHydrated = useAuthStore((s) => s.isHydrated);
   const isStoreHydrated = isLocalityHydrated && isAuthHydrated;
 
@@ -171,7 +175,7 @@ export default function Home() {
       // Defer data fetching until AFTER the tab-switch animation completes.
       // This prevents JS-thread contention that causes stuttery transitions.
       const task = InteractionManager.runAfterInteractions(() => {
-        const isLocalityHydrated = useLocaltyStore.getState().isHydrated;
+        const isLocalityHydrated = useLocalityStore.getState().isHydrated;
         const isAuthHydrated = useAuthStore.getState().isHydrated;
         if (!isLocalityHydrated || !isAuthHydrated) return;
 

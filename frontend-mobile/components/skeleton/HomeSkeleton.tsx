@@ -1,6 +1,6 @@
-import { View, ScrollView, Dimensions } from "react-native";
+﻿import { View, ScrollView, Dimensions } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 
 const { width } = Dimensions.get("window");
 const H_PAD = 20;

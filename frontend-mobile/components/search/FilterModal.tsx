@@ -1,8 +1,8 @@
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+﻿import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { X } from "lucide-react-native";
-import SectionDivider from "@/components/common/SectionDivider";
+import SectionDivider from "@/shared/components/SectionDivider";
 import colors from "@/theme/colors";
 import shadows from "@/theme/shadows";
 

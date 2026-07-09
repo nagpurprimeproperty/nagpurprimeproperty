@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -30,8 +30,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { toast } from 'react-hot-toast/headless';
 
-import ScreenHeader from '@/components/common/ScreenHeader';
-import ScreenWrapper from '@/components/common/ScreenWrapper';
+import ScreenHeader from '@/shared/components/ScreenHeader';
+import ScreenWrapper from '@/shared/components/ScreenWrapper';
 import colors from '@/theme/colors';
 import { useLead, useUpdateLeadStatusMutation } from '@/hooks/useLeadHook';
 

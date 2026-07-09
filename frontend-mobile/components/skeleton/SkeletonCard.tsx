@@ -1,6 +1,6 @@
-import { useTheme } from "@/hooks/useTheme";
+﻿import { useTheme } from "@/hooks/useTheme";
 import { View } from "react-native";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 
 export default function SkeletonCard() {
   const { colors } = useTheme();

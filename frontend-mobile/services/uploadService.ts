@@ -1,5 +1,5 @@
-import { API_BASE_URL } from '../api/apiClient';
-import { useAuthStore } from '@/store/authStore';
+﻿import { API_BASE_URL } from '../api/apiClient';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 export interface UploadMediaResponse {
   success: boolean;

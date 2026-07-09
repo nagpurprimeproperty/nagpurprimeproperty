@@ -1,5 +1,5 @@
-import { useTheme } from "@/hooks/useTheme";
-import { useProperties } from "@/hooks/usePropertyHook";
+﻿import { useTheme } from "@/hooks/useTheme";
+import { useProperties } from "@/features/property/hooks/useProperties";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -12,8 +12,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import SectionDivider from "../common/SectionDivider";
-import SectionHeader from "../common/SectionHeader";
+import SectionDivider from "@/shared/components/SectionDivider";
+import SectionHeader from "@/shared/components/SectionHeader";
 
 const { width } = Dimensions.get("window");
 const SIDE_PADDING = 12;

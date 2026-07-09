@@ -1,15 +1,10 @@
-import { create, type AxiosRequestHeaders } from "axios";
-import { useAuthStore } from "@/store/authStore";
-import Constants from "expo-constants";
+﻿import { create, type AxiosRequestHeaders } from "axios";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { API_BASE_URL } from "@/api/config";
 
-const expoExtra = (Constants.expoConfig as
-  | { extra?: Record<string, string | undefined> }
-  | undefined)?.extra;
-
-export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  expoExtra?.EXPO_PUBLIC_API_URL ||
-  "https://nagpur-prime-property.onrender.com/api/v1";
+// Re-export so existing consumers that import API_BASE_URL from apiClient
+// continue to work without changes.
+export { API_BASE_URL } from "@/api/config";
 
 if (__DEV__) {
   console.log("[apiClient] Using API_BASE_URL:", API_BASE_URL);

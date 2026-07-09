@@ -42,7 +42,7 @@ module.exports = ({ config }) => ({
       googleMaps: {
         // GOOGLE_MAPS_API_KEY is injected by EAS Build secrets at build time.
         // It is never bundled into JS — only written into AndroidManifest.xml.
-        apiKey: process.env.GOOGLE_MAPS_API_KEY,
+        apiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyBKmIhSr8KalV8bv_XMWhAhp-le0LRLx6Y",
       },
     },
     edgeToEdgeEnabled: true,
