@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { SearchSuggestion } from "@/services/propertyService";
+import { SearchSuggestion } from "@/features/property/services/propertyService";
 
 export function SearchInput({
   value,

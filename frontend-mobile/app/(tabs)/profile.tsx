@@ -1,10 +1,10 @@
 import { useTheme } from "@/hooks/useTheme";
-import { useLogoutMutation } from "@/hooks/useAuthHook";
+import { useLogoutMutation, useAuthStore } from "@/features/auth";
 import { useApiQuery } from "@/hooks/useApiQuery";
-import { useProfile } from "@/hooks/useProfileHook";
-import { useUnreadCount } from "@/hooks/useNotification";
-import { useAuthStore } from "@/store/authStore";
-import ConfirmationOverlay from "@/components/ui/ConformationOverlay";
+import { useProfile } from "@/features/profile";
+import { useUnreadCount } from "@/features/notification";
+import { useModal } from "@/context/ModalContext";
+import ConfirmationOverlay from "@/shared/components/ui/ConfirmationOverlay";
 import { useRouter } from "expo-router";
 import {
   Bell,
@@ -32,10 +32,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
-import SectionDivider from "@/components/common/SectionDivider";
-import Shimmer from "@/components/common/Shimmer";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
+import SectionDivider from "@/shared/components/SectionDivider";
+import Shimmer from "@/shared/components/Shimmer";
 
 function StatCard({ value, label, delay, onPress, active }: any) {
   const { colors } = useTheme();
@@ -206,7 +206,7 @@ type ProfileStatsResponse = {
 export default function ProfileScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const openAuth = useAuthStore((state) => state.openAuth);
+  const { openAuth } = useModal();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const phone = useAuthStore((state) => state.phone);
   const user = useAuthStore((state) => state.user);

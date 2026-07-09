@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ScrollView, Text, View, TouchableOpacity, Linking } from 'react-native';
 import {
   Info,
@@ -14,9 +14,9 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import ScreenHeader from '@/components/common/ScreenHeader';
-import ScreenWrapper from '@/components/common/ScreenWrapper';
-import SectionDivider from '@/components/common/SectionDivider';
+import ScreenHeader from '@/shared/components/ScreenHeader';
+import ScreenWrapper from '@/shared/components/ScreenWrapper';
+import SectionDivider from '@/shared/components/SectionDivider';
 import colors from '@/theme/colors';
 import { useAboutUs } from '@/hooks/useSupportAndLegalHooks';
 

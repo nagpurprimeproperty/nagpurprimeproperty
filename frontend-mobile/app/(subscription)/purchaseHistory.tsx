@@ -12,14 +12,15 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { usePurchaseHistory } from "@/hooks/useSubscriptionHooks";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/features/auth";
+import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
 import type { HistoryItem } from "@/services/subscriptionService";
-import { usePagination } from "@/hooks/usePagination";
-import LoadMoreButton from "@/components/common/LoadMoreButton";
+import { usePagination } from "@/shared/hooks/usePagination";
+import LoadMoreButton from "@/shared/components/LoadMoreButton";
 import PurchaseHistorySkeleton from "@/components/skeleton/PurchaseHistorySkeleton";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -112,7 +113,7 @@ export default function PurchaseHistoryScreen() {
   const router          = useRouter();
   const insets          = useSafeAreaInsets();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuth        = useAuthStore((s) => s.openAuth);
+  const { openAuth }        = useModal();
 
   const [page, setPage] = useState(1);
   const { data, isLoading, isFetching, isError, error, refetch } = usePurchaseHistory(page, 10, isAuthenticated);

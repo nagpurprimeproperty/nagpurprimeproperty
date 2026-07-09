@@ -16,11 +16,11 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera, User } from "lucide-react-native";
 import { toast } from "react-hot-toast/headless";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { useTheme } from "@/hooks/useTheme";
-import { useProfile, useUpdateProfileMutation } from "@/hooks/useProfileHook";
-import { useAuthStore } from "@/store/authStore";
+import { useProfile, useUpdateProfileMutation } from "@/features/profile";
+import { useAuthStore } from "@/features/auth";
 
 export default function EditProfileScreen() {
   const { colors } = useTheme();

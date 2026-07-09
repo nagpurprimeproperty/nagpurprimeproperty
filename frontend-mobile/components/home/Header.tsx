@@ -1,6 +1,6 @@
-import { useTheme } from "@/hooks/useTheme";
-import { useUnreadCount } from "@/hooks/useNotification";
-import { useLocaltyStore } from "@/store/localtyStore";
+﻿import { useTheme } from "@/hooks/useTheme";
+import { useUnreadCount } from "@/features/notification/hooks/useNotification";
+import { useLocalityStore } from "@/store/localityStore";
 import { router } from "expo-router";
 import { Bell, ChevronDown, MapPin, Search, SlidersHorizontal, X } from "lucide-react-native";
 import { Image } from "expo-image";
@@ -20,8 +20,8 @@ export default function Header() {
   const bellScale = useSharedValue(1);
   const { data: unreadCount = 0 } = useUnreadCount();
 
-  const selectedLocality = useLocaltyStore((s) => s.selectedLocality);
-  const setSelectedLocality = useLocaltyStore((s) => s.setSelectedLocality);
+  const selectedLocality = useLocalityStore((s) => s.selectedLocality);
+  const setSelectedLocality = useLocalityStore((s) => s.setSelectedLocality);
 
   const bellAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: bellScale.value }],

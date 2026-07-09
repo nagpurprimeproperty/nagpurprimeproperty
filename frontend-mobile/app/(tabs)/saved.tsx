@@ -10,15 +10,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
-import SectionDivider from "@/components/common/SectionDivider";
-import PropertyCard from "@/components/property/PropertyCard";
-import { useProperties, useTogglePropertySave, useCreateCallEnquiry } from "@/hooks/usePropertyHook";
-import { useAuthStore } from "@/store/authStore";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
+import SectionDivider from "@/shared/components/SectionDivider";
+import {
+  PropertyCard,
+  useProperties,
+  useTogglePropertySave,
+  useCreateCallEnquiry,
+} from "@/features/property";
+import { useAuthStore } from "@/features/auth";
+import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
-import { usePagination } from "@/hooks/usePagination";
-import LoadMoreButton from "@/components/common/LoadMoreButton";
+import { usePagination } from "@/shared/hooks/usePagination";
+import LoadMoreButton from "@/shared/components/LoadMoreButton";
 import PropertyCardSkeleton from "@/components/skeleton/PropertyCardSkeleton";
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -27,7 +32,7 @@ export default function SavedScreen() {
   const insets = useSafeAreaInsets();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthStore((s) => s.isHydrated);
-  const openAuth = useAuthStore((s) => s.openAuth);
+  const { openAuth } = useModal();
 
   const [page, setPage] = useState(1);
   const { mutate: toggleSave } = useTogglePropertySave();

@@ -1,7 +1,7 @@
-import { Text, View } from "react-native";
+﻿import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import SectionHeader from "../common/SectionHeader";
-import PropertyList from "../property/PropertyList";
+import SectionHeader from "@/shared/components/SectionHeader";
+import PropertyList from "@/features/property/components/PropertyList";
 import { memo } from "react";
 
 const RecommendedSection = memo(function RecommendedSection({

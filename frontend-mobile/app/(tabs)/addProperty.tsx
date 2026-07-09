@@ -5,11 +5,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'react-hot-toast/headless';
 
-import { useAddPropertyStore } from '@/store/addPropertyStore';
-import { useAuthStore } from '@/store/authStore';
+import { usePropertyWizardStore } from '@/store/propertyWizardStore';
+import { usePropertyUploadStore } from '@/store/propertyUploadStore';
+import { useAuthStore } from '@/features/auth';
+import { useModal } from '@/context/ModalContext';
 import { uploadFile } from '@/services/uploadService';
 import { validateState } from '@/lib/validation';
-import { useCreateMyProperty, useUpdateMyProperty } from '@/hooks/usePropertyHook';
+import { useCreateMyProperty, useUpdateMyProperty } from '@/features/property';
 import { useMySubscription } from '@/hooks/useSubscriptionHooks';
 import StepProgressBar from '@/components/addProperty/StepProgressBar';
 
@@ -64,15 +66,16 @@ const getPhaseForField = (field: string): string | null => {
 };
 
 export default function AddProperty() {
-  const wizardPhase = useAddPropertyStore((s) => s.wizardPhase);
-  const isSubmitting = useAddPropertyStore((s) => s.isSubmitting);
-  const setSubmitting = useAddPropertyStore((s) => s.setSubmitting);
-  const resetAll = useAddPropertyStore((s) => s.resetAll);
-  const goToPhase = useAddPropertyStore((s) => s.goToPhase);
-  const editingPropertyId = useAddPropertyStore((s) => s.editingPropertyId);
+  const wizardPhase = usePropertyWizardStore((s) => s.wizardPhase);
+  const isSubmitting = usePropertyWizardStore((s) => s.isSubmitting);
+  const setSubmitting = usePropertyWizardStore((s) => s.setSubmitting);
+  const resetAll = usePropertyWizardStore((s) => s.resetAll);
+  const resetUploadCache = usePropertyUploadStore((s) => s.resetUploadCache);
+  const goToPhase = usePropertyWizardStore((s) => s.goToPhase);
+  const editingPropertyId = usePropertyWizardStore((s) => s.editingPropertyId);
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuth = useAuthStore((s) => s.openAuth);
+  const { openAuth } = useModal();
 
   const insets = useSafeAreaInsets();
   const topInset = insets?.top ?? 0;
@@ -106,11 +109,11 @@ export default function AddProperty() {
   // ── ALL hooks must be declared unconditionally before any early return ────────
 
   const handleSubmit = useCallback(async () => {
-    const state = useAddPropertyStore.getState();
+    const state = usePropertyWizardStore.getState();
     // Validate full wizard state using Zod + dynamic field rules
     const errors = validateState(state);
     if (Object.keys(errors).length > 0) {
-      useAddPropertyStore.getState().setErrors(errors);
+      usePropertyWizardStore.getState().setErrors(errors);
       const first = Object.entries(errors)[0];
       toast.error(first[1] as string);
       return;
@@ -118,7 +121,7 @@ export default function AddProperty() {
 
     setSubmitting(true);
     try {
-      const { uploadCache } = useAddPropertyStore.getState();
+      const { uploadCache } = usePropertyUploadStore.getState();
 
       // 1. Resolve photo URLs: use cached CDN URL if already uploaded, else upload now
       const uploadedUrls = await Promise.all(
@@ -156,6 +159,7 @@ export default function AddProperty() {
             : 'Your property listing has been published successfully.'
         );
         resetAll();
+        resetUploadCache();
         router.push('/(myListing)/myProperties' as any);
       } else {
         throw new Error('Listing submission returned unsuccessful status');
@@ -183,7 +187,7 @@ export default function AddProperty() {
             }
           });
           if (Object.keys(apiErrors).length > 0) {
-            useAddPropertyStore.getState().setErrors(apiErrors);
+            usePropertyWizardStore.getState().setErrors(apiErrors);
             
             // Auto-navigate to the wizard step/phase containing the first error
             const firstField = data.errors.find((e: any) => e.field)?.field;
@@ -204,13 +208,14 @@ export default function AddProperty() {
     } finally {
       setSubmitting(false);
     }
-  }, [setSubmitting, resetAll, router, createMutation, updateMutation]);
+  }, [setSubmitting, resetAll, resetUploadCache, router, createMutation, updateMutation]);
 
   const handleBack = useCallback(() => {
     switch (wizardPhase) {
       case 'listed_by': {
-        const origin = useAddPropertyStore.getState().editOrigin;
+        const origin = usePropertyWizardStore.getState().editOrigin;
         resetAll();
+        resetUploadCache();
         if (origin) {
           router.push(origin as any);
         } else {
@@ -246,10 +251,11 @@ export default function AddProperty() {
         goToPhase('pricing');
         break;
       case 'review': {
-        const editId = useAddPropertyStore.getState().editingPropertyId;
+        const editId = usePropertyWizardStore.getState().editingPropertyId;
         if (editId) {
-          const origin = useAddPropertyStore.getState().editOrigin;
+          const origin = usePropertyWizardStore.getState().editOrigin;
           resetAll();
+          resetUploadCache();
           if (origin) {
             router.push(origin as any);
           } else {
@@ -263,7 +269,7 @@ export default function AddProperty() {
       default:
         break;
     }
-  }, [wizardPhase, goToPhase, router, resetAll]);
+  }, [wizardPhase, goToPhase, router, resetAll, resetUploadCache]);
 
   // Android hardware back button — must be registered unconditionally
   useEffect(() => {
@@ -408,7 +414,7 @@ export default function AddProperty() {
 
   // 5. Normal wizard — render current phase
   const getListingCategoryLabel = () => {
-    const category = useAddPropertyStore.getState().step1.listingCategory;
+    const category = usePropertyWizardStore.getState().step1.listingCategory;
     if (category === 'resale') return 'Resale';
     if (category === 'rental') return 'Rental';
     if (category === 'new') return 'New project';

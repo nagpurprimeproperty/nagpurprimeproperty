@@ -10,7 +10,7 @@ export default function MyEnquiriesLayout() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Stack.Screen name="enquiries" />
+      <Stack.Screen name="enquiries/index" />
       <Stack.Screen name="enquiries/[id]" />
     </Stack>
 

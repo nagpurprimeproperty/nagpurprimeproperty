@@ -22,21 +22,26 @@ const AnimatedFlashList = Animated.createAnimatedComponent(FlashList) as any;
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 
-import ScreenWrapper    from "@/components/common/ScreenWrapper";
-import SectionDivider   from "@/components/common/SectionDivider";
-import PropertyCard     from "@/components/property/PropertyCard";
+import ScreenWrapper    from "@/shared/components/ScreenWrapper";
+import SectionDivider   from "@/shared/components/SectionDivider";
+import {
+  PropertyCard,
+  useProperties,
+  useSearchSuggestions,
+  useTogglePropertySave,
+  useCreateCallEnquiry,
+  type SearchSuggestion,
+} from "@/features/property";
 import { FilterModal }  from "@/components/search/FilterModal";
-import { usePagination } from "@/hooks/usePagination";
+import { usePagination } from "@/shared/hooks/usePagination";
 import { SearchHeader } from "@/components/search/SearchHeader";
-import { useProperties, useSearchSuggestions, useTogglePropertySave, useCreateCallEnquiry } from "@/hooks/usePropertyHook";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/features/auth";
 import colors           from "@/theme/colors";
-import ScreenHeader     from "@/components/common/ScreenHeader";
+import ScreenHeader     from "@/shared/components/ScreenHeader";
 import { useTheme }     from "@/hooks/useTheme";
-import { useDebounce }  from "@/hooks/useDebounce";
+import { useDebounce }  from "@/shared/hooks/useDebounce";
 import SearchScreenSkeleton from "@/components/skeleton/SearchScreenSkeleton";
-import Shimmer          from "@/components/common/Shimmer";
-import type { SearchSuggestion } from "@/services/propertyService";
+import Shimmer          from "@/shared/components/Shimmer";
 
 // ── Type maps ─────────────────────────────────────────────────────────────────
 const API_TO_CHIP: Record<string, string> = {

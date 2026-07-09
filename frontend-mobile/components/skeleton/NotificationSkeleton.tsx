@@ -1,6 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { View } from "react-native";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 
 interface NotificationSkeletonProps {
   count?: number;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Linking, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -12,9 +12,9 @@ import {
 } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
-import SectionDivider from "@/components/common/SectionDivider";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
+import SectionDivider from "@/shared/components/SectionDivider";
 import colors from "@/theme/colors";
 import { useContactUs } from "@/hooks/useSupportAndLegalHooks";
 import type { FAQ } from "@/services/supportAndLegalService";

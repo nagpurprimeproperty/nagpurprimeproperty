@@ -24,10 +24,11 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { useMySubscription } from "@/hooks/useSubscriptionHooks";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/features/auth";
+import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -144,7 +145,7 @@ export default function MySubscriptionScreen() {
   const router          = useRouter();
   const insets          = useSafeAreaInsets();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuth        = useAuthStore((s) => s.openAuth);
+  const { openAuth }        = useModal();
 
   const { data, isLoading, isError, error, refetch } = useMySubscription(isAuthenticated);
   const sub = data?.data;
