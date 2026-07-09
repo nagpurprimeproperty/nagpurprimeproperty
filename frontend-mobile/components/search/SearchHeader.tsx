@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useTheme } from "@/hooks/useTheme";
-import { SearchSuggestion } from "@/services/propertyService";
+import { SearchSuggestion } from "@/features/property/services/propertyService";
 import { SearchInput } from "./SearchInput";
 
 type SearchHeaderProps = {

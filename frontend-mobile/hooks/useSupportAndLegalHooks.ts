@@ -8,6 +8,7 @@ import {
   type ContactUsContent,
   type StaticPageResponse,
 } from "@/services/supportAndLegalService";
+import { staticPageKeys } from "@/api/keys/staticPageKeys";
 
 // ─── Stale time: 1 hour — static pages don't change often ────────────────────
 const STALE_TIME = 60 * 60 * 1000;
@@ -16,7 +17,7 @@ const STALE_TIME = 60 * 60 * 1000;
 
 export const usePrivacyPolicy = () =>
   useQuery<StaticPageResponse<string>, Error>({
-    queryKey: ["static-pages", "privacy-policy"],
+    queryKey: staticPageKeys.privacyPolicy(),
     queryFn: getPrivacyPolicy,
     staleTime: STALE_TIME,
   });
@@ -25,7 +26,7 @@ export const usePrivacyPolicy = () =>
 
 export const useTermsAndConditions = () =>
   useQuery<StaticPageResponse<string>, Error>({
-    queryKey: ["static-pages", "terms-and-conditions"],
+    queryKey: staticPageKeys.termsAndConditions(),
     queryFn: getTermsAndConditions,
     staleTime: STALE_TIME,
   });
@@ -34,7 +35,7 @@ export const useTermsAndConditions = () =>
 
 export const useAboutUs = () =>
   useQuery<StaticPageResponse<AboutUsContent>, Error>({
-    queryKey: ["static-pages", "about-us"],
+    queryKey: staticPageKeys.aboutUs(),
     queryFn: getAboutUs,
     staleTime: STALE_TIME,
   });
@@ -43,7 +44,7 @@ export const useAboutUs = () =>
 
 export const useContactUs = () =>
   useQuery<StaticPageResponse<ContactUsContent>, Error>({
-    queryKey: ["static-pages", "contact-us"],
+    queryKey: staticPageKeys.contactUs(),
     queryFn: getContactUs,
     staleTime: STALE_TIME,
   });

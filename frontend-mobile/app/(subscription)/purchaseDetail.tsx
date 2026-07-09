@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   View,
   Text,
@@ -23,8 +23,8 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useLocalSearchParams } from "expo-router";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { usePurchaseDetail } from "@/hooks/useSubscriptionHooks";
 import colors from "@/theme/colors";
 

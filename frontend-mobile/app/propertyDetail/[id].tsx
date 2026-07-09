@@ -1,10 +1,18 @@
-import PropertyList from "@/components/property/PropertyList";
-import { usePropertyDetail, useSimilarProperties, useTogglePropertySave, useCreatePropertyEnquiry, useCreateCallEnquiry, useDeleteMyProperty } from "@/hooks/usePropertyHook";
-import { useAuthStore } from "@/store/authStore";
+import {
+  PropertyList,
+  usePropertyDetail,
+  useSimilarProperties,
+  useTogglePropertySave,
+  useCreatePropertyEnquiry,
+  useCreateCallEnquiry,
+  useDeleteMyProperty,
+} from "@/features/property";
+import { useAuthStore } from "@/features/auth";
+import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
 import { apiClient } from "@/api/apiClient";
 import { useAddPropertyStore } from "@/store/addPropertyStore";
-import ConfirmationOverlay from "@/components/ui/ConformationOverlay";
+import ConfirmationOverlay from "@/shared/components/ui/ConfirmationOverlay";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,8 +45,8 @@ import {
   CircleDollarSign,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import ScreenHeader from "@/components/common/ScreenHeader";
-import Shimmer from "@/components/common/Shimmer";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import Shimmer from "@/shared/components/Shimmer";
 import {
   Dimensions,
   FlatList,
@@ -58,7 +66,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import BackHeader from "@/components/common/BackHeader";
+import BackHeader from "@/shared/components/BackHeader";
 import { toast } from 'react-hot-toast/headless';
 import { useNavigationState, useIsFocused } from "@react-navigation/native";
 
@@ -814,7 +822,7 @@ export default function PropertyDetailsScreen() {
   const insets = useSafeAreaInsets();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isAuthHydrated = useAuthStore((s) => s.isHydrated);
-  const openAuth = useAuthStore((s) => s.openAuth);
+  const { openAuth } = useModal();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);

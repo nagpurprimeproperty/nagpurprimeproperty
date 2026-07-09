@@ -1,6 +1,6 @@
-import Animated, { FadeInDown } from "react-native-reanimated";
-import SectionHeader from "../common/SectionHeader";
-import PropertyList from "../property/PropertyList";
+﻿import Animated, { FadeInDown } from "react-native-reanimated";
+import SectionHeader from "@/shared/components/SectionHeader";
+import PropertyList from "@/features/property/components/PropertyList";
 import { router } from "expo-router";
 
 type Props = {

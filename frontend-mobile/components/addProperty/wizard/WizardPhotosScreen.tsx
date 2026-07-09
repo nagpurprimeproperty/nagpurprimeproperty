@@ -13,7 +13,8 @@ import {
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { useAddPropertyStore, PREDEFINED_AMENITIES } from '@/store/addPropertyStore';
+import { usePropertyWizardStore, PREDEFINED_AMENITIES } from '@/store/propertyWizardStore';
+import { usePropertyUploadStore } from '@/store/propertyUploadStore';
 import { uploadFile } from '@/services/uploadService';
 import { toast } from 'react-hot-toast/headless';
 import { validateStepPhotos } from '@/lib/validation';
@@ -69,21 +70,27 @@ async function requestCameraPermission() {
 }
 
 export default function WizardPhotosScreen() {
-  const store = useAddPropertyStore();
+  const store = usePropertyWizardStore();
   const step5 = store.step5;
   const errors = store.errors;
   const addPhoto = store.addPhoto;
-  const removePhoto = store.removePhoto;
   const reorderPhotos = store.reorderPhotos;
   const setErrors = store.setErrors;
   const goToPhase = store.goToPhase;
   const updateStep5 = store.updateStep5;
 
   // ── Eager upload cache ─────────────────────────────────────────────────────────
-  const uploadCache           = store.uploadCache;
-  const setUploadedPhotoUrl   = store.setUploadedPhotoUrl;
-  const setUploadedVideoUrl   = store.setUploadedVideoUrl;
-  const setUploadingMedia     = store.setUploadingMedia;
+  const uploadCache           = usePropertyUploadStore((s) => s.uploadCache);
+  const setUploadedPhotoUrl   = usePropertyUploadStore((s) => s.setUploadedPhotoUrl);
+  const setUploadedVideoUrl   = usePropertyUploadStore((s) => s.setUploadedVideoUrl);
+  const setUploadingMedia     = usePropertyUploadStore((s) => s.setUploadingMedia);
+  const removeUploadedPhotoUrl = usePropertyUploadStore((s) => s.removeUploadedPhotoUrl);
+
+  // removePhoto must purge both stores atomically
+  const removePhoto = (uri: string) => {
+    store.removePhoto(uri);
+    removeUploadedPhotoUrl(uri);
+  };
 
   // Local set of URIs currently being uploaded (for per-card spinner)
   const [uploadingUris, setUploadingUris] = useState<Set<string>>(new Set());

@@ -22,10 +22,10 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { usePlans, useMySubscription } from "@/hooks/useSubscriptionHooks";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/features/auth";
 import colors from "@/theme/colors";
 import type { SubscriptionPlan } from "@/services/subscriptionService";
 

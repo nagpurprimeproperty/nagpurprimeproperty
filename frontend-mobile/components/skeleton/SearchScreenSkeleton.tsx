@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const H_PAD = 12;

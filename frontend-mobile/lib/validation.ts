@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { getStep3Fields, getStep4Fields } from './fieldMatrix';
-import type { AddPropertyStore } from '../store/addPropertyStore';
+import type { PropertyWizardStore } from '../store/propertyWizardStore';
 
 // ─── Modular Step Schemas ──────────────────────────────────────────────────────
 
@@ -349,7 +349,7 @@ export function validateStepPhotos(photos: string[]) {
 
 // ─── Legacy / Full Validation compatibility ────────────────────────────────────
 
-export function validateState(state: ReturnType<typeof import('../store/addPropertyStore').useAddPropertyStore.getState>) {
+export function validateState(state: ReturnType<typeof import('../store/propertyWizardStore').usePropertyWizardStore.getState>) {
   const errors: Record<string, string> = {};
 
   // Step 0 Listed By

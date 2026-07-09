@@ -1,13 +1,13 @@
-import { useTheme } from "@/hooks/useTheme";
-import { usePopularLocalities } from "@/hooks/useLocaltyHook";
-import { useLocaltyStore } from "@/store/localtyStore";
+﻿import { useTheme } from "@/hooks/useTheme";
+import { usePopularLocalities } from "@/hooks/useLocalityHook";
+import { useLocalityStore } from "@/store/localityStore";
 import { router } from "expo-router";
 import { FlatList, Text, View, Pressable, ScrollView } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import SectionDivider from "../common/SectionDivider";
-import SectionHeader from "../common/SectionHeader";
+import SectionDivider from "@/shared/components/SectionDivider";
+import SectionHeader from "@/shared/components/SectionHeader";
 import { MapPin, Building2, Home, Store, Compass, Navigation, Check } from "lucide-react-native";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -64,7 +64,7 @@ const FALLBACK_LOCALITIES = [
 export default function TrendingLocalitiesSection({ enabled = true }: { enabled?: boolean }) {
   const { colors } = useTheme();
   const { data: apiResponse, isLoading } = usePopularLocalities(enabled);
-  const selectedLocality = useLocaltyStore((s) => s.selectedLocality);
+  const selectedLocality = useLocalityStore((s) => s.selectedLocality);
 
   const rawLocalities = apiResponse?.data && apiResponse.data.length > 0
     ? apiResponse.data
@@ -80,9 +80,9 @@ export default function TrendingLocalitiesSection({ enabled = true }: { enabled?
 
   const handleCardPress = async (item: any) => {
     if (selectedLocality === item.locality) {
-      await useLocaltyStore.getState().setSelectedLocality(null);
+      await useLocalityStore.getState().setSelectedLocality(null);
     } else {
-      await useLocaltyStore.getState().setSelectedLocality(
+      await useLocalityStore.getState().setSelectedLocality(
         item.locality,
         item.latitude,
         item.longitude

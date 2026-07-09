@@ -1,6 +1,7 @@
-import { useTheme } from "@/hooks/useTheme";
-import { useTogglePropertySave } from "@/hooks/usePropertyHook";
-import { useAuthStore } from "@/store/authStore";
+﻿import { useTheme } from "@/hooks/useTheme";
+import { useTogglePropertySave } from "@/features/property/hooks/useTogglePropertySave";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useModal } from "@/context/ModalContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -66,7 +67,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 function FeaturedHeartButton({ item }: { item: any }) {
   const { colors } = useTheme();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openAuth = useAuthStore((s) => s.openAuth);
+  const { openAuth } = useModal();
   const propertyId = typeof item.id === "string" ? item.id : item._id;
   const { mutate: toggleSave } = useTogglePropertySave(propertyId);
   const [liked, setLiked] = useState(Boolean(item.isSaved ?? item.isLiked));

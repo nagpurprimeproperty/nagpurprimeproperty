@@ -6,16 +6,17 @@ import {
   updateLeadStatus,
 } from "@/services/leadService";
 import type { LeadListResponse, LeadDetailResponse } from "@/services/leadService";
+import { leadKeys } from "@/api/keys/leadKeys";
 
 export const useLeads = (page = 1, limit = 10, enabled = true) => {
-  return useApiQuery<LeadListResponse>(["leads", page, limit], "/leads", {
+  return useApiQuery<LeadListResponse>(leadKeys.list(page, limit), "/leads", {
     params: { page, limit },
   }, enabled);
 };
 
 export const useLead = (id?: string, enabled = true) => {
   return useApiQuery<LeadDetailResponse>(
-    ["lead", id],
+    leadKeys.detail(id),
     id ? `/leads/${id}` : "",
     undefined,
     enabled && Boolean(id),
@@ -24,8 +25,8 @@ export const useLead = (id?: string, enabled = true) => {
 
 /**
  * Mutation that updates a lead's status and immediately refreshes:
- *  1. The individual lead detail query ["lead", id]
- *  2. The full leads list query ["leads", ...]
+ *  1. The individual lead detail query leadKeys.detail(id)
+ *  2. The full leads list query leadKeys.all
  *
  * Using refetchQueries (not just invalidateQueries) ensures the detail
  * screen reflects the new status right away, even if the query is
@@ -43,13 +44,13 @@ export const useUpdateLeadStatusMutation = (id?: string) => {
       // Immediately refetch the specific lead — forces detail page to update
       if (id) {
         queryClient.refetchQueries({
-          queryKey: ["lead", id],
+          queryKey: leadKeys.detail(id),
           exact: true,
         });
       }
       // Also invalidate the list so the status pill there is up to date
       queryClient.invalidateQueries({
-        queryKey: ["leads"],
+        queryKey: leadKeys.all,
         exact: false,
       });
     },

@@ -1,14 +1,15 @@
-import AuthModal from "@/components/auth/AuthModal";
-import NativeHotToast from "@/components/common/NativeHotToast";
-import NoInternetModal from "@/components/common/NoInternetModal";
+import { AuthModal } from "@/features/auth";
+import NativeHotToast from "@/shared/components/NativeHotToast";
+import NoInternetModal from "@/shared/components/NoInternetModal";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/api/queryClient";
+import { queryClient } from "@/config/queryClient";
 import { configureNotificationHandler, setupNotificationResponseListener } from "@/lib/pushNotifications";
 import { useSocket } from "@/hooks/useSocket";
+import { ModalProvider } from "@/context/ModalContext";
 import { useEffect, lazy, Suspense } from "react";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
@@ -47,11 +48,11 @@ function AppContent() {
   }, []);
 
   return (
-    <>
+    <ModalProvider>
       <Stack screenOptions={{ headerShown: false }} />
       <AuthModal />
       <NoInternetModal />
-    </>
+    </ModalProvider>
   );
 }
 

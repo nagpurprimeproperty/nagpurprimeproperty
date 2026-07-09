@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   FlatList,
   View,
@@ -21,13 +21,13 @@ import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import ScreenHeader from "@/components/common/ScreenHeader";
-import ScreenWrapper from "@/components/common/ScreenWrapper";
-import SectionDivider from "@/components/common/SectionDivider";
-import Shimmer from "@/components/common/Shimmer";
-import { usePopularLocalities } from "@/hooks/useLocaltyHook";
-import type { PopularLocalityItem } from "@/services/localtyService";
-import { useLocaltyStore } from "@/store/localtyStore";
+import ScreenHeader from "@/shared/components/ScreenHeader";
+import ScreenWrapper from "@/shared/components/ScreenWrapper";
+import SectionDivider from "@/shared/components/SectionDivider";
+import Shimmer from "@/shared/components/Shimmer";
+import { usePopularLocalities } from "@/hooks/useLocalityHook";
+import type { PopularLocalityItem } from "@/services/localityService";
+import { useLocalityStore } from "@/store/localityStore";
 import colors from "@/theme/colors";
 import { toast } from 'react-hot-toast/headless';
 
@@ -37,10 +37,10 @@ export default function SetLocationScreen() {
   const [loading, setLoading] = useState(false);
 
   // ─── Store ──────────────────────────────────────────────────────────────────
-  const selectedLocality = useLocaltyStore((s) => s.selectedLocality);
-  const setSelectedLocality = useLocaltyStore((s) => s.setSelectedLocality);
-  const cachedLocalities = useLocaltyStore((s) => s.popularLocalities);
-  const setPopularLocalities = useLocaltyStore((s) => s.setPopularLocalities);
+  const selectedLocality = useLocalityStore((s) => s.selectedLocality);
+  const setSelectedLocality = useLocalityStore((s) => s.setSelectedLocality);
+  const cachedLocalities = useLocalityStore((s) => s.popularLocalities);
+  const setPopularLocalities = useLocalityStore((s) => s.setPopularLocalities);
 
   // display the currently selected locality or default to "Nagpur"
   const [displayLocation, setDisplayLocation] = useState(

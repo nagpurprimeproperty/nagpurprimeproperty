@@ -1,6 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { View, StyleSheet } from "react-native";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 import colors from "@/theme/colors";
 
 interface PurchaseHistorySkeletonProps {

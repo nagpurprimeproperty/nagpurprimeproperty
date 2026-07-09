@@ -1,6 +1,6 @@
-import { View, ScrollView } from "react-native";
+﻿import { View, ScrollView } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
-import Shimmer from "@/components/common/Shimmer";
+import Shimmer from "@/shared/components/Shimmer";
 
 interface SkeletonBlockProps {
   width?: string | number;
