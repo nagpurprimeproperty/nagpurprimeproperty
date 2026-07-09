@@ -14,8 +14,8 @@ export default function manifest() {
     lang: 'en-IN',
     icons: [
       {
-        src: '/favico.jpeg',
-        sizes: '192x192',
+        src: '/android-chrome-512x512.jpeg',
+        sizes: '512x512',
         type: 'image/jpeg',
         purpose: 'any maskable',
       },

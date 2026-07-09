@@ -50,6 +50,18 @@ export const metadata = {
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32x32.jpeg', type: 'image/jpeg', sizes: '32x32' },
+      { url: '/favicon-16x16.jpeg', type: 'image/jpeg', sizes: '16x16' },
+    ],
+    apple: [
+      { url: '/apple-ico.jpeg', type: 'image/jpeg' },
+      { url: '/android-chrome-512x512.jpeg', type: 'image/jpeg', sizes: '512x512' },
+    ],
+    shortcut: '/favicon.ico',
+  },
   verification: {
     // google: 'your-google-search-console-verification-code', // Add when you have it
   },

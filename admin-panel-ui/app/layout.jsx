@@ -6,15 +6,15 @@ export const metadata = {
     generator: 'Next.js',
     icons: {
         icon: [
-            { url: '/logo.jpeg', type: 'image/jpeg', sizes: '32x32' },
-            { url: '/icon-light-32x3.jpeg', type: 'image/jpeg', sizes: '32x32' },
-            { url: '/icon-light-16x1.jpeg', type: 'image/jpeg', sizes: '16x16' },
-            { url: '/favico.jpeg',           type: 'image/jpeg' },
+            { url: '/favicon.ico', sizes: 'any' },
+            { url: '/favicon-32x32.jpeg', type: 'image/jpeg', sizes: '32x32' },
+            { url: '/favicon-16x16.jpeg', type: 'image/jpeg', sizes: '16x16' },
         ],
         apple: [
             { url: '/apple-ico.jpeg', type: 'image/jpeg' },
+            { url: '/android-chrome-512x512.jpeg', type: 'image/jpeg', sizes: '512x512' },
         ],
-        shortcut: '/logo.jpeg',
+        shortcut: '/favicon.ico',
     },
 };
 export default function RootLayout({ children, }) {
