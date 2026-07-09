@@ -16,6 +16,7 @@ services:
     image: mongo:8
     ports:
       - '27017:27017'
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
 
   redis:
     image: redis:7-alpine
