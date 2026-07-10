@@ -7,6 +7,7 @@ import { FloatingWhatsApp, MobileBottomBar } from '@/components/site/MobileBotto
 import { Toaster } from '@/components/ui/sonner'
 import QueryProvider from '@/providers/QueryProvider'
 import dynamic from 'next/dynamic'
+import { headers } from 'next/headers'
 
 const AuthModal = dynamic(() => import('@/components/site/AuthModal').then((mod) => mod.AuthModal))
 
@@ -67,20 +68,31 @@ export const metadata = {
   },
 }
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const isSpecialPage = pathname === '/coming-soon' || pathname === '/maintenance';
+
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body>
         <QueryProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1 pb-20 md:pb-0">{children}</main>
-            <Footer />
-            <MobileBottomBar />
-            <FloatingWhatsApp />
-            <AuthModal />
-            <Toaster />
-          </div>
+          {isSpecialPage ? (
+            <div className="flex min-h-screen flex-col">
+              <main className="flex-1">{children}</main>
+              <Toaster />
+            </div>
+          ) : (
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1 pb-20 md:pb-0">{children}</main>
+              <Footer />
+              <MobileBottomBar />
+              <FloatingWhatsApp />
+              <AuthModal />
+              <Toaster />
+            </div>
+          )}
         </QueryProvider>
       </body>
     </html>
