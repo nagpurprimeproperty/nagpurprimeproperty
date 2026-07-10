@@ -7,6 +7,10 @@ import { FloatingWhatsApp, MobileBottomBar } from '@/components/site/MobileBotto
 import { Toaster } from '@/components/ui/sonner'
 import QueryProvider from '@/providers/QueryProvider'
 import dynamic from 'next/dynamic'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import connectDB from '@/server/src/config/db.js'
+import Setting from '@/server/src/models/setting.model.js'
 
 const AuthModal = dynamic(() => import('@/components/site/AuthModal').then((mod) => mod.AuthModal))
 
@@ -67,7 +71,41 @@ export const metadata = {
   },
 }
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+
+  const isBypass = pathname.startsWith('/api') || 
+                   pathname.startsWith('/_next') || 
+                   pathname.startsWith('/favicon.ico') || 
+                   pathname.includes('.');
+
+  let settings = null;
+  if (!isBypass) {
+    try {
+      await connectDB();
+      settings = await Setting.findOne({ key: 'system_settings' }).lean();
+    } catch (err) {
+      console.error('[RootLayout] Settings check failed:', err.message);
+    }
+  }
+
+  if (settings) {
+    if (settings.isMaintenanceMode) {
+      if (pathname !== '/maintenance') {
+        redirect('/maintenance');
+      }
+    } else if (settings.isComingSoonMode) {
+      if (pathname !== '/coming-soon') {
+        redirect('/coming-soon');
+      }
+    } else {
+      if (pathname === '/maintenance' || pathname === '/coming-soon') {
+        redirect('/');
+      }
+    }
+  }
+
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body>
