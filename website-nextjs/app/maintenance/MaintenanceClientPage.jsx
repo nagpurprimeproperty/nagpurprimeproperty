@@ -117,8 +117,8 @@ export default function MaintenanceClientPage({ settings }) {
 
                     {/* EXPECTED LIVE TIME */}
                     {liveAtFormatted && (
-                        <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-6 py-2.5 text-sm font-medium text-primary shadow-[var(--shadow-soft)]">
-                            <Calendar className="h-4 w-4 text-primary" />
+                        <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-amber-200/50 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-950/40 px-6 py-2.5 text-sm font-medium text-amber-800 dark:text-amber-300 shadow-[var(--shadow-soft)]">
+                            <Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                             <span>Estimated completion: <strong>{liveAtFormatted}</strong></span>
                         </div>
                     )}

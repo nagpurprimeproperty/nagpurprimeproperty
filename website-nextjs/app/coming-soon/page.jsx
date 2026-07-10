@@ -124,7 +124,7 @@ export default function ComingSoonPage() {
                 Contact Us
               </a>
             </div>
-            <div className="mt-10 flex items-center gap-6 text-sm text-[var(--muted-foreground)]">
+            <div className="mt-10 flex items-center gap-6 text-sm text-[var(--foreground)]/70">
               <div><span className="font-display text-2xl font-bold text-[var(--foreground)]">500+</span><div>Properties soon</div></div>
               <div className="h-10 w-px bg-[var(--border)]" />
               <div><span className="font-display text-2xl font-bold text-[var(--foreground)]">50+</span><div>Trusted brokers</div></div>
