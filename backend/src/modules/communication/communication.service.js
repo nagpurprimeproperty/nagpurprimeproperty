@@ -93,14 +93,39 @@ const communicationService = {
       metadata: { ...metadata, data },
     });
 
-    // TODO: Integrate with firebase-admin messaging
-    log.status = 'failed';
-    log.failedAt = new Date();
-    log.errorMessage = 'Push notification integration not configured';
-    await log.save();
-    const err = new Error('Push notification integration not configured');
-    err.status = 503;
-    throw err;
+    try {
+      const { getMessaging } = await import('../../config/firebase.js');
+      const messaging = getMessaging();
+      await messaging.send({
+        token: fcmToken,
+        notification: { title, body },
+        data: Object.keys(data).reduce((acc, key) => {
+          acc[key] = String(data[key]);
+          return acc;
+        }, {}),
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'default',
+            sound: 'default'
+          }
+        },
+        apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
+      });
+      log.status = 'sent';
+      log.sentAt = new Date();
+      await log.save();
+      return { success: true, logId: log._id };
+    } catch (error) {
+      log.status = 'failed';
+      log.failedAt = new Date();
+      log.errorMessage = error?.message ? String(error.message).slice(0, 500) : 'FCM service failure';
+      await log.save();
+      const err = new Error('Failed to send push notification');
+      err.status = 500;
+      err.cause = error;
+      throw err;
+    }
   },
 
   /**

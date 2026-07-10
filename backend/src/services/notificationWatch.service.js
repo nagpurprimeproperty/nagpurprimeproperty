@@ -178,7 +178,13 @@ const sendFCM = async (token, { title, message, type, userId }) => {
       token,
       notification: { title, body: message },
       data: { type: String(type || 'info') },
-      android: { priority: 'high' },
+      android: { 
+        priority: 'high',
+        notification: {
+          channelId: 'default',
+          sound: 'default'
+        }
+      },
       apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
     });
   } catch (err) {

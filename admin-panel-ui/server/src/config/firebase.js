@@ -16,11 +16,15 @@ const initFirebase = () => {
         console.log('Firebase initialized (service account)');
       } 
       else if (env.FIREBASE_PROJECT_ID && env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY) {
+        let rawPrivateKey = env.FIREBASE_PRIVATE_KEY.trim();
+        if (rawPrivateKey.startsWith('"') && rawPrivateKey.endsWith('"')) {
+          rawPrivateKey = rawPrivateKey.slice(1, -1);
+        }
         firebaseApp = admin.initializeApp({
           credential: admin.credential.cert({
             projectId:   env.FIREBASE_PROJECT_ID,
             clientEmail: env.FIREBASE_CLIENT_EMAIL,
-            privateKey:  env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            privateKey:  rawPrivateKey.replace(/\\n/g, '\n'),
           }),
         });
 
