@@ -80,7 +80,7 @@ services:
       context: ./admin-panel-ui
       dockerfile: dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.nagpurprimeproperty.com}
+        - NEXT_PUBLIC_API_URL=/api
         - NEXT_PUBLIC_GOOGLE_MAPS_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_KEY}
         - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL:-https://nagpurprimeproperty.com}
         - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://admin.nagpurprimeproperty.com}
