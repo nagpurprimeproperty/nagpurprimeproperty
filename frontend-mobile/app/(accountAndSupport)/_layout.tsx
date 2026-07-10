@@ -11,10 +11,11 @@ export default function AccountSupportLayout() {
       }}
     >
       <Stack.Screen name="termsAndConditions" />
-        <Stack.Screen name="about" />
-        <Stack.Screen name="privacy" />
-        {/* <Stack.Screen name="contact" /> */}
-        <Stack.Screen name="helpAndSupport" />
+      <Stack.Screen name="about" />
+      <Stack.Screen name="privacy" />
+      {/* <Stack.Screen name="contact" /> */}
+      <Stack.Screen name="helpAndSupport" />
+      <Stack.Screen name="deleteAccount" />
     </Stack>
 
   );

@@ -272,3 +272,8 @@ export const updateProfile = async (data: ProfileUpdatePayload) => {
   const formData = await buildProfileFormData(data);
   return submitProfileFormData(requestUrl, token, data, formData);
 };
+
+export const deleteProfile = async (): Promise<{ success: boolean; message: string }> => {
+  const response = await apiClient.delete<{ success: boolean; message: string }>("/profile");
+  return response.data;
+};
