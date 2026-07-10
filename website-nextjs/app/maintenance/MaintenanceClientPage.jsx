@@ -97,7 +97,7 @@ export default function MaintenanceClientPage({ settings }) {
                         {settings.maintenanceTitle || "Under Maintenance"}
                     </h1>
                     
-                    <p className="mt-4 text-lg text-[var(--muted-foreground)] max-w-xl mx-auto leading-relaxed">
+                    <p className="mt-4 text-lg text-[var(--foreground)]/80 max-w-xl mx-auto leading-relaxed">
                         We're currently polishing the engine and updating listings to serve you better. We'll be back online in just a bit.
                     </p>
 
@@ -109,7 +109,7 @@ export default function MaintenanceClientPage({ settings }) {
                                 <Info className="h-4.5 w-4.5" />
                                 What's coming in this update:
                             </h3>
-                            <p className="mt-2 text-sm text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">
+                            <p className="mt-2 text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap">
                                 {settings.maintenanceDescription}
                             </p>
                         </div>
@@ -117,7 +117,7 @@ export default function MaintenanceClientPage({ settings }) {
 
                     {/* EXPECTED LIVE TIME */}
                     {liveAtFormatted && (
-                        <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-6 py-2.5 text-sm font-medium text-[var(--accent-foreground)] shadow-[var(--shadow-soft)]">
+                        <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-6 py-2.5 text-sm font-medium text-primary shadow-[var(--shadow-soft)]">
                             <Calendar className="h-4 w-4 text-primary" />
                             <span>Estimated completion: <strong>{liveAtFormatted}</strong></span>
                         </div>

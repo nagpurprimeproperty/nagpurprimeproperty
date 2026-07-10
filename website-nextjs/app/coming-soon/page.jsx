@@ -56,7 +56,7 @@ export default function ComingSoonPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-primary/30">
       {/* UNDER DEVELOPMENT BANNER */}
-      <div className="relative z-50 bg-[var(--secondary)] text-[var(--secondary-foreground)] text-center py-2.5 px-4 text-sm font-medium border-b border-[var(--border)]/60">
+      <div className="relative z-50 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-center py-2.5 px-4 text-sm font-medium border-b border-amber-200/50 dark:border-amber-900/30">
         <span className="inline-flex items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -99,7 +99,7 @@ export default function ComingSoonPage() {
 
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-28 lg:pt-28 lg:pb-36 grid lg:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2.5 rounded-full border-2 border-primary/40 bg-primary/15 px-5 py-2 text-base font-semibold text-[var(--accent-foreground)] backdrop-blur shadow-[var(--shadow-soft)]">
+            <span className="inline-flex items-center gap-2.5 rounded-full border-2 border-primary/40 bg-primary/15 px-5 py-2 text-base font-semibold text-primary backdrop-blur shadow-[var(--shadow-soft)]">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-80"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
@@ -113,7 +113,7 @@ export default function ComingSoonPage() {
               </span>{" "}
               in Nagpur
             </h1>
-            <p className="mt-6 text-lg text-[var(--muted-foreground)] max-w-xl leading-relaxed">
+            <p className="mt-6 text-lg text-[var(--foreground)]/80 max-w-xl leading-relaxed">
               We're building a smarter way for brokers and buyers to explore, compare, and discover premium properties across Nagpur. <strong>Coming soon — join the waitlist.</strong>
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
@@ -314,17 +314,18 @@ export default function ComingSoonPage() {
       <footer className="border-t border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)]">
         <div className="mx-auto max-w-7xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-display font-bold">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[image:var(--gradient-primary)]">N</span>
+            <Image
+              src="/logo.jpeg"
+              alt="Nagpur Prime Property Logo"
+              width={32}
+              height={32}
+              className="rounded-lg object-cover"
+            />
             Nagpur Prime Property
           </div>
           <div className="text-sm text-[var(--secondary-foreground)]/70 text-center md:text-left">
             © 2026 Nagpur Prime Property. All rights reserved.
             <span className="block md:inline md:ml-2 text-primary/80 font-medium">Currently under development.</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-[var(--secondary-foreground)]/80">
-            <a href="#" className="hover:text-[var(--secondary-foreground)] transition">Privacy</a>
-            <a href="#" className="hover:text-[var(--secondary-foreground)] transition">Terms</a>
-            <a href="#contact" className="hover:text-[var(--secondary-foreground)] transition">Contact</a>
           </div>
         </div>
       </footer>
