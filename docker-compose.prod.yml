@@ -14,6 +14,11 @@ services:
       - mongo-data:/data/db
     networks:
       - npp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # 2. Redis Caching & Queue Service
   redis:
@@ -25,6 +30,11 @@ services:
       - redis-data:/data
     networks:
       - npp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # 3. Express API Backend
   backend:
@@ -47,6 +57,11 @@ services:
       - redis
     networks:
       - npp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # 4. Next.js Public Website
   website:
@@ -74,6 +89,11 @@ services:
       - redis
     networks:
       - npp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # 5. Next.js Admin Panel
   admin-panel:
@@ -107,6 +127,11 @@ services:
       - redis
     networks:
       - npp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   mongo-data:
