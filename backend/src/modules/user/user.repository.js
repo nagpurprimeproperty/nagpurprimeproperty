@@ -122,6 +122,11 @@ const userRepository = {
     };
     return  formattedStats;
   },
+
+  /**
+   * Delete a user by ID
+   */
+  deleteById: (id) => User.findByIdAndDelete(id),
 };
 
 export default userRepository;

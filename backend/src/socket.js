@@ -11,7 +11,23 @@ let io;
 const init = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()) : '*',
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+
+        if (env.NODE_ENV !== 'production') {
+          return callback(null, true);
+        }
+
+        const allowedOrigins = env.ALLOWED_ORIGINS
+          ? env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+          : [];
+
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+
+        return callback(new Error('Not allowed by CORS'));
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
