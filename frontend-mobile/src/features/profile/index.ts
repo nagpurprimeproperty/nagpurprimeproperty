@@ -5,7 +5,7 @@
  */
 
 // Hooks
-export { useProfile, useUpdateProfileMutation } from './hooks/useProfile';
+export { useProfile, useUpdateProfileMutation, useDeleteProfileMutation } from './hooks/useProfile';
 
 // Keys
 export { profileKeys } from './keys/profileKeys';

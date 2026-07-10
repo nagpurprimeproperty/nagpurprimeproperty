@@ -22,14 +22,24 @@ let socket: Socket | null = null;
  * Authenticates using the user's JWT token.
  * Safe to call multiple times — disconnects old socket first.
  */
-export const initSocket = (token: string): Socket => {
-  if (socket?.connected) {
+export const initSocket = (token: string): Socket | null => {
+  // Guard: don't attempt connection without a valid token
+  if (!token) {
+    if (__DEV__) {
+      console.warn('[Socket] initSocket called with empty token — skipping.');
+    }
+    return null;
+  }
+
+  // Disconnect any existing socket (connected OR reconnecting)
+  if (socket) {
     socket.disconnect();
+    socket = null;
   }
 
   socket = io(SOCKET_URL, {
     auth: { token },
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 10000,

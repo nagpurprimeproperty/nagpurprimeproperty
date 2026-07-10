@@ -71,3 +71,14 @@ export const getUserStats = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    await UserService.deleteUser(userId);
+    res.clearCookie('userToken');
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};

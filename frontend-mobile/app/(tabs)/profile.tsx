@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Star,
   User,
+  UserX,
   Users,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -365,7 +366,7 @@ export default function ProfileScreen() {
                   )}
 
                   <View
-                    className="absolute top-6 right-6 rounded-full px-2 py-1 border-2 border-white"
+                    className="absolute top-0 right-0 rounded-full px-2 py-1 border-2 border-white"
                     style={{ backgroundColor: isAuthenticated ? colors.success : colors.primary }}
                   >
                     <Text className="text-[8px] font-black text-white">
@@ -559,6 +560,15 @@ export default function ProfileScreen() {
                 onPress={() => router.push("/(accountAndSupport)/about")}
                 active={animationsTriggered}
               />
+              {isAuthenticated && (
+                <MenuItem
+                  icon={UserX}
+                  label="Delete Account"
+                  delay={430}
+                  onPress={() => router.push("/(accountAndSupport)/deleteAccount")}
+                  active={animationsTriggered}
+                />
+              )}
             </View>
           </>
         )}

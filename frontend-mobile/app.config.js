@@ -48,6 +48,7 @@ module.exports = ({ config }) => ({
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: "com.ayushbharne.nagpurPrimeProperty",
+    usesCleartextTraffic: true,
   },
   web: {
     bundler: "metro",

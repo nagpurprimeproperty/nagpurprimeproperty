@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore, type AuthUser } from "@/features/auth";
-import { getProfile, updateProfile, type ProfileUpdatePayload } from "@/features/profile/services/profileService";
+import { getProfile, updateProfile, deleteProfile, type ProfileUpdatePayload } from "@/features/profile/services/profileService";
 import { profileKeys } from "@/features/profile/keys/profileKeys";
+import { disconnectSocket } from "@/config/socket";
 
 export const useProfile = () => {
   const token = useAuthStore((state) => state.token);
@@ -43,6 +44,20 @@ export const useUpdateProfileMutation = () => {
       }
 
       queryClient.setQueryData(profileKeys.all, profile);
+    },
+  });
+};
+
+export const useDeleteProfileMutation = () => {
+  const queryClient = useQueryClient();
+  const logoutFromStore = useAuthStore((state) => state.logout);
+
+  return useMutation<{ success: boolean; message: string }, Error, void>({
+    mutationFn: async () => deleteProfile(),
+    onSuccess: () => {
+      disconnectSocket();
+      logoutFromStore();
+      queryClient.clear();
     },
   });
 };
