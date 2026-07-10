@@ -72,21 +72,21 @@ RUN addgroup --system --gid 1001 nodejs \
 # Install pnpm for prod dependencies installation
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Set workdir ownership
+RUN chown nextjs:nodejs /app
+
 # Copy files needed to install production dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
+COPY --chown=nextjs:nodejs package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 
 # Install only production dependencies
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy build artifacts and server files
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/server.js ./server.js
-COPY --from=builder /app/server ./server
-COPY --from=builder /app/next.config.mjs ./next.config.mjs
-
-# Set ownership to nextjs user
-RUN chown -R nextjs:nodejs /app
+# Copy build artifacts and server files with correct ownership
+COPY --chown=nextjs:nodejs --from=builder /app/.next ./.next
+COPY --chown=nextjs:nodejs --from=builder /app/public ./public
+COPY --chown=nextjs:nodejs --from=builder /app/server.js ./server.js
+COPY --chown=nextjs:nodejs --from=builder /app/server ./server
+COPY --chown=nextjs:nodejs --from=builder /app/next.config.mjs ./next.config.mjs
 
 USER nextjs
 
