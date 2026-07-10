@@ -16,6 +16,12 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use((response) => response, async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && typeof window !== 'undefined') {
+        const isAuthRoute = originalRequest.url?.includes('/auth/login') ||
+                            originalRequest.url?.includes('/auth/forgot-password') ||
+                            originalRequest.url?.includes('/auth/reset-password');
+        if (isAuthRoute) {
+            return Promise.reject(error);
+        }
         originalRequest._retry = true;
         if (isRefreshing) {
             return new Promise((resolve, reject) => {
