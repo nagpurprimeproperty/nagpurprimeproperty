@@ -68,6 +68,7 @@ services:
       - PORT=3000
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-production_secure_db_password_change_me}@mongo:27017/nagpur-property?authSource=admin&replicaSet=rs0
       - REDIS_URL=redis://default:${REDIS_PASSWORD:-production_secure_redis_password_change_me}@redis:6379
+      - ADMIN_API_URL=http://npp-admin:3000
     depends_on:
       - mongo
       - redis

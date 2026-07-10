@@ -1,17 +1,74 @@
 import { NextResponse } from 'next/server';
 
-export function middleware(req) {
+let cachedSettings = null;
+let lastFetched = 0;
+const CACHE_TTL = 5000; // 5-second cache to avoid query overload
+
+export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // Set x-pathname header so Server Components (like layouts) can know the current path
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set('x-pathname', pathname);
+  // Bypass static files, images, favicon, and API routes
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
+  // Use the admin container URL in production (e.g. http://npp-admin:3000), or localhost:3002 in dev
+  const adminApiBase = process.env.ADMIN_API_URL || 'http://127.0.0.1:3002';
+  const now = Date.now();
+  let settings = cachedSettings;
+
+  // Fetch settings from the Admin Panel's public settings API
+  if (!settings || (now - lastFetched > CACHE_TTL)) {
+    try {
+      const res = await fetch(`${adminApiBase}/api/v1/settings`, {
+        cache: 'no-store',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          settings = json.data;
+          cachedSettings = settings;
+          lastFetched = now;
+        }
+      }
+    } catch (err) {
+      console.error('[Middleware] Failed to fetch system settings from admin panel:', err.message);
     }
-  });
+  }
+
+  if (settings) {
+    // 1. Maintenance Mode takes precedence
+    if (settings.isMaintenanceMode) {
+      if (pathname !== '/maintenance') {
+        return NextResponse.redirect(new URL('/maintenance', req.url));
+      }
+      return NextResponse.next();
+    }
+
+    // 2. Coming Soon Mode
+    if (settings.isComingSoonMode) {
+      if (pathname !== '/coming-soon') {
+        return NextResponse.redirect(new URL('/coming-soon', req.url));
+      }
+      return NextResponse.next();
+    }
+  }
+
+  // If neither mode is active but the user explicitly lands on /maintenance or /coming-soon,
+  // redirect them to the home page.
+  if (pathname === '/maintenance' || pathname === '/coming-soon') {
+    return NextResponse.redirect(new URL('/', req.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
