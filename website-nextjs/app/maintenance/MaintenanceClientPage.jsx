@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react";
+import Image from "next/image";
+
 import { Wrench, Calendar, Bell, Sparkles, AlertTriangle, ArrowRight, ShieldCheck, Info } from "lucide-react";
 
 // ─── Format date cleanly ──────────────────────────────────────────────────────
@@ -61,9 +63,13 @@ export default function MaintenanceClientPage({ settings }) {
             <header className="border-b border-[var(--border)]/60 bg-[var(--background)]/50 backdrop-blur-xl sticky top-0 z-40">
                 <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2 font-display font-bold text-lg">
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-soft)]">
-                            N
-                        </span>
+                        <Image
+                            src="/logo.jpeg"
+                            alt="Nagpur Prime Property Logo"
+                            width={36}
+                            height={36}
+                            className="rounded-xl object-cover shadow-[var(--shadow-soft)]"
+                        />
                         <span>Nagpur Prime Property</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/30 px-3 py-1.5 rounded-full">

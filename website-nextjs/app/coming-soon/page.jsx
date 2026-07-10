@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react";
+import Image from "next/image";
+
 import {
   Home, MapPin, Bell, CheckCircle2, Wrench, Search, Building2, Clock,
   Phone, Mail, ArrowRight,
@@ -68,9 +70,13 @@ export default function ComingSoonPage() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[var(--background)]/70 border-b border-[var(--border)]/60">
         <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
           <a href="#" className="flex items-center gap-2 font-display font-bold text-lg">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-soft)]">
-              N
-            </span>
+            <Image
+              src="/logo.jpeg"
+              alt="Nagpur Prime Property Logo"
+              width={36}
+              height={36}
+              className="rounded-xl object-cover shadow-[var(--shadow-soft)]"
+            />
             <span>Nagpur Prime Property</span>
           </a>
           <nav className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-foreground)]">

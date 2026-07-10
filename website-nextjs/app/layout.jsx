@@ -7,7 +7,7 @@ import { FloatingWhatsApp, MobileBottomBar } from '@/components/site/MobileBotto
 import { Toaster } from '@/components/ui/sonner'
 import QueryProvider from '@/providers/QueryProvider'
 import dynamic from 'next/dynamic'
-import { headers } from 'next/headers'
+import HideOnComingSoon from '@/components/site/HideOnComingSoon'
 
 const AuthModal = dynamic(() => import('@/components/site/AuthModal').then((mod) => mod.AuthModal))
 
@@ -68,31 +68,24 @@ export const metadata = {
   },
 }
 
-export default async function RootLayout({ children }) {
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const isSpecialPage = pathname === '/coming-soon' || pathname === '/maintenance';
-
+export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body>
         <QueryProvider>
-          {isSpecialPage ? (
-            <div className="flex min-h-screen flex-col">
-              <main className="flex-1">{children}</main>
-              <Toaster />
-            </div>
-          ) : (
-            <div className="flex min-h-screen flex-col">
+          <div className="flex min-h-screen flex-col">
+            <HideOnComingSoon>
               <Header />
-              <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            </HideOnComingSoon>
+            <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            <HideOnComingSoon>
               <Footer />
               <MobileBottomBar />
               <FloatingWhatsApp />
               <AuthModal />
-              <Toaster />
-            </div>
-          )}
+            </HideOnComingSoon>
+            <Toaster />
+          </div>
         </QueryProvider>
       </body>
     </html>
