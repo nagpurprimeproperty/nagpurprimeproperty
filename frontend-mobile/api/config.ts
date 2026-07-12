@@ -21,4 +21,4 @@ const expoExtra = (Constants.expoConfig as
 export const API_BASE_URL: string =
   process.env.EXPO_PUBLIC_API_URL ||
   expoExtra?.EXPO_PUBLIC_API_URL ||
-  "https://nagpur-prime-property.onrender.com/api/v1";
+  "https://api.nagpurprimeproperty.com/api/v1";
