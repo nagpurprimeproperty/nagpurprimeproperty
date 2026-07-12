@@ -14,8 +14,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://nagpur-prime-property.onrender.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://nagpur-prime-property.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
+        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
         "GOOGLE_SERVICES_INFO_PLIST": "@GOOGLE_SERVICES_INFO_PLIST"
       }
@@ -23,8 +23,8 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://nagpur-prime-property.onrender.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://nagpur-prime-property.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
+        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
         "GOOGLE_SERVICES_INFO_PLIST": "@GOOGLE_SERVICES_INFO_PLIST"
       }

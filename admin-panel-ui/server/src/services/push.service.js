@@ -17,6 +17,14 @@ const pushService = {
           acc[key] = String(data[key]); // FCM requires string values
           return acc;
         }, {}),
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'default',
+            sound: 'default'
+          }
+        },
+        apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
       };
 
       const response = await messaging.send(message);
@@ -47,6 +55,14 @@ const pushService = {
           acc[key] = String(data[key]);
           return acc;
         }, {}),
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'default',
+            sound: 'default'
+          }
+        },
+        apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
       };
 
       const response = await messaging.sendMulticast(message);
@@ -78,6 +94,14 @@ const pushService = {
           acc[key] = String(data[key]);
           return acc;
         }, {}),
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'default',
+            sound: 'default'
+          }
+        },
+        apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
       };
 
       const response = await messaging.send(message);
