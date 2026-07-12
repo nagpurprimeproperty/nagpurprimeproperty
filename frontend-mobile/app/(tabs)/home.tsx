@@ -6,6 +6,8 @@ import ByBudgetSection from "@/components/home/ByBudgetSection";
 import TrendingLocalitiesSection from "@/components/home/TrendingLocalitiesSection";
 import CategoryTabs from "@/components/home/CategoryTabs";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
+import ExploreOptionsSection from "@/components/home/ExploreOptionsSection";
+import WhyChooseSection from "@/components/home/WhyChooseSection";
 import Header from "@/components/home/Header";
 import NearYouSection from "@/components/home/NearYouSection";
 import RecommendedSection from "@/components/home/RecommendedSection";
@@ -330,6 +332,9 @@ const HomeHeader = memo(function HomeHeader({
       {/* Featured Section */}
       {featuredData.length > 0 && <FeaturedCarousel data={featuredData} />}
 
+      {/* Explore Options — Buy / Rent / Sell */}
+      <ExploreOptionsSection />
+
       {/* Near You Section */}
       {nearYouData.length > 0 && (
         <NearYouSection
@@ -355,6 +360,9 @@ const HomeHeader = memo(function HomeHeader({
           <TrendingLocalitiesSection enabled={loadStage3} />
         </>
       )}
+
+      {/* Why Choose — always visible after recommendations */}
+      <WhyChooseSection />
       
       <View style={styles.sectionDivider}>
         <SectionDivider
