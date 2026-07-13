@@ -27,10 +27,16 @@ module.exports = ({ config }) => ({
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
-    supportsTablet: true,
-    bundleIdentifier: "com.ayushbharne.nagpurPrimeProperty",
-    googleServicesFile: process.env.GOOGLE_SERVICES_INFO_PLIST || "./GoogleService-Info.plist",
+  supportsTablet: true,
+  bundleIdentifier: "com.nagpurprimeproperty.app",
+  googleServicesFile:
+    process.env.GOOGLE_SERVICES_INFO_PLIST ||
+    "./GoogleService-Info.plist",
+
+  config: {
+    usesNonExemptEncryption: false,
   },
+},
   android: {
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
     adaptiveIcon: {
@@ -47,7 +53,7 @@ module.exports = ({ config }) => ({
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
-    package: "com.ayushbharne.nagpurPrimeProperty",
+    package: "com.nagpurprimeproperty.app",
     usesCleartextTraffic: true,
   },
   web: {

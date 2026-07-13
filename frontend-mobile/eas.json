@@ -1,3 +1,4 @@
+
 {
   "cli": {
     "version": ">= 18.9.1",
@@ -13,24 +14,14 @@
       "android": {
         "buildType": "apk"
       },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
-        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
-        "GOOGLE_SERVICES_INFO_PLIST": "@GOOGLE_SERVICES_INFO_PLIST"
-      }
+      "environment": "preview"
     },
     "production": {
       "autoIncrement": true,
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
-        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
-        "GOOGLE_SERVICES_INFO_PLIST": "@GOOGLE_SERVICES_INFO_PLIST"
-      }
+      "environment": "production"
     }
   },
   "submit": {
     "production": {}
   }
-}
+}
