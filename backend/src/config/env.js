@@ -1,12 +1,34 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 const envFile =
   process.env.NODE_ENV === 'production'
     ? '.env.production'
     : '.env.development';
 
-dotenv.config({ path: path.resolve(process.cwd(), envFile) });
+const searchPaths = [
+  path.resolve(process.cwd(), envFile),
+  path.resolve(process.cwd(), '..', envFile),
+  path.resolve(process.cwd(), '.env.production'),
+  path.resolve(process.cwd(), '..', '.env.production'),
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '..', '.env'),
+];
+
+let envLoaded = false;
+for (const p of searchPaths) {
+  if (fs.existsSync(p)) {
+    dotenv.config({ path: p });
+    console.log(`[Config] Loaded environment variables from: ${p}`);
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  console.warn('[Config] No environment file found. Using system environment variables.');
+}
 
 const required = (key, fallback) => {
   const value = process.env[key] ?? fallback;
