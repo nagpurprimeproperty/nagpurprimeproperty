@@ -16,20 +16,6 @@
 //   $env:GOOGLE_MAPS_API_KEY="AIza..."     # PowerShell / Windows
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Config plugin: sets android:usesCleartextTraffic="true" on <application>.
-// This allows HTTP (non-TLS) traffic to the dev/staging backend.
-// usesCleartextTraffic is a native Android attribute — it cannot be set
-// directly in the expo android config object (schema violation), so we
-// modify AndroidManifest.xml via the withAndroidManifest plugin API instead.
-const { withAndroidManifest } = require('@expo/config-plugins');
-
-const withCleartextTraffic = (config) =>
-  withAndroidManifest(config, (mod) => {
-    const app = mod.modResults.manifest.application[0];
-    app.$['android:usesCleartextTraffic'] = 'true';
-    return mod;
-  });
-
 module.exports = ({ config }) => ({
   ...config,
   name: "Nagpur Prime Property",
@@ -75,7 +61,17 @@ module.exports = ({ config }) => ({
     favicon: "./assets/images/favicon.png",
   },
   plugins: [
-    withCleartextTraffic,
+    [
+      "expo-build-properties",
+      {
+        android: {
+          // Allow HTTP (cleartext) traffic to dev/staging backend.
+          // usesCleartextTraffic cannot be set directly in the android config
+          // object (schema violation) — this is the correct Expo approach.
+          usesCleartextTraffic: true,
+        },
+      },
+    ],
     "expo-secure-store",
     "expo-router",
     [
