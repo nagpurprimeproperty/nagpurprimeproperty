@@ -74,5 +74,17 @@ export const verifyOTPSchema = z.object({
   fcmToken: z.string().nullable().optional(),
 });
 
-export const updateUserSchema = userBaseSchema
-  .partial()
+export const updateUserSchema = userBaseSchema.partial();
+
+export const requestDeletionSchema = z.object({
+  mobile: z
+    .string({ required_error: 'Mobile number is required' })
+    .regex(MOBILE_REGEX, MOBILE_REGEX_MESSAGE),
+});
+
+export const confirmDeletionSchema = z.object({
+  mobile: z
+    .string({ required_error: 'Mobile number is required' })
+    .regex(MOBILE_REGEX, MOBILE_REGEX_MESSAGE),
+  otp: z.string({ required_error: 'OTP is required' }).length(4, 'OTP must be 4 digits'),
+});
