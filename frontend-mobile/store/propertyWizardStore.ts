@@ -593,12 +593,20 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       pricing.lockInPeriod = lockInMap[pricing.lockInPeriod] || pricing.lockInPeriod.toLowerCase();
     }
 
+    // Map 'RERA Agent' → 'Broker' for backend compatibility
+    const listedByMap: Record<string, string> = {
+      'RERA Agent': 'Broker',
+    };
+    const propertyListedBy = s.step0.propertyListedBy
+      ? (listedByMap[s.step0.propertyListedBy] ?? s.step0.propertyListedBy)
+      : s.step0.propertyListedBy;
+
     return {
       title: s.step1.title,
       description: s.step1.description,
       listingCategory,
       propertyType,
-      propertyListedBy: s.step0.propertyListedBy,
+      propertyListedBy,
       location,
       details,
       pricing,

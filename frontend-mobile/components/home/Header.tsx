@@ -1,4 +1,4 @@
-﻿import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme";
 import { useUnreadCount } from "@/features/notification/hooks/useNotification";
 import { useLocalityStore } from "@/store/localityStore";
 import { router } from "expo-router";
@@ -40,7 +40,7 @@ export default function Header() {
         <View className="flex-row items-center flex-1">
           <View className="w-10 h-10 rounded-xl overflow-hidden mr-3 bg-orange-500 items-center justify-center">
             <Image
-              source={require("@/assets/images/nppicon.webp")}
+              source={require("@/assets/images/nppicon.png")}
               style={{ width: "100%", height: "100%" }}
               contentFit="contain"
               cachePolicy="memory"

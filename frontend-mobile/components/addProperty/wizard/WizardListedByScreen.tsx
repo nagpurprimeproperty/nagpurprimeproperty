@@ -19,6 +19,13 @@ const LISTED_BY_OPTIONS: {
     icon: User,
   },
   {
+    value: 'Broker',
+    label: 'Broker',
+    desc: 'Listed by a licensed property broker',
+    badge: 'Professional agent',
+    icon: Briefcase,
+  },
+  {
     value: 'RERA Agent',
     label: 'RERA Agent',
     desc: 'Listed by a registered RERA agent',
