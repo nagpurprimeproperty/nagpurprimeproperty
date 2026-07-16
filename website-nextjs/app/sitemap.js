@@ -62,6 +62,7 @@ export default async function sitemap({ id }) {
     { url: `${BASE_URL}/about-us`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/privacy-policy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/terms-and-conditions`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/help-and-support`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ] : []
 
   // Property pages for this chunk

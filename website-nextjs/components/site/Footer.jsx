@@ -228,6 +228,7 @@ export async function Footer() {
             <Link href="/about-us" className="transition hover:text-white">About Us</Link>
             <Link href="/privacy-policy" className="transition hover:text-white">Privacy</Link>
             <Link href="/terms-and-conditions" className="transition hover:text-white">Terms</Link>
+            <Link href="/help-and-support" className="transition hover:text-white">Help & Support</Link>
             <Link href="/delete-account" className="transition hover:text-white">Delete Account</Link>
             <span className="hidden sm:inline">Built for Nagpur • Made with ♥</span>
           </div>
