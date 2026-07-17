@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "@/theme/colors";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -34,6 +34,18 @@ interface Props {
 }
 
 export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
+  // Delayed focus: wait for the modal slide-up animation to finish on iOS
+  // before opening the keyboard. autoFocus fires too early and causes the
+  // KeyboardAvoidingView / Animated sheet to jank/crash.
+  const phoneInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      phoneInputRef.current?.focus();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
+
   const {
     control,
     handleSubmit,
@@ -62,6 +74,7 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
                 <Text style={styles.codeText}>+91</Text>
               </View>
               <TextInput
+                ref={phoneInputRef}
                 style={styles.input}
                 placeholder="98765 43210"
                 placeholderTextColor="#CBD5E1"
@@ -70,7 +83,6 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                autoFocus
               />
             </View>
 

@@ -2,12 +2,15 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useModal } from "@/context/ModalContext";
 import { useSendOtpMutation, useVerifyOtpMutation } from "@/features/auth/hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
-  KeyboardAvoidingView,
+  Keyboard,
+  KeyboardEvent,
   Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -33,6 +36,39 @@ export default function AuthModal() {
   const [sendError, setSendError] = useState<string | null>(null);
 
   const insets = useSafeAreaInsets();
+
+  // ── iOS keyboard shift ──────────────────────────────────────────────────────
+  // KeyboardAvoidingView is unreliable inside a transparent overFullScreen Modal
+  // on iOS. Instead we listen to keyboard events and animate the sheet upward.
+  const sheetTranslateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+
+    const onShow = (e: KeyboardEvent) => {
+      Animated.timing(sheetTranslateY, {
+        toValue: -e.endCoordinates.height,
+        duration: e.duration || 250,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const onHide = (e: KeyboardEvent) => {
+      Animated.timing(sheetTranslateY, {
+        toValue: 0,
+        duration: e.duration || 250,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const showSub = Keyboard.addListener("keyboardWillShow", onShow);
+    const hideSub = Keyboard.addListener("keyboardWillHide", onHide);
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [sheetTranslateY]);
 
   const handleSendOTP = async (enteredPhone: string, name: string) => {
     if (enteredPhone.length < 10) {
@@ -104,39 +140,63 @@ export default function AuthModal() {
       onRequestClose={handleClose}
       statusBarTranslucent
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 20 : 0}
-        style={{ flex: 1 }}
-      >
-        <View style={styles.overlay}>
-          <View style={[styles.sheet, { paddingBottom: insets.bottom + 28 }]}>            
-            <View style={styles.header}>
-              <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
-              </TouchableOpacity>
-              <Text style={styles.title}>
-                {step === "phone" ? "Verify Phone" : "Enter OTP"}
-              </Text>
-              <View style={{ width: 40 }} />
-            </View>
+      {/* Tapping the dark overlay closes the modal & dismisses the keyboard */}
+      <View style={styles.overlay}>
+        <TouchableOpacity
+          style={StyleSheet.absoluteFillObject}
+          activeOpacity={1}
+          onPress={() => {
+            Keyboard.dismiss();
+            handleClose();
+          }}
+        />
 
-            <View style={styles.progressRow}>
-              <View
-                style={[
-                  styles.progressDot,
-                  step === "phone" && styles.progressDotActive,
-                ]}
-              />
-              <View style={styles.progressLine} />
-              <View
-                style={[
-                  styles.progressDot,
-                  step === "otp" && styles.progressDotActive,
-                ]}
-              />
-            </View>
+        {/*
+          On iOS we shift the sheet up using an Animated.Value driven by
+          keyboardWillShow/Hide events. This is far more reliable than
+          KeyboardAvoidingView inside a transparent overFullScreen Modal.
+          On Android the OS handles window resizing itself (adjustResize),
+          so no translation is needed.
+        */}
+        <Animated.View
+          style={[
+            styles.sheet,
+            { paddingBottom: insets.bottom + 28 },
+            Platform.OS === "ios" && { transform: [{ translateY: sheetTranslateY }] },
+          ]}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={styles.title}>
+              {step === "phone" ? "Verify Phone" : "Enter OTP"}
+            </Text>
+            <View style={{ width: 40 }} />
+          </View>
 
+          <View style={styles.progressRow}>
+            <View
+              style={[
+                styles.progressDot,
+                step === "phone" && styles.progressDotActive,
+              ]}
+            />
+            <View style={styles.progressLine} />
+            <View
+              style={[
+                styles.progressDot,
+                step === "otp" && styles.progressDotActive,
+              ]}
+            />
+          </View>
+
+          {/* ScrollView lets content scroll if it overflows the remaining space */}
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
             {step === "phone" ? (
               <PhoneInput
                 onSend={handleSendOTP}
@@ -150,9 +210,9 @@ export default function AuthModal() {
                 onBack={() => setStep("phone")}
               />
             )}
-          </View>
-        </View>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
@@ -169,8 +229,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 32,
     paddingHorizontal: 24,
     paddingTop: 24,
-    minHeight: SCREEN_H * 0.74,
-    maxHeight: SCREEN_H * 0.95,
+    // Removed minHeight: SCREEN_H * 0.74 — a hard minimum height forces overflow
+    // when the keyboard is open. The sheet now sizes to its content instead.
+    maxHeight: SCREEN_H * 0.92,
   },
   header: {
     flexDirection: "row",

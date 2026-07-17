@@ -62,6 +62,17 @@ export default function OTPVerification({ phone, onVerify, onBack }: Props) {
     }
   }, [timer]);
 
+  // ── delayed focus on first OTP box ──
+  // autoFocus inside a Modal fires too early on iOS (during the slide-up
+  // animation), causing the keyboard to fight the Animated sheet. We
+  // manually focus after the animation has completed instead.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      inputs.current[0]?.focus();
+    }, 400);
+    return () => clearTimeout(t);
+  }, []);
+
   // ── submit ──
   const onSubmit = async ({ otp }: OTPFormData) => {
     setLoading(true);
@@ -139,7 +150,6 @@ export default function OTPVerification({ phone, onVerify, onBack }: Props) {
             value={digit}
             onChangeText={(t) => handleChange(t, i)}
             onKeyPress={(e) => handleKeyPress(e, i)}
-            autoFocus={i === 0}
             selectTextOnFocus
           />
         ))}
