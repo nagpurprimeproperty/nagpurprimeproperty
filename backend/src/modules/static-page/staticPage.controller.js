@@ -27,20 +27,74 @@ function formatHtmlForMobile(html, title) {
   // Remove <ul>, <ol>, </ul>, </ol>
   cleanHtml = cleanHtml.replace(/<\/?(ul|ol)[^>]*>/gi, '');
 
-  // Convert paragraphs that look like headings to <h3>
-  cleanHtml = cleanHtml.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, content) => {
-    const plainText = content.replace(/<[^>]+>/g, '').trim();
-    // Pattern 1: "1. Introduction" or "15. Grievance Redressal"
-    // Pattern 2: "A. Information You Provide"
-    const isHeadingPattern = /^\d+\.\s+[A-Z]/i.test(plainText) || /^[A-Z]\.\s+[A-Z]/i.test(plainText);
+  // Parse all <p> paragraphs.
+  let finalHtml = '';
+  const pRegex = /<p([^>]*)>([\s\S]*?)<\/p>/gi;
+  let match;
+  
+  while ((match = pRegex.exec(cleanHtml)) !== null) {
+    const attrs = match[1];
+    const content = match[2];
     
-    if (isHeadingPattern) {
-      return `<h3>${plainText}</h3>`;
+    // We split lines
+    const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    
+    if (lines.length > 1) {
+      // It has multiple lines inside the paragraph. Let's separate the heading and the body
+      let headingText = lines[0];
+      let bodyStartIndex = 1;
+      
+      const secondLinePlain = lines[1].replace(/<[^>]+>/g, '').trim();
+      
+      if (
+        lines[1] &&
+        secondLinePlain.length < 35 && 
+        !/^[A-Z]\.\s+/i.test(secondLinePlain) &&
+        !/^[•\-\d*]/i.test(secondLinePlain) &&
+        !/^(These|The|By|To|Registration|All|Users|Buyers|False|Company|Governed|Grievance|Listing|Lead|Payments|RERA)/i.test(secondLinePlain)
+      ) {
+        headingText += ' ' + lines[1];
+        bodyStartIndex = 2;
+      }
+      
+      const headingPlain = headingText.replace(/<[^>]+>/g, '').trim();
+      const isHeadingPattern = /^\d+\.\s+[A-Z]/i.test(headingPlain) || /^[A-Z]\.\s+[A-Z]/i.test(headingPlain);
+      
+      if (isHeadingPattern) {
+        finalHtml += `<h3>${headingPlain}</h3>\n`;
+      } else {
+        finalHtml += `<p${attrs}>${headingText}</p>\n`;
+      }
+      
+      // Append the rest as normal paragraphs
+      for (let i = bodyStartIndex; i < lines.length; i++) {
+        const lineContent = lines[i];
+        const linePlain = lineContent.replace(/<[^>]+>/g, '').trim();
+        const isLineHeadingPattern = /^\d+\.\s+[A-Z]/i.test(linePlain) || /^[A-Z]\.\s+[A-Z]/i.test(linePlain);
+        
+        if (isLineHeadingPattern) {
+          finalHtml += `<h3>${linePlain}</h3>\n`;
+        } else {
+          finalHtml += `<p>${lineContent}</p>\n`;
+        }
+      }
+    } else {
+      // Single line paragraph
+      const plainText = content.replace(/<[^>]+>/g, '').trim();
+      const isHeadingPattern = /^\d+\.\s+[A-Z]/i.test(plainText) || /^[A-Z]\.\s+[A-Z]/i.test(plainText);
+      if (isHeadingPattern) {
+        finalHtml += `<h3>${plainText}</h3>\n`;
+      } else {
+        finalHtml += `<p${attrs}>${content}</p>\n`;
+      }
     }
-    return `<p${attrs}>${content}</p>`;
-  });
+  }
 
-  return `<h2>${title}</h2>\n${cleanHtml}`;
+  if (finalHtml === '') {
+    finalHtml = cleanHtml;
+  }
+
+  return `<h2>${title}</h2>\n${finalHtml}`;
 }
 
 const staticPageController = {
