@@ -19,8 +19,13 @@ export default function HeroBannerSection({ initial = {}, popularAreas = [] }) {
         try {
           const res = await fetch('/api/pages/about-us')
           const json = await res.json()
-          if (json.success && json.data) {
-            setAboutData(json.data)
+          if (json.success && json.data?.content) {
+            try {
+              const parsed = JSON.parse(json.data.content)
+              setAboutData(parsed)
+            } catch (parseErr) {
+              console.error('Failed to parse about-us content:', parseErr)
+            }
           }
         } catch (err) {
           console.error('Failed to load page config on client:', err)
