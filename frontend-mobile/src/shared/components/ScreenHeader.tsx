@@ -60,7 +60,7 @@ export default function ScreenHeader({
   ) : (
     <View className="h-10 w-10 rounded-xl overflow-hidden bg-orange-500 items-center justify-center">
       <Image
-        source={require("@/assets/images/nppicon.webp")}
+        source={require("@/assets/images/nppicon.png")}
         style={{ width: "100%", height: "100%" }}
         contentFit="contain"
         cachePolicy="memory"

@@ -282,7 +282,7 @@ const NUMBER_OF_DOCKS_MIN = 0;
 const NUMBER_OF_DOCKS_MAX = 20;
 const NUMBER_OF_DOCKS_MESSAGE = `Number of docks must be a number between ${NUMBER_OF_DOCKS_MIN} and ${NUMBER_OF_DOCKS_MAX}`;
 
-const PROPERTY_LISTED_BY_OPTIONS = ['Owner', 'Broker', 'Builder'];
+const PROPERTY_LISTED_BY_OPTIONS = ['Owner', 'Broker', 'Builder', 'RERA Agent'];
 const PROPERTY_LISTED_BY_OPTIONS_MESSAGE = `Property listed by must be one of: ${PROPERTY_LISTED_BY_OPTIONS.join(', ')}`;
 export {
   LISTING_CATEGORIES,

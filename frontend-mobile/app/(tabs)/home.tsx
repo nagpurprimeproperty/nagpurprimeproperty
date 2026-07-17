@@ -6,6 +6,8 @@ import ByBudgetSection from "@/components/home/ByBudgetSection";
 import TrendingLocalitiesSection from "@/components/home/TrendingLocalitiesSection";
 import CategoryTabs from "@/components/home/CategoryTabs";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
+import ExploreOptionsSection from "@/components/home/ExploreOptionsSection";
+import WhyChooseSection from "@/components/home/WhyChooseSection";
 import Header from "@/components/home/Header";
 import NearYouSection from "@/components/home/NearYouSection";
 import RecommendedSection from "@/components/home/RecommendedSection";
@@ -91,6 +93,13 @@ export default function Home() {
   const [loadStage2, setLoadStage2] = useState(false);
   const [loadStage3, setLoadStage3] = useState(false);
 
+  // Ref mirror of loadStage3 so handleScroll can read the latest value
+  // without being recreated (which would rebind FlashList's onScroll prop).
+  const loadStage3Ref = useRef(false);
+  useEffect(() => {
+    loadStage3Ref.current = loadStage3;
+  }, [loadStage3]);
+
   useEffect(() => {
     if (homeFetched) {
       setLoadStage2(true);
@@ -101,10 +110,11 @@ export default function Home() {
 
   const handleScroll = useCallback((event: any) => {
     const y = event.nativeEvent.contentOffset.y;
-    if (y > 40 && !loadStage3) {
+    if (y > 40 && !loadStage3Ref.current) {
       setLoadStage3(true);
     }
-  }, [loadStage3]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: reads loadStage3 via ref, never needs recreation
 
   // ─── Featured & Recommended — always global, no locality filter ─────────────
   const {
@@ -330,6 +340,9 @@ const HomeHeader = memo(function HomeHeader({
       {/* Featured Section */}
       {featuredData.length > 0 && <FeaturedCarousel data={featuredData} />}
 
+      {/* Explore Options — Buy / Rent / Sell */}
+      <ExploreOptionsSection />
+
       {/* Near You Section */}
       {nearYouData.length > 0 && (
         <NearYouSection
@@ -355,6 +368,9 @@ const HomeHeader = memo(function HomeHeader({
           <TrendingLocalitiesSection enabled={loadStage3} />
         </>
       )}
+
+      {/* Why Choose — always visible after recommendations */}
+      <WhyChooseSection />
       
       <View style={styles.sectionDivider}>
         <SectionDivider

@@ -12,6 +12,7 @@
     "check:circular": "madge --circular --extensions ts,tsx --ts-config tsconfig.json app/ components/ hooks/ store/ services/ context/ api/ lib/"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.10",
     "@hookform/resolvers": "^5.2.2",
@@ -27,6 +28,7 @@
     "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.35",
     "expo-blur": "~15.0.8",
+    "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.21",
     "expo-file-system": "~19.0.23",
