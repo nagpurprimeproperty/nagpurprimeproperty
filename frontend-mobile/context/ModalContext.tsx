@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,8 +37,13 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     setAuthAction(null);
   }, []);
 
+  const value = useMemo(
+    () => ({ authModalVisible, authAction, openAuth, closeAuth }),
+    [authModalVisible, authAction, openAuth, closeAuth]
+  );
+
   return (
-    <ModalContext.Provider value={{ authModalVisible, authAction, openAuth, closeAuth }}>
+    <ModalContext.Provider value={value}>
       {children}
     </ModalContext.Provider>
   );

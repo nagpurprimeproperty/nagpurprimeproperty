@@ -1,4 +1,4 @@
-﻿import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme";
 import { useTogglePropertySave } from "@/features/property/hooks/useTogglePropertySave";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useModal } from "@/context/ModalContext";
@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef, useState, memo } from "react";
+import { useCallback, useEffect, useRef, useState, memo, useMemo } from "react";
 import { Dimensions, ScrollView, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -30,7 +30,7 @@ const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const AUTO_SCROLL_DELAY = 3000;
 
 // ─── Animated Dot ────────────────────────────────────────────────────────────
-function Dot({
+const Dot = memo(function Dot({
   active,
   color,
   borderColor,
@@ -59,7 +59,7 @@ function Dot({
   }));
 
   return <Animated.View style={style} />;
-}
+});
 
 // ─── Featured Heart Button ────────────────────────────────────────────────────
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -295,7 +295,10 @@ const FeaturedCarousel = memo(({ data }: any) => {
   const flatListRef = useRef<ScrollView>(null);
   const autoScrollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const featuredData = data.filter((item: any) => item.badge);
+  // Memoize filteredData so .filter() doesn't run on every render and
+  // so that `total` is stable — preventing the auto-scroll interval from
+  // being cleared and restarted every time the parent re-renders.
+  const featuredData = useMemo(() => data.filter((item: any) => item.badge), [data]);
   const total = featuredData.length;
 
   const DUMMY_IMAGE =
@@ -347,10 +350,14 @@ const FeaturedCarousel = memo(({ data }: any) => {
     }
   }, []);
 
+  // Only depend on `total` — not on startAutoScroll/stopAutoScroll refs, which
+  // are stable useCallback values. Including them causes the effect to re-run
+  // (and restart the interval) whenever `total` changes, creating redundant timers.
   useEffect(() => {
     if (total > 1) startAutoScroll();
     return () => stopAutoScroll();
-  }, [total, startAutoScroll, stopAutoScroll]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
 
   // ── Snap / scroll tracking ─────────────────────────────────────────────────
   const handleMomentumScrollEnd = (e: any) => {

@@ -129,7 +129,7 @@ export default function OTPVerification({ phone, onVerify, onBack }: Props) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <Text style={styles.subtitle}>
         Code sent to <Text style={styles.phone}>+91 {phone}</Text>
       </Text>
@@ -198,6 +198,9 @@ export default function OTPVerification({ phone, onVerify, onBack }: Props) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingBottom: 8,
+  },
   subtitle: {
     fontSize: 14,
     color: "#64748B",

@@ -59,7 +59,7 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
   const onSubmit = ({ phone, name }: PhoneFormData) => onSend(phone, name);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <Text style={styles.subtitle}>
         Enter your mobile number and name to continue
       </Text>
@@ -89,7 +89,7 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
             {errors.phone ? (
               <Text style={styles.errorText}>{errors.phone.message}</Text>
             ) : (
-              <Text style={styles.hint}>We will send a 6-digit OTP for verification</Text>
+              <Text style={styles.hint}>We will send a 4-digit OTP for verification</Text>
             )}
           </>
         )}
@@ -146,6 +146,9 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingBottom: 8,
+  },
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,

@@ -261,12 +261,26 @@ function ReviewVideoSlide({ videoUrl, width, height }: { videoUrl: string; width
 
   const safeUri = videoUrl ? decodeURIComponent(videoUrl) : null;
   const player = useVideoPlayer(safeUri ? { uri: safeUri } : null, (p) => {
-    p.loop = true;
+    p.loop = false; // Don't loop — wastes GPU/memory in the review step
     p.bufferOptions = {
       maxBufferBytes: 2 * 1024 * 1024, // 2MB buffer limit to prevent Android OOM
       prioritizeTimeOverSizeThreshold: false,
     };
   });
+
+  // Release the native player on unmount to free video buffers
+  useEffect(() => {
+    return () => {
+      if (player) {
+        try {
+          player.pause();
+          if (typeof (player as any).release === 'function') {
+            (player as any).release();
+          }
+        } catch { /* already released */ }
+      }
+    };
+  }, [player]);
 
   const togglePlay = () => {
     if (!player) return;

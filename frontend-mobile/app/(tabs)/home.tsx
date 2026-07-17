@@ -93,6 +93,13 @@ export default function Home() {
   const [loadStage2, setLoadStage2] = useState(false);
   const [loadStage3, setLoadStage3] = useState(false);
 
+  // Ref mirror of loadStage3 so handleScroll can read the latest value
+  // without being recreated (which would rebind FlashList's onScroll prop).
+  const loadStage3Ref = useRef(false);
+  useEffect(() => {
+    loadStage3Ref.current = loadStage3;
+  }, [loadStage3]);
+
   useEffect(() => {
     if (homeFetched) {
       setLoadStage2(true);
@@ -103,10 +110,11 @@ export default function Home() {
 
   const handleScroll = useCallback((event: any) => {
     const y = event.nativeEvent.contentOffset.y;
-    if (y > 40 && !loadStage3) {
+    if (y > 40 && !loadStage3Ref.current) {
       setLoadStage3(true);
     }
-  }, [loadStage3]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: reads loadStage3 via ref, never needs recreation
 
   // ─── Featured & Recommended — always global, no locality filter ─────────────
   const {
