@@ -161,7 +161,7 @@ export default function ProfilePage() {
           <div className="h-32 bg-gradient-primary sm:h-40" />
           <div className="px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="-mt-12 flex flex-col items-start gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
                 <div className="relative group">
                   <div className="relative overflow-hidden h-24 w-24 rounded-2xl border-4 border-card bg-gradient-primary text-3xl font-bold text-primary-foreground shadow-elegant sm:h-28 sm:w-28 flex items-center justify-center">
                     {profileLoading ? (
@@ -201,11 +201,11 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
+              <Button variant="outline" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending} className="w-full sm:w-auto mt-2 sm:mt-0">
                 <LogOut className="mr-1.5 h-4 w-4" /> Logout
               </Button>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <StatCard icon={Heart} label="Saved properties" value={savedLoading ? <Skeleton className="h-5 w-8 bg-muted-foreground/15 inline-block" /> : savedTotal} />
               <StatCard icon={Eye} label="Recently viewed" value={viewedIds.length} />
             </div>
