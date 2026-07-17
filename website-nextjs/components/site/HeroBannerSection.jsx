@@ -40,7 +40,7 @@ export default function HeroBannerSection({ initial = {}, popularAreas = [] }) {
       {/* ── HERO ── */}
       <section className="relative overflow-hidden">
         <Image
-          src={aboutData.bannerImage || "https://images.unsplash.com/photo-1567496898669-ee935f5f647a?auto=format&fit=crop&w=1536&q=80"}
+          src={aboutData.bannerImage || "https://s3-noi.aces3.ai/nagpurpropertytest/blog-media/1781857741869-839061532.png"}
           alt="Nagpur skyline — find verified properties in Nagpur"
           fill
           priority
@@ -51,13 +51,11 @@ export default function HeroBannerSection({ initial = {}, popularAreas = [] }) {
         <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
           <div className="max-w-4xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-background/15 px-3 py-1 text-xs font-semibold text-background backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" /> {aboutData.tagline || "Nagpur's #1 Property Marketplace"}
+              <Sparkles className="h-3.5 w-3.5" /> {aboutData.tagline || "Connecting Buyers with Trusted Brokers"}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] text-background sm:text-5xl md:text-6xl">
-              {aboutData.bannerHeading || "Find your next home in"}{' '}
-              {aboutData.bannerHeadingHighlight && (
-                <span className="text-primary-glow">{aboutData.bannerHeadingHighlight}</span>
-              )}
+              {aboutData.bannerHeading || "Find your next property in"}{' '}
+              <span className="text-primary-glow">{aboutData.bannerHeadingHighlight || "Nagpur"}</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base text-background/85 sm:text-lg">
               {aboutData.bannerSubheading || "Verified flats, plots and villas across Dighori, MIHAN, Wardha Road and more. Direct contact with trusted brokers — no middlemen, no spam."}
@@ -71,10 +69,10 @@ export default function HeroBannerSection({ initial = {}, popularAreas = [] }) {
       <section className="border-y border-border bg-secondary/40">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 sm:grid-cols-4 sm:px-6">
           {[
-            { n: aboutData.stats?.properties || '1,200+', l: 'Verified Listings' },
-            { n: aboutData.stats?.cities || '60+', l: 'Localities Covered' },
-            { n: aboutData.stats?.users || '350+', l: 'Happy Buyers' },
-            { n: aboutData.stats?.brokers || '100%', l: 'Verified Brokers' },
+            { n: aboutData.stats?.properties || '8K+', l: 'Verified Listings' },
+            { n: aboutData.stats?.cities || '17+', l: 'Localities Covered' },
+            { n: aboutData.stats?.users || '52K+', l: 'Happy Buyers' },
+            { n: aboutData.stats?.brokers || '550+', l: 'Verified Brokers' },
           ].map((s) => (
             <div key={s.l}>
               <div className="font-display text-2xl font-bold text-primary sm:text-3xl">{s.n}</div>

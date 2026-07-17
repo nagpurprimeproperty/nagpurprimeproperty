@@ -70,9 +70,13 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
         { slug: 'manish-nagar-nagpur', label: 'Manish Nagar' },
       ];
 
-  const address = aboutData.contactInfo?.address || "Wardha Road, Nagpur 440015, Maharashtra";
-  const phone = aboutData.contactInfo?.phone || "+91 98765 43210";
-  const email = aboutData.contactInfo?.email || "hello@nagpurprime.in";
+  const contactInfo = aboutData.contactInfo || {};
+  const address = contactInfo.address || "Nagpur, Maharashtra, India";
+  const phone = contactInfo.phone || "+91 9011111504";
+  const email = contactInfo.email || "info@nagpurprimeproperty.com";
+  const facebook = contactInfo.facebook || "https://facebook.com";
+  const instagram = contactInfo.instagram || "https://instagram.com";
+  const youtube = contactInfo.youtube || "https://youtube.com";
 
   return (
     <footer className="relative mt-24 overflow-hidden bg-[oklch(0.16_0.02_50)] text-[oklch(0.97_0.005_80)]">
@@ -112,9 +116,9 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
               </span>
             </div>
             <div className="mt-6 flex gap-2">
-              {aboutData.contactInfo?.facebook && (
+              {facebook && (
                 <a
-                  href={aboutData.contactInfo.facebook}
+                  href={facebook}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook link"
@@ -123,9 +127,9 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
                   <FacebookIcon className="h-4 w-4" />
                 </a>
               )}
-              {aboutData.contactInfo?.instagram && (
+              {instagram && (
                 <a
-                  href={aboutData.contactInfo.instagram}
+                  href={instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram link"
@@ -134,9 +138,9 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
                   <InstagramIcon className="h-4 w-4" />
                 </a>
               )}
-              {aboutData.contactInfo?.youtube && (
+              {youtube && (
                 <a
-                  href={aboutData.contactInfo.youtube}
+                  href={youtube}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Youtube link"
