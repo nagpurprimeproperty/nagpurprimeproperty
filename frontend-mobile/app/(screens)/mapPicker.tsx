@@ -113,6 +113,19 @@ export default function MapPickerScreen() {
   const searchRef = useRef<TextInput>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const slideAnim = useRef(new Animated.Value(300)).current;
+  // Guard all async state updates after component unmounts
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      // Cancel any pending autocomplete debounce timeout
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+    };
+  }, []);
 
   const [pin, setPin] = useState<{ latitude: number; longitude: number } | null>(
     step2.latitude && step2.longitude && mode !== "search"
@@ -149,13 +162,14 @@ export default function MapPickerScreen() {
 
   // ── Reverse geocode using Google Geocoding API ──────────────────────────────
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
+    if (!mountedRef.current) return;
     setGeocoding(true);
     setDetails(null);
     try {
-      // Key-free: the backend proxy calls Google server-side.
       const url = `${MAPS_PROXY_BASE}/maps/reverse-geocode?latlng=${lat},${lng}`;
       const res = await fetch(url);
       const data = await res.json();
+      if (!mountedRef.current) return; // Check again after await
       if (data.status === "OK" && data.results.length > 0) {
         const parsed = parseGeocodingResult(data.results[0]);
         const cityLower = (parsed.city || "").toLowerCase();
@@ -178,9 +192,9 @@ export default function MapPickerScreen() {
         setDetails(null);
       }
     } catch {
-      setDetails(null);
+      if (mountedRef.current) setDetails(null);
     } finally {
-      setGeocoding(false);
+      if (mountedRef.current) setGeocoding(false);
     }
   }, []);
 
@@ -321,16 +335,19 @@ export default function MapPickerScreen() {
 
   // ── GPS locate ─────────────────────────────────────────────────────────────
   const handleLocate = async () => {
+    if (!mountedRef.current) return;
     setLocating(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
+      if (!mountedRef.current) return;
       if (status !== "granted") {
         Alert.alert("Permission Required", "Enable location access to use this feature.");
         return;
       }
       const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced, // Changed from High → Balanced for faster response
       });
+      if (!mountedRef.current) return;
       const p = {
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
@@ -341,9 +358,11 @@ export default function MapPickerScreen() {
         600,
       );
     } catch {
-      Alert.alert("Error", "Could not get your current location.");
+      if (mountedRef.current) {
+        Alert.alert("Error", "Could not get your current location.");
+      }
     } finally {
-      setLocating(false);
+      if (mountedRef.current) setLocating(false);
     }
   };
 

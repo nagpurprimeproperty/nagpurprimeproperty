@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSocket } from '@/config/socket';
 import type { NotificationApiItem } from '@/features/notification/services/notificationService';
@@ -91,13 +91,22 @@ export const useSocket = () => {
     };
 
     if (!attach(getSocket())) {
+      let retries = 0;
+      const MAX_RETRIES = 20; // Give up after 20 seconds to avoid indefinite polling
       intervalId = setInterval(() => {
+        retries += 1;
         const s = getSocket();
         if (s && attach(s)) {
           clearInterval(intervalId!);
           intervalId = null;
+        } else if (retries >= MAX_RETRIES) {
+          clearInterval(intervalId!);
+          intervalId = null;
+          if (__DEV__) {
+            console.warn('[useSocket] Gave up waiting for socket after', MAX_RETRIES, 'attempts.');
+          }
         }
-      }, 300);
+      }, 1000); // 1000ms instead of 300ms to reduce JS thread load
     }
 
     return () => {

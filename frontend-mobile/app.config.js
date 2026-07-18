@@ -27,10 +27,16 @@ module.exports = ({ config }) => ({
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
-    supportsTablet: true,
-    bundleIdentifier: "com.ayushbharne.nagpurPrimeProperty",
-    googleServicesFile: process.env.GOOGLE_SERVICES_INFO_PLIST || "./GoogleService-Info.plist",
+  supportsTablet: true,
+  bundleIdentifier: "com.nagpurprimeproperty.app",
+  googleServicesFile:
+    process.env.GOOGLE_SERVICES_INFO_PLIST ||
+    "./GoogleService-Info.plist",
+
+  config: {
+    usesNonExemptEncryption: false,
   },
+},
   android: {
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
     adaptiveIcon: {
@@ -47,8 +53,7 @@ module.exports = ({ config }) => ({
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
-    package: "com.ayushbharne.nagpurPrimeProperty",
-    usesCleartextTraffic: true,
+    package: "com.nagpurprimeproperty.app",
   },
   web: {
     bundler: "metro",
@@ -56,6 +61,17 @@ module.exports = ({ config }) => ({
     favicon: "./assets/images/favicon.png",
   },
   plugins: [
+    [
+      "expo-build-properties",
+      {
+        android: {
+          // Allow HTTP (cleartext) traffic to dev/staging backend.
+          // usesCleartextTraffic cannot be set directly in the android config
+          // object (schema violation) — this is the correct Expo approach.
+          usesCleartextTraffic: true,
+        },
+      },
+    ],
     "expo-secure-store",
     "expo-router",
     [

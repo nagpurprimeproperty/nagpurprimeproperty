@@ -70,14 +70,17 @@ async function requestCameraPermission() {
 }
 
 export default function WizardPhotosScreen() {
-  const store = usePropertyWizardStore();
-  const step5 = store.step5;
-  const errors = store.errors;
-  const addPhoto = store.addPhoto;
-  const reorderPhotos = store.reorderPhotos;
-  const setErrors = store.setErrors;
-  const goToPhase = store.goToPhase;
-  const updateStep5 = store.updateStep5;
+  // ── Use individual selectors to avoid re-rendering on every store change ──
+  const step5 = usePropertyWizardStore((s) => s.step5);
+  const errors = usePropertyWizardStore((s) => s.errors);
+  const step6 = usePropertyWizardStore((s) => s.step6);
+  const addPhoto = usePropertyWizardStore((s) => s.addPhoto);
+  const reorderPhotos = usePropertyWizardStore((s) => s.reorderPhotos);
+  const setErrors = usePropertyWizardStore((s) => s.setErrors);
+  const goToPhase = usePropertyWizardStore((s) => s.goToPhase);
+  const updateStep5 = usePropertyWizardStore((s) => s.updateStep5);
+  const toggleAmenity = usePropertyWizardStore((s) => s.toggleAmenity);
+  const addCustomAmenity = usePropertyWizardStore((s) => s.addCustomAmenity);
 
   // ── Eager upload cache ─────────────────────────────────────────────────────────
   const uploadCache           = usePropertyUploadStore((s) => s.uploadCache);
@@ -87,8 +90,9 @@ export default function WizardPhotosScreen() {
   const removeUploadedPhotoUrl = usePropertyUploadStore((s) => s.removeUploadedPhotoUrl);
 
   // removePhoto must purge both stores atomically
+  const removePhotoFromStore = usePropertyWizardStore((s) => s.removePhoto);
   const removePhoto = (uri: string) => {
-    store.removePhoto(uri);
+    removePhotoFromStore(uri);
     removeUploadedPhotoUrl(uri);
   };
 
@@ -178,7 +182,7 @@ export default function WizardPhotosScreen() {
     const isPredefinedDuplicate = PREDEFINED_AMENITIES.some(
       (a) => a.toLowerCase() === trimmed.toLowerCase()
     );
-    const isCustomDuplicate = (store.step6.customAmenities || []).some(
+    const isCustomDuplicate = (step6.customAmenities || []).some(
       (a) => a.toLowerCase() === trimmed.toLowerCase()
     );
     
@@ -187,10 +191,10 @@ export default function WizardPhotosScreen() {
       return;
     }
     
-    store.addCustomAmenity(trimmed);
+    addCustomAmenity(trimmed);
     
-    if (!store.step6.amenities.includes(trimmed)) {
-      store.toggleAmenity(trimmed);
+    if (!step6.amenities.includes(trimmed)) {
+      toggleAmenity(trimmed);
     }
     
     toast.success('Amenity added successfully');
@@ -617,12 +621,12 @@ export default function WizardPhotosScreen() {
             Select the utilities and amenities present at this property.
           </Text>
           <View className="flex-row flex-wrap gap-2">
-            {[...PREDEFINED_AMENITIES, ...(store.step6.customAmenities || [])].map((am) => {
-              const isSel = store.step6.amenities.includes(am);
+            {[...PREDEFINED_AMENITIES, ...(step6.customAmenities || [])].map((am) => {
+              const isSel = step6.amenities.includes(am);
               return (
                 <TouchableOpacity
                   key={am}
-                  onPress={() => store.toggleAmenity(am)}
+                  onPress={() => toggleAmenity(am)}
                   activeOpacity={0.75}
                   style={{
                     backgroundColor: isSel ? '#FCF5EC' : '#FFFFFF',

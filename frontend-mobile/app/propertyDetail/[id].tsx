@@ -68,7 +68,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BackHeader from "@/shared/components/BackHeader";
 import { toast } from 'react-hot-toast/headless';
-import { useNavigationState, useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HERO_HEIGHT = 300;
@@ -445,27 +445,36 @@ function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolea
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  useEffect(() => {
-    if (__DEV__) {
-      console.log("VIDEO MOUNTED");
-    }
-    return () => {
-      if (__DEV__) {
-        console.log("VIDEO UNMOUNTED");
-      }
-    };
-  }, []);
-  
   const safeUri = videoUrl ? decodeURIComponent(videoUrl) : null;
   const player = useVideoPlayer(safeUri ? { uri: safeUri } : null, (p) => {
-    p.loop = true;
+    p.loop = false; // Don't loop — continuous decoding wastes GPU & memory
     p.bufferOptions = {
       maxBufferBytes: 2 * 1024 * 1024, // 2MB buffer limit to prevent Android OOM
       prioritizeTimeOverSizeThreshold: false,
     };
   });
 
+  // Pause and release the native player when this slide unmounts.
+  // Without this, visiting multiple property detail screens leaves multiple
+  // native video players alive simultaneously, each holding 2MB+ of buffer.
+  useEffect(() => {
+    return () => {
+      if (player) {
+        try {
+          player.pause();
+          // expo-video v2 exposes .release() — call if available
+          if (typeof (player as any).release === 'function') {
+            (player as any).release();
+          }
+        } catch {
+          // Silently ignore if player already released
+        }
+      }
+    };
+  }, [player]);
+
   const isFocused = useIsFocused();
+  // Pause video when screen loses focus or this slide is no longer visible
   useEffect(() => {
     if ((!isActive || !isFocused) && player && isPlaying) {
       player.pause();
@@ -824,13 +833,11 @@ export default function PropertyDetailsScreen() {
   const isAuthHydrated = useAuthStore((s) => s.isHydrated);
   const { openAuth } = useModal();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [unlockedPhone, setUnlockedPhone] = useState<string | null>(null);
   const [isPhoneUnlocked, setIsPhoneUnlocked] = useState(false);
 
   const user = useAuthStore((s) => s.user);
-  const routes = useNavigationState((state) => state?.routes || []);
 
   const { data: property, isLoading: propertyLoading, refetch } = usePropertyDetail(
     id,
@@ -844,12 +851,6 @@ export default function PropertyDetailsScreen() {
   const { mutate: togglePropertySave, isPending: isSaving } = useTogglePropertySave(id);
   const { mutateAsync: createEnquiry } = useCreatePropertyEnquiry(id);
   const { mutateAsync: createCallEnquiry } = useCreateCallEnquiry();
-
-  useEffect(() => {
-    if (__DEV__) {
-      console.log("STACK DEPTH:", routes.length);
-    }
-  }, [routes]);
 
   const renderHeroItem = useCallback(({ item, index }: { item: string; index: number }) => {
     if (item === VIDEO_SLIDE_KEY) {
@@ -941,9 +942,18 @@ export default function PropertyDetailsScreen() {
     return getSecondarySpecsList(property.type, property.details);
   }, [property]);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // Memoized at top level (Rules of Hooks: never call useMemo inside JSX)
+  const dynamicSpecs = useMemo(
+    () => (property ? getDynamicSpecs(property.type, property.details, property.area) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [property?.type, property?.details, property?.area],
+  );
+
+  const dynamicMiniInfo = useMemo(
+    () => (property ? getDynamicMiniInfo(property.type, property.details, property.parking) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [property?.type, property?.details, property?.parking],
+  );
 
   useEffect(() => {
     setIsFavorite(Boolean(property?.isSaved));
@@ -1045,8 +1055,6 @@ export default function PropertyDetailsScreen() {
     setIsFavorite((current) => !current);
     togglePropertySave(undefined as never);
   };
-
-  if (!isMounted) return null;
 
   if (propertyLoading || !property) {
     return <PropertyDetailSkeleton />;
@@ -1199,8 +1207,9 @@ export default function PropertyDetailsScreen() {
             </View>
           </View>
 
+          {/* Key Specs */}
           <View className="flex-row flex-wrap justify-between">
-            {getDynamicSpecs(property.type, property.details, property.area).map((spec, index) => (
+            {dynamicSpecs.map((spec, index) => (
               <SpecCard
                 key={index}
                 label={spec.label}
@@ -1211,7 +1220,7 @@ export default function PropertyDetailsScreen() {
           </View>
 
           <View className="flex-row gap-3 mb-8">
-            {getDynamicMiniInfo(property.type, property.details, property.parking).map((mini, index) => (
+            {dynamicMiniInfo.map((mini, index) => (
               <View key={index} className="flex-1">
                 <MiniInfoCard
                   label={mini.label}
