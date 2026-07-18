@@ -12,6 +12,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { PermissionGate, Unauthorized } from "@/components/utils/permission-gate";
 
 const CATEGORIES = ["General", "Property Type", "Budget", "Intent", "Area", "Amenity", "Other"];
 
@@ -63,7 +64,8 @@ export default function CreateKeywordPage() {
   };
 
   return (
-    <div className="space-y-6 w-full min-w-0">
+    <PermissionGate module="keywords" action="write" fallback={<Unauthorized />}>
+      <div className="space-y-6 w-full min-w-0">
       <AdminPageHeader
         title="Add SEO Keyword"
         description="Create a new keyword chip that will appear on the homepage"
@@ -219,6 +221,7 @@ export default function CreateKeywordPage() {
         </div>
       </form>
     </div>
+    </PermissionGate>
   );
 }
 

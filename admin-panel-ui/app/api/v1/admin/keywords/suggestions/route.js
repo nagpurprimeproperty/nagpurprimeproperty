@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/server/src/config/db.js';
 import Keyword from '@/server/src/models/keyword.model.js';
-import { requireAuth } from '@/server/src/middlewares/auth.next.js';
+import { requireAuth, requirePermission } from '@/server/src/middlewares/auth.next.js';
 import { handleApiError } from '@/server/src/utils/route-helpers.js';
 
 // Nagpur-specific smart keyword templates
@@ -46,6 +46,9 @@ export async function GET(req) {
   try {
     const auth = requireAuth(req);
     if (auth instanceof NextResponse) return auth;
+    const permErr = await requirePermission(auth.user, 'GET', 'keywords');
+    if (permErr) return permErr;
+
     await connectDB();
 
     // Fetch existing keywords to exclude duplicates

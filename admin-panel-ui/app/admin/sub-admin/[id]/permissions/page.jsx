@@ -38,6 +38,9 @@ const MODULES = [
     { id: "analytics", name: "Analytics", description: "View platform analytics" },
     { id: "plans", name: "Plans", description: "Manage subscription plans" },
     { id: "notifications", name: "Notifications", description: "Send push notifications" },
+    { id: "areas", name: "Areas", description: "Manage Nagpur localities & insights" },
+    { id: "keywords", name: "Keywords", description: "Manage SEO redirect keywords" },
+    { id: "blogs", name: "Blogs", description: "Manage website blog articles" },
 ];
 // Modules that only support read access (backend has no write/delete routes for them)
 const READ_ONLY_MODULES = ["dashboard", "revenue", "analytics"];

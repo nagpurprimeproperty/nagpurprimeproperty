@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/server/src/config/db.js';
 import Keyword from '@/server/src/models/keyword.model.js';
-import { requireAuth } from '@/server/src/middlewares/auth.next.js';
+import { requireAuth, requirePermission } from '@/server/src/middlewares/auth.next.js';
 import { handleApiError } from '@/server/src/utils/route-helpers.js';
 
 /** GET /api/v1/admin/keywords — list all keywords (admin) */
@@ -9,6 +9,9 @@ export async function GET(req) {
   try {
     const auth = requireAuth(req);
     if (auth instanceof NextResponse) return auth;
+    const permErr = await requirePermission(auth.user, 'GET', 'keywords');
+    if (permErr) return permErr;
+
     await connectDB();
     const keywords = await Keyword.find().sort({ sortOrder: 1, createdAt: -1 }).lean();
     return NextResponse.json({ success: true, data: keywords });
@@ -22,6 +25,9 @@ export async function POST(req) {
   try {
     const auth = requireAuth(req);
     if (auth instanceof NextResponse) return auth;
+    const permErr = await requirePermission(auth.user, 'POST', 'keywords');
+    if (permErr) return permErr;
+
     await connectDB();
     const body = await req.json();
 
