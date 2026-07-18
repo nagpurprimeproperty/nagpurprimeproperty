@@ -53,11 +53,15 @@ export default function CreateKeywordPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create keyword");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed to create keyword");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Keyword created!", description: `"${form.keyword}" is now active.` });
       router.push("/admin/keywords");
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

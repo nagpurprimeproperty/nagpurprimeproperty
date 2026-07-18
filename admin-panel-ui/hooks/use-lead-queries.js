@@ -78,7 +78,7 @@ export function useUpdateLead(id) {
         onError: (err) => {
             toast({
                 title: "Update failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },
@@ -107,7 +107,7 @@ export function useUpdateLeadStatus() {
             setUpdating(lead._id, false);
             toast({
                 title: "Status update failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },
@@ -130,7 +130,7 @@ export function useDeleteLead() {
         onError: (err) => {
             toast({
                 title: "Deletion failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },

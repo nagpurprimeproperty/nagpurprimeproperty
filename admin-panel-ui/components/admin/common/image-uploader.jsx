@@ -47,11 +47,15 @@ export function ImageUploader({ value, onChange, label, circular = false, classN
         body: fd,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Upload failed");
+      if (!res.ok) {
+        const error = new Error(data.message || "Upload failed");
+        error.errors = data.errors;
+        throw error;
+      }
       onChange(data.data.url);
       toast({ title: "Image uploaded!" });
     } catch (err) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      toast({ title: "Upload failed", description: err, variant: "destructive" });
     } finally {
       setUploading(false);
     }

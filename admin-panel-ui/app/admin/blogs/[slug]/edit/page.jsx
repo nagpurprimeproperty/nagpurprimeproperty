@@ -105,11 +105,15 @@ export default function EditBlogPage() {
         body: JSON.stringify({ ...form, content: validContent }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save blog");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed to save blog");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Blog updated!", description: `"${form.title}" has been saved.` });
       router.push("/admin/blogs");
     } catch (err) {
-      toast({ title: "Error", description: err.message || "Failed to save blog", variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

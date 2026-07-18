@@ -52,13 +52,15 @@ export default function BlogsAdminPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "Failed to delete");
+        const error = new Error(data.message || "Failed to delete");
+        error.errors = data.errors;
+        throw error;
       }
       toast({ title: "Deleted", description: "Blog removed successfully" });
       setDeleteSlug(null);
       fetchBlogs();
     } catch (err) {
-      toast({ title: "Error", description: err.message || "Failed to delete blog", variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     }
   };
 

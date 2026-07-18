@@ -94,14 +94,16 @@ export default function KeywordsAdminPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "Failed to delete");
+        const error = new Error(data.message || "Failed to delete");
+        error.errors = data.errors;
+        throw error;
       }
       toast({ title: "Deleted", description: `"${deleteName}" removed successfully` });
       setDeleteId(null);
       setDeleteName("");
       fetchKeywords();
     } catch (err) {
-      toast({ title: "Error", description: err.message || "Failed to delete", variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     }
   };
 
@@ -116,10 +118,13 @@ export default function KeywordsAdminPage() {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ [field]: !kw[field] }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) {
+        const error = new Error("Failed to update");
+        throw error;
+      }
       fetchKeywords();
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     }
   };
 
@@ -150,13 +155,17 @@ export default function KeywordsAdminPage() {
         body: JSON.stringify({ bulk: true, rows: selectedSuggestions }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Import failed");
+      if (!res.ok) {
+        const error = new Error(data.message || "Import failed");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Imported!", description: data.message });
       setShowSuggestions(false);
       setSelectedSuggestions([]);
       fetchKeywords();
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setBulkImporting(false);
     }
@@ -203,13 +212,17 @@ export default function KeywordsAdminPage() {
         body: JSON.stringify({ bulk: true, rows }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Import failed");
+      if (!res.ok) {
+        const error = new Error(data.message || "Import failed");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Imported!", description: data.message });
       setShowBulkImport(false);
       setCsvText("");
       fetchKeywords();
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setBulkImporting(false);
     }

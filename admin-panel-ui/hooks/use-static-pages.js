@@ -33,7 +33,7 @@ export function useUpdateStaticPage(slug) {
         onError: (err) => {
             toast({
                 title: "Save failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },

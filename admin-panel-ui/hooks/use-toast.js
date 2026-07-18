@@ -83,8 +83,46 @@ function dispatch(action) {
         listener(memoryState);
     });
 }
+function formatErrorDescription(error, fallbackMessage) {
+    if (!error) return fallbackMessage || "Something went wrong";
+    
+    const apiErrors = error.errors || error.data?.errors || error.response?.data?.errors;
+    const message = error.message || error.data?.message || fallbackMessage || "Something went wrong";
+    
+    if (Array.isArray(apiErrors) && apiErrors.length > 0) {
+        return React.createElement("div", { className: "space-y-1 mt-1 text-xs" },
+            React.createElement("p", { className: "font-semibold text-sm" }, message),
+            React.createElement("ul", { className: "list-disc pl-4 space-y-0.5" },
+                apiErrors.map((e, idx) => {
+                    const rawField = e.field || "";
+                    const cleanField = rawField.replace(/^(body\.|query\.|params\.)/, '');
+                    const formattedField = cleanField
+                        ? cleanField
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, (str) => str.toUpperCase())
+                        : "";
+                    return React.createElement("li", { key: idx },
+                        formattedField ? React.createElement("span", { className: "font-semibold" }, `${formattedField}: `) : null,
+                        React.createElement("span", null, e.message)
+                    );
+                })
+            )
+        );
+    }
+    
+    return message;
+}
+
 function toast({ ...props }) {
     const id = genId();
+    
+    let description = props.description;
+    const error = props.error || (props.description instanceof Error || (props.description && typeof props.description === 'object' && ('message' in props.description || 'errors' in props.description || 'data' in props.description)) ? props.description : null);
+    
+    if (error) {
+        description = formatErrorDescription(error, typeof props.description === 'string' ? props.description : null);
+    }
+
     const update = (props) => dispatch({
         type: 'UPDATE_TOAST',
         toast: { ...props, id },
@@ -94,6 +132,7 @@ function toast({ ...props }) {
         type: 'ADD_TOAST',
         toast: {
             ...props,
+            description,
             id,
             open: true,
             onOpenChange: (open) => {

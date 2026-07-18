@@ -52,13 +52,15 @@ export default function AreasPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "Failed to delete");
+        const error = new Error(data.message || "Failed to delete");
+        error.errors = data.errors;
+        throw error;
       }
       toast({ title: "Deleted", description: "Area removed successfully" });
       setDeleteSlug(null);
       fetchAreas();
     } catch (err) {
-      toast({ title: "Error", description: err.message || "Failed to delete area", variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     }
   };
 

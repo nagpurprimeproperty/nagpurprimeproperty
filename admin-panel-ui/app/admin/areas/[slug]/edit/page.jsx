@@ -89,11 +89,15 @@ export default function EditAreaPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Area updated!", description: `${form.name} has been saved.` });
       router.push("/admin/areas");
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

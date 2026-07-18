@@ -28,7 +28,7 @@ export function useCreateUserPlan(userId) {
         },
         onError: (err) => toast({
             title: "Failed to assign plan",
-            description: err?.message ?? "Something went wrong",
+            description: err,
             variant: "destructive",
         }),
     });
@@ -45,7 +45,7 @@ export function useUpdateUserPlan(userId) {
         },
         onError: (err) => toast({
             title: "Failed to update plan",
-            description: err?.message ?? "Something went wrong",
+            description: err,
             variant: "destructive",
         }),
     });
@@ -61,7 +61,7 @@ export function useDeleteUserPlan(userId) {
         },
         onError: (err) => toast({
             title: "Failed to delete plan",
-            description: err?.message ?? "Something went wrong",
+            description: err,
             variant: "destructive",
         }),
     });

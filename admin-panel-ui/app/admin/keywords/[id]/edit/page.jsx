@@ -64,11 +64,15 @@ export default function EditKeywordPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed to update");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Updated!", description: `"${form.keyword}" has been saved.` });
       router.push("/admin/keywords");
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

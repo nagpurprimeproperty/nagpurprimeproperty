@@ -68,11 +68,15 @@ export default function CreateBlogPage() {
         body: JSON.stringify({ ...form, content: validContent }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create blog");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed to create blog");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Blog created!", description: `"${form.title}" is now live on the website.` });
       router.push("/admin/blogs");
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
