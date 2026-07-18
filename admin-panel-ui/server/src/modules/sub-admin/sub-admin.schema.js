@@ -20,6 +20,7 @@ const VALID_MODULES = [
   'dashboard', 'sub-admin', 'users',
   'leads', 'properties', 'revenue', 'analytics',
   'plans', 'notifications', 'settings',
+  'areas', 'keywords', 'blogs',
 ];
 
 const modulePermissionSchema = z.object({

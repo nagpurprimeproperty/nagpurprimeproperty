@@ -19,6 +19,9 @@ export const ALL_MODULES = [
     'plans',
     'notifications',
     'settings',
+    'areas',
+    'keywords',
+    'blogs',
 ];
 /** The full list including internal-only modules */
 export const ALL_MODULES_WITH_INTERNAL = [
