@@ -154,7 +154,7 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
 
           {/* Explore */}
           <div className="md:col-span-2">
-            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Explore</h4>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Explore</h3>
             <ul className="mt-5 space-y-3 text-sm">
               {explore.map((l) => (
                 <li key={l.to}>
@@ -171,7 +171,7 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
 
           {/* Localities */}
           <div className="md:col-span-3">
-            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Top Localities</h4>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Top Localities</h3>
             <ul className="mt-5 space-y-3 text-sm">
               {activeLocalities.map((l) => (
                 <li key={l.slug}>
@@ -189,7 +189,7 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
 
           {/* Contact */}
           <div className="md:col-span-3">
-            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Get in touch</h4>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Get in touch</h3>
             <ul className="mt-5 space-y-3.5 text-sm text-white/75">
               <li className="flex items-start gap-2.5">
                 <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">

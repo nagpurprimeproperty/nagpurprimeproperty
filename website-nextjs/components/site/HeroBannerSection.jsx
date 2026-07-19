@@ -75,7 +75,7 @@ export default function HeroBannerSection({ initial = {}, popularAreas = [] }) {
             { n: aboutData.stats?.brokers || '550+', l: 'Verified Brokers' },
           ].map((s) => (
             <div key={s.l}>
-              <div className="font-display text-2xl font-bold text-primary sm:text-3xl">{s.n}</div>
+              <div className="font-display text-2xl font-bold text-foreground sm:text-3xl">{s.n}</div>
               <div className="text-xs text-muted-foreground sm:text-sm">{s.l}</div>
             </div>
           ))}

@@ -60,7 +60,7 @@ export default function HeroSearchCard({ popularAreas }) {
           <div className="rounded-xl border border-border bg-background px-3 py-1.5">
             <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Budget</div>
             <Select value={budget} onValueChange={setBudget}>
-              <SelectTrigger className="h-7 border-0 bg-transparent p-0 text-sm font-medium shadow-none focus:ring-0">
+              <SelectTrigger className="h-7 border-0 bg-transparent p-0 text-sm font-medium shadow-none focus:ring-0" aria-label="Select budget filter">
                 <div className="flex items-center gap-1">
                   <IndianRupee className="h-3.5 w-3.5 text-primary" />
                   <SelectValue placeholder="Any budget" />
