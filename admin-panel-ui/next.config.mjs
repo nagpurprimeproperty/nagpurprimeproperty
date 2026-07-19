@@ -27,6 +27,10 @@ const nextConfig = {
     '@googlemaps/google-maps-services-js',
     '@aws-sdk/client-s3',
     'jsonwebtoken',
+    // Media compression — native/binary modules, must not be bundled by Next.js
+    'sharp',
+    'fluent-ffmpeg',
+    'ffmpeg-static',
   ],
   async rewrites() {
     return [
