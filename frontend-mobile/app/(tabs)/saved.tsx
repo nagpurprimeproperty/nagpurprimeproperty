@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+
 import {
   View,
   Text,
@@ -25,6 +26,13 @@ import colors from "@/theme/colors";
 import { usePagination } from "@/shared/hooks/usePagination";
 import LoadMoreButton from "@/shared/components/LoadMoreButton";
 import PropertyCardSkeleton from "@/components/skeleton/PropertyCardSkeleton";
+
+// Stable header element — has no dynamic content so it never needs to change.
+const SAVED_LIST_HEADER = (
+  <View className="mb-5 mt-2 ml-1">
+    <SectionDivider label="Saved Properties" />
+  </View>
+);
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -95,6 +103,24 @@ export default function SavedScreen() {
     []
   );
 
+  // Must be declared at top level — NOT inline in JSX (Rules of Hooks).
+  const savedContentStyle = useMemo(() => ({
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: (insets?.bottom ?? 0) + 100,
+  }), [insets?.bottom]);
+
+  const savedListFooter = useMemo(() => (
+    <View>
+      {isLoadingMore && <PropertyCardSkeleton count={1} />}
+      <LoadMoreButton
+        onPress={loadMore}
+        loading={isLoadingMore}
+        hasMore={hasMore}
+      />
+    </View>
+  ), [isLoadingMore, loadMore, hasMore]);
+
   // ─── Hydration skeleton (auth store not ready yet) ─────────────────────────
   if (!isHydrated) {
     return (
@@ -162,29 +188,12 @@ export default function SavedScreen() {
           maxToRenderPerBatch={3}
           windowSize={5}
           updateCellsBatchingPeriod={50}
-          contentContainerStyle={{
-            paddingHorizontal: 12,
-            paddingTop: 12,
-            paddingBottom: (insets?.bottom ?? 0) + 100,
-          }}
+          contentContainerStyle={savedContentStyle}
           showsVerticalScrollIndicator={false}
           onRefresh={handleRefresh}
           refreshing={refreshing}
-          ListHeaderComponent={() => (
-            <View className="mb-5 mt-2 ml-1">
-              <SectionDivider label="Saved Properties" />
-            </View>
-          )}
-          ListFooterComponent={() => (
-            <View>
-              {isLoadingMore && <PropertyCardSkeleton count={1} />}
-              <LoadMoreButton
-                onPress={loadMore}
-                loading={isLoadingMore}
-                hasMore={hasMore}
-              />
-            </View>
-          )}
+          ListHeaderComponent={SAVED_LIST_HEADER}
+          ListFooterComponent={savedListFooter}
           ListEmptyComponent={
             // Only shown after loading finishes and the list is genuinely empty
             <View className="items-center justify-center mt-32 px-10">

@@ -1,4 +1,5 @@
-﻿import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
+
 import {
   View,
   Text,
@@ -34,7 +35,7 @@ type SearchHeaderProps = {
   onFiltersChange: (f: any) => void;
 };
 
-export const SearchHeader = ({
+const SearchHeaderBase = ({
   searchQuery,
   onSearchChange,
   priceSort,
@@ -127,14 +128,14 @@ export const SearchHeader = ({
     return chips;
   }, [searchQuery, filters, onSearchChange, onFiltersChange]);
 
-  const handleCategoryPress = (val: string) => {
+  const handleCategoryPress = useCallback((val: string) => {
     onFiltersChange({
       ...filters,
       propertyType: val,
     });
-  };
+  }, [filters, onFiltersChange]);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     onFiltersChange({
       listingCategory: "All",
       propertyType: "All",
@@ -145,9 +146,9 @@ export const SearchHeader = ({
     });
     onSearchChange("");
     onSortChange("");
-  };
+  }, [onFiltersChange, onSearchChange, onSortChange]);
 
-  const handleSortCycle = () => {
+  const handleSortCycle = useCallback(() => {
     if (priceSort === "") {
       onSortChange("low_to_high");
     } else if (priceSort === "low_to_high") {
@@ -155,13 +156,13 @@ export const SearchHeader = ({
     } else {
       onSortChange("");
     }
-  };
+  }, [priceSort, onSortChange]);
 
-  const getSortLabel = () => {
+  const sortLabel = useMemo(() => {
     if (priceSort === "low_to_high") return "Sorted by Price: Low ▾";
     if (priceSort === "high_to_low") return "Sorted by Price: High ▾";
     return "Sorted by Relevance ▾";
-  };
+  }, [priceSort]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -261,7 +262,7 @@ export const SearchHeader = ({
             {resultCount} Properties Found
           </Text>
           <TouchableOpacity onPress={handleSortCycle} style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.sortText}>{getSortLabel()}</Text>
+            <Text style={styles.sortText}>{sortLabel}</Text>
           </TouchableOpacity>
         </View>
 
@@ -273,6 +274,8 @@ export const SearchHeader = ({
     </BlurView>
   );
 };
+
+export const SearchHeader = React.memo(SearchHeaderBase);
 
 const styles = StyleSheet.create({
   blurHeader: {

@@ -1,12 +1,13 @@
-﻿import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import React, { useState, useEffect } from "react";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { X } from "lucide-react-native";
 import SectionDivider from "@/shared/components/SectionDivider";
 import colors from "@/theme/colors";
 import shadows from "@/theme/shadows";
 
-const FilterChip = ({
+const FilterChip = React.memo(function FilterChip({
   label,
   isSelected,
   onPress,
@@ -14,25 +15,27 @@ const FilterChip = ({
   label: string;
   isSelected: boolean;
   onPress?: () => void;
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.8}
-    className={`px-5 py-2.5 rounded-full mr-2 mb-3 border ${
-      isSelected
-        ? "bg-orange-500 border-orange-500"
-        : "bg-slate-50 border-slate-100"
-    }`}
-  >
-    <Text
-      className={`font-bold text-[13px] ${
-        isSelected ? "text-white" : "text-slate-500"
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      className={`px-5 py-2.5 rounded-full mr-2 mb-3 border ${
+        isSelected
+          ? "bg-orange-500 border-orange-500"
+          : "bg-slate-50 border-slate-100"
       }`}
     >
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
+      <Text
+        className={`font-bold text-[13px] ${
+          isSelected ? "text-white" : "text-slate-500"
+        }`}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+});
 
 type FilterValues = {
   listingCategory: string;
@@ -94,7 +97,10 @@ export const FilterModal = ({
   const [budgetToText, setBudgetToText] = useState(initialMaxLakhs);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialValues.selectedAmenities);
 
-  // Keep local states in sync when initialValues change
+  // Keep local states in sync when initialValues change.
+  // Depend on individual primitive fields — NOT the object reference — so that
+  // unrelated SearchScreen re-renders (which create a new `initialValues` object)
+  // do not reset the user's in-progress filter edits.
   useEffect(() => {
     setListingCategory(initialValues.listingCategory);
     setPropertyType(initialValues.propertyType);
@@ -102,15 +108,31 @@ export const FilterModal = ({
     setBudgetFromText(initialValues.budgetFrom ? String(Number(initialValues.budgetFrom) / 100000) : "");
     setBudgetToText(initialValues.budgetTo ? String(Number(initialValues.budgetTo) / 100000) : "");
     setSelectedAmenities(initialValues.selectedAmenities);
-  }, [initialValues]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    initialValues.listingCategory,
+    initialValues.propertyType,
+    initialValues.bhk,
+    initialValues.budgetFrom,
+    initialValues.budgetTo,
+    // selectedAmenities: array reference — only re-sync on length change to avoid
+    // infinite loops; deep equality is handled by the onApply/onClear flow.
+    initialValues.selectedAmenities.length,
+  ]);
 
-  const toggleAmenity = (amenity: string) => {
-    if (selectedAmenities.includes(amenity)) {
-      setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
-    } else {
-      setSelectedAmenities([...selectedAmenities, amenity]);
-    }
-  };
+  // O(1) Set for amenity lookups — avoids O(n) Array.includes per chip per render.
+  const selectedAmenitiesSet = useMemo(
+    () => new Set(selectedAmenities),
+    [selectedAmenities]
+  );
+
+  const toggleAmenity = useCallback((amenity: string) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(amenity)
+        ? prev.filter((a) => a !== amenity)
+        : [...prev, amenity]
+    );
+  }, []);
 
   const handleApply = () => {
     // Convert Lakhs values back to raw pricing integers for backend querying
@@ -219,7 +241,7 @@ export const FilterModal = ({
             <FilterChip
               key={a}
               label={a}
-              isSelected={selectedAmenities.includes(a)}
+              isSelected={selectedAmenitiesSet.has(a)}
               onPress={() => toggleAmenity(a)}
             />
           ))}

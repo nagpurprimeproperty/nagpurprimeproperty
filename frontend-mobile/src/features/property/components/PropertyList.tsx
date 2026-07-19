@@ -144,20 +144,8 @@ export default function PropertyList({
         disableIntervalMomentum={fullSize}
         scrollEventThrottle={16}
         data={data}
-        renderItem={({ item }) => (
-          <PropertyListItem
-            item={item}
-            horizontal={horizontal}
-            fullSize={fullSize}
-            fullCardWidth={fullCardWidth}
-            gap={FULL_CARD_GAP}
-            onToggleSave={onToggleSave}
-            onCreateCallEnquiry={onCreateCallEnquiry}
-          />
-        )}
-        keyExtractor={(item: any, index: number) =>
-          item?.id?.toString() || item?._id?.toString() || index.toString()
-        }
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
         initialNumToRender={4}
         maxToRenderPerBatch={4}
         windowSize={3}

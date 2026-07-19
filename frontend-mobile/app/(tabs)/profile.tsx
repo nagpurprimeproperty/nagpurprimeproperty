@@ -23,7 +23,8 @@ import {
   UserX,
   Users,
 } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import {
   Animated,
   Image,
@@ -38,8 +39,7 @@ import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import SectionDivider from "@/shared/components/SectionDivider";
 import Shimmer from "@/shared/components/Shimmer";
 
-function StatCard({ value, label, delay, onPress, active }: any) {
-  const { colors } = useTheme();
+const StatCard = React.memo(function StatCard({ value, label, delay, onPress, active, colors }: any) {
   const scale = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -82,10 +82,9 @@ function StatCard({ value, label, delay, onPress, active }: any) {
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
 
-function MenuItem({ icon: Icon, label, badge, onPress, delay, active }: any) {
-  const { colors } = useTheme();
+const MenuItem = React.memo(function MenuItem({ icon: Icon, label, badge, onPress, delay, active, colors }: any) {
   const translateX = useRef(new Animated.Value(20)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -128,10 +127,13 @@ function MenuItem({ icon: Icon, label, badge, onPress, delay, active }: any) {
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
+
+// Module-level constant — shimmerColors is static, no need to recreate on every render.
+const PROFILE_SHIMMER_COLORS: [string, string, string] = ["#E2E8F0", "#F8FAFC", "#E2E8F0"];
 
 function ProfileSkeleton() {
-  const shimmerColors = ["#E2E8F0", "#F8FAFC", "#E2E8F0"];
+  const shimmerColors = PROFILE_SHIMMER_COLORS;
 
   return (
     <View className="px-3 pt-2">
@@ -281,57 +283,93 @@ export default function ProfileScreen() {
     logoutMutation.mutate();
   }, [logoutMutation]);
 
+  const handleShowLogout = useCallback(() => setConfirmLogoutVisible(true), []);
+  const handleCancelLogout = useCallback(() => setConfirmLogoutVisible(false), []);
+  const handleVerifyNumber = useCallback(() => openAuth("verifyNumber"), [openAuth]);
+
+  // Stable onPress handlers for each menu item — one useCallback per route.
+  const goMyProperties    = useCallback(() => router.push("/(myListing)/myProperties"), [router]);
+  const goLeads           = useCallback(() => router.push("/(myListing)/leads"), [router]);
+  const goSubscription    = useCallback(() => router.push("/(subscription)/subscription"), [router]);
+  const goSaved           = useCallback(() => router.push("/saved"), [router]);
+  const goEnquiries       = useCallback(() => router.push("/(myEnquiries)/enquiries"), [router]);
+  const goLocation        = useCallback(() => router.push("/location"), [router]);
+  const goNotifications   = useCallback(() => router.push("/notification"), [router]);
+  const goHelp            = useCallback(() => router.push("/(accountAndSupport)/helpAndSupport"), [router]);
+  const goTerms           = useCallback(() => router.push("/(accountAndSupport)/termsAndConditions"), [router]);
+  const goPrivacy         = useCallback(() => router.push("/(accountAndSupport)/privacy"), [router]);
+  const goAbout           = useCallback(() => router.push("/(accountAndSupport)/about"), [router]);
+  const goDeleteAccount   = useCallback(() => router.push("/(accountAndSupport)/deleteAccount"), [router]);
+  const goBellNotification = useCallback(() => router.push("/notification"), [router]);
+
+  // rightElement: memoized so it only recreates when unreadCount changes.
+  const rightElement = useMemo(() => (
+    <TouchableOpacity
+      onPress={goBellNotification}
+      className="w-11 h-11 items-center justify-center relative"
+      activeOpacity={0.7}
+    >
+      <Bell size={24} color="#1E293B" strokeWidth={2} />
+      {unreadCount > 0 && (
+        <View
+          style={{
+            position: "absolute",
+            top: 2,
+            right: 2,
+            backgroundColor: "#EF4444",
+            borderRadius: 10,
+            paddingHorizontal: 4,
+            minWidth: 18,
+            height: 18,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1.5,
+            borderColor: "#FFFFFF",
+          }}
+        >
+          <Text
+            numberOfLines={1}
+            style={{
+              color: "white",
+              fontSize: 9,
+              fontWeight: "900",
+              textAlign: "center",
+              includeFontPadding: false,
+            }}
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  ), [unreadCount, goBellNotification]);
+
+  // profileDetails: memoized so inline array literal is not recreated every render.
+  const profileDetails = useMemo(() => [
+    { label: "Mobile", value: mobileValue },
+    { label: "Email",  value: emailValue },
+    { label: "City",   value: cityValue },
+    { label: "Area",   value: areaValue },
+  ], [mobileValue, emailValue, cityValue, areaValue]);
+
+  // scrollContentStyle: memoized to avoid a new inline object every render.
+  const scrollContentStyle = useMemo(
+    () => ({ paddingHorizontal: 12, paddingBottom: 120 }),
+    []
+  );
+
   return (
     <ScreenWrapper edges={["top"]}>
       <ScreenHeader
         title="Profile"
         subtitle="Your account"
         showBack={false}
-        rightElement={
-          <TouchableOpacity
-            onPress={() => router.push("/notification")}
-            className="w-11 h-11 items-center justify-center relative"
-            activeOpacity={0.7}
-          >
-            <Bell size={24} color="#1E293B" strokeWidth={2} />
-            {unreadCount > 0 && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: 2,
-                  right: 2,
-                  backgroundColor: "#EF4444",
-                  borderRadius: 10,
-                  paddingHorizontal: 4,
-                  minWidth: 18,
-                  height: 18,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 1.5,
-                  borderColor: "#FFFFFF",
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    color: "white",
-                    fontSize: 9,
-                    fontWeight: "900",
-                    textAlign: "center",
-                    includeFontPadding: false,
-                  }}
-                >
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        }
+        rightElement={rightElement}
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 120 }}
+        contentContainerStyle={scrollContentStyle}
       >
         {isAuthenticated && isLoading ? (
           <ProfileSkeleton />
@@ -412,7 +450,7 @@ export default function ProfileScreen() {
                             borderColor: colors.error,
                             flex: 1
                           }}
-                          onPress={() => setConfirmLogoutVisible(true)}
+                          onPress={handleShowLogout}
                         >
                           <Text className="font-black text-xs uppercase tracking-wider"
                             style={{ color: colors.error }}
@@ -426,7 +464,7 @@ export default function ProfileScreen() {
                         activeOpacity={0.85}
                         className="flex-row items-center justify-center rounded-full py-3 px-6"
                         style={{ backgroundColor: colors.black, alignSelf: "center", minWidth: 180 }}
-                        onPress={() => openAuth("verifyNumber")}
+                        onPress={handleVerifyNumber}
                       >
                         <PhoneCall size={16} color={colors.white} />
                         <Text className="text-white font-black text-xs uppercase tracking-wider ml-2">
@@ -442,12 +480,7 @@ export default function ProfileScreen() {
                     Profile Details
                   </Text>
 
-                  {[
-                    { label: "Mobile", value: mobileValue },
-                    { label: "Email", value: emailValue },
-                    { label: "City", value: cityValue },
-                    { label: "Area", value: areaValue },
-                  ].map((item) => (
+                  {profileDetails.map((item) => (
                     <View key={item.label} className="flex-row items-center justify-between py-3 border-b border-slate-100">
                       <Text className="text-xs font-bold text-slate-500">{item.label}</Text>
                       <Text className="text-sm font-bold text-slate-900 text-right flex-1 ml-4">
@@ -465,6 +498,7 @@ export default function ProfileScreen() {
                       delay={50 + i * 50}
                       onPress={() => router.push(s.navigation as any)}
                       active={animationsTriggered}
+                      colors={colors}
                     />
                   ))}
                 </View>
@@ -475,99 +509,27 @@ export default function ProfileScreen() {
 
             <View className="mb-3">
               <SectionDivider label="Property Management" />
-              <MenuItem
-                icon={Home}
-                label="My Properties"
-                delay={100}
-                onPress={() => router.push("/(myListing)/myProperties")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={Users}
-                label="Leads"
-                delay={130}
-                onPress={() => router.push("/(myListing)/leads")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={Star}
-                label="Subscription Plans"
-                delay={160}
-                onPress={() => router.push("/(subscription)/subscription")}
-                active={animationsTriggered}
-              />
+              <MenuItem icon={Home}  label="My Properties"     delay={100} onPress={goMyProperties}  active={animationsTriggered} colors={colors} />
+              <MenuItem icon={Users} label="Leads"             delay={130} onPress={goLeads}          active={animationsTriggered} colors={colors} />
+              <MenuItem icon={Star}  label="Subscription Plans" delay={160} onPress={goSubscription}  active={animationsTriggered} colors={colors} />
             </View>
 
             <View className="mb-3 mt-2">
               <SectionDivider label="Buyer Preferences" />
-              <MenuItem
-                icon={Heart}
-                label="Saved Properties"
-                delay={190}
-                onPress={() => router.push("/saved")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={MessageSquare}
-                label="My Enquiries"
-                delay={220}
-                onPress={() => router.push("/(myEnquiries)/enquiries")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={MapPin}
-                label="Set Location"
-                delay={250}
-                onPress={() => router.push("/location")}
-                active={animationsTriggered}
-              />
+              <MenuItem icon={Heart}        label="Saved Properties" delay={190} onPress={goSaved}     active={animationsTriggered} colors={colors} />
+              <MenuItem icon={MessageSquare} label="My Enquiries"    delay={220} onPress={goEnquiries} active={animationsTriggered} colors={colors} />
+              <MenuItem icon={MapPin}       label="Set Location"     delay={250} onPress={goLocation}  active={animationsTriggered} colors={colors} />
             </View>
 
             <View className="mb-4 mt-2">
               <SectionDivider label="Support & Legal" />
-              <MenuItem
-                icon={Bell}
-                label="Notifications"
-                delay={280}
-                onPress={() => router.push("/notification")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={HelpCircle}
-                label="Help & Support"
-                delay={310}
-                onPress={() => router.push("/(accountAndSupport)/helpAndSupport")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={FileText}
-                label="Terms & Conditions"
-                delay={340}
-                onPress={() => router.push("/(accountAndSupport)/termsAndConditions")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={ShieldCheck}
-                label="Privacy Policy"
-                delay={370}
-                onPress={() => router.push("/(accountAndSupport)/privacy")}
-                active={animationsTriggered}
-              />
-              <MenuItem
-                icon={Info}
-                label="About Us"
-                delay={400}
-                onPress={() => router.push("/(accountAndSupport)/about")}
-                active={animationsTriggered}
-              />
+              <MenuItem icon={Bell}        label="Notifications"      delay={280} onPress={goNotifications} active={animationsTriggered} colors={colors} />
+              <MenuItem icon={HelpCircle}  label="Help & Support"     delay={310} onPress={goHelp}         active={animationsTriggered} colors={colors} />
+              <MenuItem icon={FileText}    label="Terms & Conditions" delay={340} onPress={goTerms}        active={animationsTriggered} colors={colors} />
+              <MenuItem icon={ShieldCheck} label="Privacy Policy"     delay={370} onPress={goPrivacy}      active={animationsTriggered} colors={colors} />
+              <MenuItem icon={Info}        label="About Us"           delay={400} onPress={goAbout}        active={animationsTriggered} colors={colors} />
               {isAuthenticated && (
-                <MenuItem
-                  icon={UserX}
-                  label="Delete Account"
-                  delay={430}
-                  onPress={() => router.push("/(accountAndSupport)/deleteAccount")}
-                  active={animationsTriggered}
-                />
+                <MenuItem icon={UserX} label="Delete Account" delay={430} onPress={goDeleteAccount} active={animationsTriggered} colors={colors} />
               )}
             </View>
           </>
@@ -582,7 +544,7 @@ export default function ProfileScreen() {
         confirmLabel="Logout"
         cancelLabel="Cancel"
         onConfirm={handleLogoutConfirm}
-        onCancel={() => setConfirmLogoutVisible(false)}
+        onCancel={handleCancelLogout}
       />
     </ScreenWrapper>
   );

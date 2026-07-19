@@ -1,4 +1,4 @@
-﻿import { API_BASE_URL } from '../api/apiClient';
+import { API_BASE_URL } from '../api/apiClient';
 import { useAuthStore } from '@/features/auth/store/authStore';
 
 export interface UploadMediaResponse {
@@ -63,15 +63,38 @@ export async function uploadFile(uri: string): Promise<string> {
 }
 
 /**
- * Uploads an array of local/remote photo URIs. Remote URLs are preserved.
- * Local URIs are uploaded concurrently using single file upload requests.
- * Returns an array of uploaded CDN URLs.
+ * Runs `worker` on each item, with at most `limit` concurrent executions.
+ * Results are returned in the original order.
+ */
+async function runWithConcurrencyLimit<T>(
+  items: string[],
+  limit: number,
+  worker: (item: string) => Promise<T>
+): Promise<T[]> {
+  const results: T[] = new Array(items.length);
+  let index = 0;
+
+  async function next(): Promise<void> {
+    const current = index++;
+    if (current >= items.length) return;
+    results[current] = await worker(items[current]);
+    return next();
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, next));
+  return results;
+}
+
+/**
+ * Uploads an array of local/remote photo URIs with a concurrency cap of 3.
+ * Remote URLs are preserved. Local URIs are uploaded via single-file requests.
+ * Returns an array of CDN URLs in the original order.
  */
 export async function uploadPhotos(localUris: string[]): Promise<string[]> {
   if (!localUris || localUris.length === 0) return [];
-  const uploadPromises = localUris.map((uri) => uploadFile(uri));
-  return Promise.all(uploadPromises);
+  return runWithConcurrencyLimit(localUris, 3, uploadFile);
 }
+
 
 /**
  * Deletes a single uploaded media file from CDN.

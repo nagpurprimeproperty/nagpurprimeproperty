@@ -1,6 +1,7 @@
 import { useTheme } from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, usePathname } from "expo-router";
+import { useRouter } from "expo-router";
+
 import { useAuthStore } from "@/features/auth";
 import { useModal } from "@/context/ModalContext";
 import React, { useCallback, useMemo, useState, useRef } from "react";
@@ -221,7 +222,7 @@ const PropertyCard = ({
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { openAuth } = useModal();
   const router = useRouter();
-  const pathname = usePathname();
+
   const windowWidth = useWindowDimensions().width;
   const heartScale = useSharedValue(1);
   const cardScale = useSharedValue(1);
@@ -369,12 +370,19 @@ const PropertyCard = ({
 
   const handleCardPress = useCallback(() => {
     if (!propertyId) return;
-    if (pathname.includes("/propertyDetail")) {
+    // Avoid stacking duplicate propertyDetail screens when already on one.
+    // Read the current route name imperatively (zero re-render cost).
+    const state = router.canGoBack();
+    const isOnDetail =
+      typeof (router as any).pathname === "string"
+        ? (router as any).pathname.includes("/propertyDetail")
+        : false;
+    if (isOnDetail) {
       router.replace({ pathname: "/propertyDetail/[id]", params: { id: propertyId } });
     } else {
       router.push({ pathname: "/propertyDetail/[id]", params: { id: propertyId } });
     }
-  }, [propertyId, pathname, router]);
+  }, [propertyId, router]);
 
   const handleLike = useCallback(() => {
     if (!isAuthenticated) {

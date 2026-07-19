@@ -66,25 +66,41 @@ const OriginalTextRender = (Text as any).render;
 if (OriginalTextRender && !(Text as any).__interPatched) {
   (Text as any).__interPatched = true;
   (Text as any).render = function (props: any, ref: any) {
-    const flatStyle = props.style
-      ? Array.isArray(props.style)
-        ? Object.assign({}, ...props.style.filter(Boolean))
-        : props.style
-      : {};
-    const fontFamily =
-      flatStyle.fontFamily ?? _cachedInterFamily(flatStyle.fontWeight);
-    const patchedStyle = { fontFamily, ...flatStyle };
-    return OriginalTextRender({ ...props, style: patchedStyle }, ref);
+    const style = props.style;
+
+    // Fast path 1: no style at all \u2014 inject the default Inter Regular and bail.
+    if (!style) {
+      return OriginalTextRender(
+        { ...props, style: { fontFamily: 'Inter_400Regular' } },
+        ref
+      );
+    }
+
+    // Fast path 2: already a plain object with an explicit fontFamily \u2014 nothing to do.
+    if (!Array.isArray(style) && style.fontFamily) {
+      return OriginalTextRender(props, ref);
+    }
+
+    // Slow path: style is an array or a plain object without fontFamily \u2014 flatten and map.
+    const flatStyle = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    const fontFamily = flatStyle.fontFamily ?? _cachedInterFamily(flatStyle.fontWeight);
+    return OriginalTextRender(
+      { ...props, style: { fontFamily, ...flatStyle } },
+      ref
+    );
   };
 } else {
   // Fallback for RN versions without .render
-  if (Text.defaultProps == null) (Text as any).defaultProps = {};
-  (Text.defaultProps as any).style = { fontFamily: "Inter_400Regular" };
+  if ((Text as any).defaultProps == null) (Text as any).defaultProps = {};
+  (Text as any).defaultProps.style = { fontFamily: "Inter_400Regular" };
 }
 
+
 // Patch TextInput
-if (TextInput.defaultProps == null) (TextInput as any).defaultProps = {};
-(TextInput.defaultProps as any).style = { fontFamily: "Inter_400Regular" };
+if ((TextInput as any).defaultProps == null) (TextInput as any).defaultProps = {};
+(TextInput as any).defaultProps.style = { fontFamily: "Inter_400Regular" };
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Dev-only tooling ─────────────────────────────────────────────────────────
