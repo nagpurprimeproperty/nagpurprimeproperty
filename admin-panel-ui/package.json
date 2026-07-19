@@ -8,6 +8,10 @@
     "start": "NODE_ENV=production node server.js",
     "lint": "eslint ."
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["ffmpeg-static", "sharp", "bcrypt"],
+    "approvedBuildsDependencies": ["ffmpeg-static", "sharp", "bcrypt"]
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1043.0",
     "@googlemaps/google-maps-services-js": "^3.4.2",
