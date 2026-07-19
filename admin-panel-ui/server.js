@@ -7,6 +7,60 @@ const mongoose = require('mongoose');
 const Busboy = require('busboy');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const path = require('path');
+const sharp = require('sharp');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegStatic = require('ffmpeg-static');
+const { writeFile, readFile, unlink } = require('fs/promises');
+const { tmpdir } = require('os');
+const { randomUUID } = require('crypto');
+
+// Point fluent-ffmpeg to the bundled static binary (no system install needed)
+ffmpeg.setFfmpegPath(ffmpegStatic);
+
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+
+// ── Image compression ──────────────────────────────────────────────────────────
+async function compressImage(buffer) {
+  return sharp(buffer)
+    .resize({ width: 1920, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer();
+}
+
+// ── Video compression (via temp files — ffmpeg requires file paths) ────────────
+async function compressVideo(buffer) {
+  const id = randomUUID();
+  const inputPath = path.join(tmpdir(), `${id}-input.mp4`);
+  const outputPath = path.join(tmpdir(), `${id}-output.mp4`);
+
+  await writeFile(inputPath, buffer);
+
+  await new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .outputOptions([
+        '-c:v libx264',        // H.264 codec — widest compatibility
+        '-crf 28',             // Quality factor: lower = better quality
+        '-preset fast',        // Encoding speed vs compression ratio
+        '-c:a aac',            // AAC audio
+        '-b:a 128k',           // 128 kbps audio bitrate
+        '-movflags +faststart',// Move moov atom to front for streaming
+      ])
+      .save(outputPath)
+      .on('end', resolve)
+      .on('error', reject);
+  });
+
+  const compressed = await readFile(outputPath);
+
+  // Clean up temp files (fire-and-forget)
+  Promise.all([
+    unlink(inputPath).catch(() => {}),
+    unlink(outputPath).catch(() => {}),
+  ]);
+
+  return compressed;
+}
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOST || process.env.HOSTNAME || '0.0.0.0';
@@ -33,7 +87,7 @@ function getS3() {
   return _s3;
 }
 
-async function uploadToS3(buffer, originalname, folder) {
+async function uploadToS3(buffer, originalname, folder, contentType) {
   const ext = path.extname(originalname);
   const key = `${folder}/${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
   await getS3().send(
@@ -41,7 +95,7 @@ async function uploadToS3(buffer, originalname, folder) {
       Bucket: process.env.S3_BUCKET || '',
       Key: key,
       Body: buffer,
-      ContentType: getMimeType(ext),
+      ContentType: contentType || getMimeType(ext),
     })
   );
   const base = process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT || '';
@@ -161,10 +215,34 @@ function handleMediaUpload(req, res) {
           }
         }
 
-        const photoUrls = await Promise.all(
-          photos.map((p) => uploadToS3(p.buffer, p.originalname, 'properties'))
+        // ── Compress photos → WebP ─────────────────────────────────────────
+        const compressedPhotos = await Promise.all(
+          photos.map(async (p) => {
+            if (IMAGE_TYPES.includes(p.mimetype)) {
+              const buf = await compressImage(p.buffer);
+              return { buffer: buf, name: p.originalname.replace(/\.[^.]+$/, '.webp'), type: 'image/webp' };
+            }
+            return { buffer: p.buffer, name: p.originalname, type: p.mimetype };
+          })
         );
-        const videoUrl = video ? await uploadToS3(video.buffer, video.originalname, 'properties/videos') : null;
+
+        // ── Compress video → MP4 (H.264) ──────────────────────────────────────
+        let compressedVideo = null;
+        if (video) {
+          if (VIDEO_TYPES.includes(video.mimetype)) {
+            const buf = await compressVideo(video.buffer);
+            compressedVideo = { buffer: buf, name: video.originalname.replace(/\.[^.]+$/, '.mp4'), type: 'video/mp4' };
+          } else {
+            compressedVideo = { buffer: video.buffer, name: video.originalname, type: video.mimetype };
+          }
+        }
+
+        const photoUrls = await Promise.all(
+          compressedPhotos.map((p) => uploadToS3(p.buffer, p.name, 'properties', p.type))
+        );
+        const videoUrl = compressedVideo
+          ? await uploadToS3(compressedVideo.buffer, compressedVideo.name, 'properties/videos', compressedVideo.type)
+          : null;
 
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Credentials', 'true');
