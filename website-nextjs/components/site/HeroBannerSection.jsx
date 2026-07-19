@@ -1,4 +1,4 @@
-﻿// HeroBannerSection — Server Component
+// HeroBannerSection — Server Component
 // Renders the LCP hero <Image> in SSR HTML so the browser preload scanner
 // can discover it immediately — before any JS is parsed or executed.
 // Next.js emits fetchpriority="high" + <link rel="preload"> automatically
@@ -14,6 +14,14 @@ export default function HeroBannerSection({ initial = {}, popularAreas = [] }) {
 
   return (
     <>
+      {/* Explicit preload hint — hoisted to <head> by Next.js App Router.
+          Browser starts fetching the LCP image before the body is parsed. */}
+      <link
+        rel="preload"
+        as="image"
+        href={`/_next/image?url=${encodeURIComponent(bannerSrc)}&w=1920&q=75`}
+        fetchPriority="high"
+      />
       {/* ── HERO — image is server-rendered for instant LCP ── */}
       <section className="relative overflow-hidden">
         <Image

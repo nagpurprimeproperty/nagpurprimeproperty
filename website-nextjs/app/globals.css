@@ -318,13 +318,10 @@
 }
 
 /* Add Property button premium glowing and shimmering styling */
+/* Composited glow — opacity+transform run on GPU, zero main-thread cost per frame */
 @keyframes premium-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.55 0.22 35 / 0.95), 0 4px 14px oklch(0.55 0.22 35 / 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 12px oklch(0.55 0.22 35 / 0), 0 8px 30px oklch(0.55 0.22 35 / 0.9);
-  }
+  0%, 100% { opacity: 0.5; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
 
 @keyframes shimmer-swipe {
@@ -340,19 +337,32 @@
   background: linear-gradient(135deg, oklch(0.65 0.22 38) 0%, oklch(0.75 0.20 55) 50%, oklch(0.58 0.22 35) 100%) !important;
   background-size: 200% 100% !important;
   color: oklch(1 0 0) !important;
-  font-weight: 700 !important; /* Make text bolder */
+  font-weight: 700 !important;
   font-family: var(--font-display) !important;
   border: none !important;
-  border-radius: 9999px !important; /* Pill design for modern premium look */
+  border-radius: 9999px !important;
   padding: 0.5rem 1.25rem !important;
   position: relative !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  animation: premium-glow 1.2s infinite ease-in-out !important; /* Speed up to 1.2s for higher urgency/attention */
+  /* No animation here — glow is on ::before pseudo-element (GPU composited) */
+}
+
+/* Glow halo — uses opacity+transform (composited), never triggers paint */
+.btn-premium-cta::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -4px !important;
+  border-radius: inherit !important;
+  background: oklch(0.55 0.22 35 / 0.55) !important;
+  filter: blur(10px) !important;
+  z-index: -1 !important;
+  animation: premium-glow 1.2s infinite ease-in-out !important;
+  pointer-events: none !important;
 }
 
 /* Shimmer sweep overlay */
