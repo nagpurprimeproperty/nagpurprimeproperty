@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ArrowUpRight, Mail, MapPin, Phone, Shield, Star } from 'lucide-react';
@@ -42,24 +41,9 @@ function YoutubeIcon({ className }) {
 }
 
 export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
-  const [aboutData, setAboutData] = useState(initialAboutData);
-
-  useEffect(() => {
-    // Fetch fresh details from API on client-side mount
-    async function load() {
-      try {
-        const res = await fetch('/api/pages/about-us');
-        const json = await res.json();
-        if (json.success && json.data?.content) {
-          const parsed = JSON.parse(json.data.content);
-          setAboutData(parsed);
-        }
-      } catch (err) {
-        console.error('Failed to load footer config on client:', err);
-      }
-    }
-    load();
-  }, []);
+  // Data is provided by the Server Component (Footer.jsx) which fetches directly
+  // from MongoDB with a 1-hour cache — no client-side fetch needed.
+  const aboutData = initialAboutData;
 
   const activeLocalities = initialAreasList.length > 0 
     ? initialAreasList.slice(0, 4).map(a => ({ slug: a.slug, label: a.name }))

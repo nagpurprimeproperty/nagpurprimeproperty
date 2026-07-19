@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState, useMemo, memo, useRef } from 'react'
 import { PropertyCard, PropertyCardSkeleton } from './PropertyCard'
 
@@ -28,7 +28,7 @@ const FeaturedPropertiesSection = memo(function FeaturedPropertiesSection({ init
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect() } },
-      { rootMargin: '300px' }
+      { rootMargin: '50px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
