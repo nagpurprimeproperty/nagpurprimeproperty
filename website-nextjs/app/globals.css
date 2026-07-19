@@ -104,6 +104,7 @@
   html {
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
+    overflow-x: clip; /* definitively prevents horizontal scroll at viewport level */
   }
   body {
     background-color: var(--color-background);
@@ -354,7 +355,7 @@
   box-shadow: 0 0 18px oklch(0.55 0.22 35 / 0.45), 0 4px 14px oklch(0.55 0.22 35 / 0.35) !important;
 }
 
-/* Shimmer sweep overlay — will-change promotes to own GPU layer (composited) */
+/* Shimmer sweep overlay */
 .btn-premium-cta::after {
   content: "" !important;
   position: absolute !important;
@@ -372,7 +373,8 @@
   ) !important;
   transform: translateX(-150%) skewX(-25deg) !important;
   animation: shimmer-swipe 3.5s infinite linear !important;
-  will-change: transform !important;
+  /* No will-change: transform — compositor-promoted children can escape
+     the parent's overflow:hidden clip in Chrome, causing page-level overflow */
   pointer-events: none !important;
 }
 
