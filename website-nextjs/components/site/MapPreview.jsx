@@ -50,7 +50,9 @@ export function MapPreview({
     map.addListener("click", (e) => {
       if (!e.latLng) return;
       const geocoder = new google.maps.Geocoder();
+      console.log("MapPreview geocoding coordinates:", e.latLng.lat(), e.latLng.lng());
       geocoder.geocode({ location: e.latLng }, (results, status) => {
+        console.log("MapPreview geocoding response status:", status, "results:", results);
         if (status === "OK" && results && results.length > 0) {
           let sublocality = '';
           for (const res of results) {

@@ -233,7 +233,9 @@ export function MapSearchDialog({
   const handleReverseGeocode = useCallback((pos) => {
     if (!window.google) return;
     const geocoder = new google.maps.Geocoder();
+    console.log("Geocoding coordinates:", pos);
     geocoder.geocode({ location: pos }, (results, status) => {
+      console.log("Geocoding response status:", status, "results:", results);
       if (status === 'OK' && results && results.length > 0) {
         setSearchQuery(results[0].formatted_address || '');
         

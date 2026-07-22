@@ -43,7 +43,9 @@ export function LocationMapPicker({ lat, lng, onFill, disabled }) {
     // ── Stable reverseGeocode ─────────────────────────────────────────────────
     const reverseGeocode = useCallback((latVal, lngVal) => {
         const geocoder = new google.maps.Geocoder();
+        console.log("Geocoding coordinates:", latVal, lngVal);
         geocoder.geocode({ location: { lat: latVal, lng: lngVal } }, (results, status) => {
+            console.log("Geocoding response status:", status, "results:", results);
             if (status === "OK" && results && results.length > 0) {
                 setAddress(results[0].formatted_address);
                 
