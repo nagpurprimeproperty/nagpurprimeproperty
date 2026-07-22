@@ -22,7 +22,7 @@ export function useProperties(filters = {}, options = {}) {
         data: json.data || [],
         total: json.total || 0,
         page: json.page || 1,
-        limit: json.limit || 12,
+        limit: json.limit || 6,
         totalPages: json.totalPages || 1,
       };
     },
