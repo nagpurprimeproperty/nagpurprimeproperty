@@ -234,9 +234,23 @@ export function MapSearchDialog({
     if (!window.google) return;
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: pos }, (results, status) => {
-      if (status === 'OK' && results?.[0]) {
+      if (status === 'OK' && results && results.length > 0) {
         setSearchQuery(results[0].formatted_address || '');
-        const localityName = resolveLocalityName(results[0].address_components || []);
+        
+        const mergedComponents = [];
+        const seenTypes = new Set();
+        for (const res of results) {
+          if (!res.address_components) continue;
+          for (const comp of res.address_components) {
+            const hasSeenAnyType = comp.types.some((t) => seenTypes.has(t));
+            if (!hasSeenAnyType) {
+              mergedComponents.push(comp);
+              comp.types.forEach((t) => seenTypes.add(t));
+            }
+          }
+        }
+
+        const localityName = resolveLocalityName(mergedComponents);
         if (localityName) {
           setSelectedLocality(localityName);
         }

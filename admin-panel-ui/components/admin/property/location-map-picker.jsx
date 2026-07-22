@@ -44,9 +44,23 @@ export function LocationMapPicker({ lat, lng, onFill, disabled }) {
     const reverseGeocode = useCallback((latVal, lngVal) => {
         const geocoder = new google.maps.Geocoder();
         geocoder.geocode({ location: { lat: latVal, lng: lngVal } }, (results, status) => {
-            if (status === "OK" && results?.[0]) {
+            if (status === "OK" && results && results.length > 0) {
                 setAddress(results[0].formatted_address);
-                fillFromComponents(results[0].address_components ?? [], latVal, lngVal);
+                
+                const mergedComponents = [];
+                const seenTypes = new Set();
+                for (const res of results) {
+                    if (!res.address_components) continue;
+                    for (const comp of res.address_components) {
+                        const hasSeenAnyType = comp.types.some((t) => seenTypes.has(t));
+                        if (!hasSeenAnyType) {
+                            mergedComponents.push(comp);
+                            comp.types.forEach((t) => seenTypes.add(t));
+                        }
+                    }
+                }
+                
+                fillFromComponents(mergedComponents, latVal, lngVal);
             }
         });
     }, [fillFromComponents]); // fillFromComponents is stable so this is too

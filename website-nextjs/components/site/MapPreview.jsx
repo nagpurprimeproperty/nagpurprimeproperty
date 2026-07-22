@@ -51,9 +51,21 @@ export function MapPreview({
       if (!e.latLng) return;
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: e.latLng }, (results, status) => {
-        if (status === "OK" && results?.[0]) {
-          const comps = results[0].address_components || [];
-          const sublocality = comps.find((c) =>
+        if (status === "OK" && results && results.length > 0) {
+          const mergedComponents = [];
+          const seenTypes = new Set();
+          for (const res of results) {
+            if (!res.address_components) continue;
+            for (const comp of res.address_components) {
+              const hasSeenAnyType = comp.types.some((t) => seenTypes.has(t));
+              if (!hasSeenAnyType) {
+                mergedComponents.push(comp);
+                comp.types.forEach((t) => seenTypes.add(t));
+              }
+            }
+          }
+
+          const sublocality = mergedComponents.find((c) =>
             c.types.includes("sublocality_level_1") ||
             c.types.includes("sublocality") ||
             c.types.includes("neighborhood")
