@@ -57,10 +57,10 @@ export default function HeroSearchCard({ popularAreas }) {
             onSelect={handleSelectSuggestion}
             placeholder="Search locality, project or area…"
           />
-          <div className="rounded-xl border border-border bg-background px-3 py-1.5">
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Budget</div>
+          <div className="rounded-xl border border-border bg-background px-3 h-12 flex flex-col justify-center">
+            <div className="text-[10px] leading-tight font-semibold uppercase tracking-widest text-muted-foreground">Budget</div>
             <Select value={budget} onValueChange={setBudget}>
-              <SelectTrigger className="h-7 border-0 bg-transparent p-0 text-sm font-medium shadow-none focus:ring-0" aria-label="Select budget filter">
+              <SelectTrigger className="h-5 border-0 bg-transparent p-0 text-sm font-medium shadow-none focus:ring-0" aria-label="Select budget filter">
                 <div className="flex items-center gap-1">
                   <IndianRupee className="h-3.5 w-3.5 text-primary" />
                   <SelectValue placeholder="Any budget" />
@@ -71,7 +71,7 @@ export default function HeroSearchCard({ popularAreas }) {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="hero" size="lg" onClick={goSearch}>
+          <Button variant="hero" className="h-12 rounded-xl px-8" onClick={goSearch}>
             <Search className="mr-1 h-4 w-4" /> Search
           </Button>
         </div>
