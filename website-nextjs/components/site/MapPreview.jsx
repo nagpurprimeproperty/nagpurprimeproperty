@@ -52,24 +52,16 @@ export function MapPreview({
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: e.latLng }, (results, status) => {
         if (status === "OK" && results && results.length > 0) {
-          const mergedComponents = [];
-          const seenTypes = new Set();
+          let sublocality = '';
           for (const res of results) {
-            if (!res.address_components) continue;
-            for (const comp of res.address_components) {
-              const hasSeenAnyType = comp.types.some((t) => seenTypes.has(t));
-              if (!hasSeenAnyType) {
-                mergedComponents.push(comp);
-                comp.types.forEach((t) => seenTypes.add(t));
-              }
+            const comps = res.address_components || [];
+            const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? '';
+            sublocality = get('sublocality_level_1') || get('sublocality') || get('neighborhood');
+            if (sublocality) {
+              break;
             }
           }
-
-          const sublocality = mergedComponents.find((c) =>
-            c.types.includes("sublocality_level_1") ||
-            c.types.includes("sublocality") ||
-            c.types.includes("neighborhood")
-          )?.long_name;
+          
           if (sublocality) {
             onSelectLocality?.(sublocality);
           }

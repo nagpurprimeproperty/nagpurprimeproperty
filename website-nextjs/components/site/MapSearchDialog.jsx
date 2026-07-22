@@ -237,26 +237,34 @@ export function MapSearchDialog({
       if (status === 'OK' && results && results.length > 0) {
         setSearchQuery(results[0].formatted_address || '');
         
-        const mergedComponents = [];
-        const seenTypes = new Set();
+        let localityName = '';
         for (const res of results) {
-          if (!res.address_components) continue;
-          for (const comp of res.address_components) {
-            const hasSeenAnyType = comp.types.some((t) => seenTypes.has(t));
-            if (!hasSeenAnyType) {
-              mergedComponents.push(comp);
-              comp.types.forEach((t) => seenTypes.add(t));
+          const comps = res.address_components || [];
+          const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? '';
+          localityName = get('sublocality_level_1') || get('sublocality') || get('neighborhood') || get('locality');
+          if (localityName && localityName !== 'Nagpur') {
+            break;
+          }
+        }
+        
+        // Fallback to "Nagpur" if no specific sublocality/neighborhood is found
+        if (!localityName) {
+          for (const res of results) {
+            const comps = res.address_components || [];
+            const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? '';
+            localityName = get('locality');
+            if (localityName) {
+              break;
             }
           }
         }
-
-        const localityName = resolveLocalityName(mergedComponents);
+        
         if (localityName) {
           setSelectedLocality(localityName);
         }
       }
     });
-  }, [resolveLocalityName]);
+  }, []);
 
   // Initialize Map with a small timeout to let dialog mounting animation complete
   useEffect(() => {

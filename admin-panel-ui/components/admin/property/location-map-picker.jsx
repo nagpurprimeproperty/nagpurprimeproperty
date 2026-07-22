@@ -47,23 +47,44 @@ export function LocationMapPicker({ lat, lng, onFill, disabled }) {
             if (status === "OK" && results && results.length > 0) {
                 setAddress(results[0].formatted_address);
                 
-                const mergedComponents = [];
-                const seenTypes = new Set();
+                let locality = "";
+                let subLocality = "";
+                let landmark = "";
+                let pinCode = "";
+                
                 for (const res of results) {
-                    if (!res.address_components) continue;
-                    for (const comp of res.address_components) {
-                        const hasSeenAnyType = comp.types.some((t) => seenTypes.has(t));
-                        if (!hasSeenAnyType) {
-                            mergedComponents.push(comp);
-                            comp.types.forEach((t) => seenTypes.add(t));
-                        }
+                    const comps = res.address_components ?? [];
+                    const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? "";
+                    
+                    if (!locality) {
+                        locality = get("sublocality_level_1") || get("sublocality") || get("neighborhood");
+                    }
+                    if (!subLocality) {
+                        subLocality = get("sublocality_level_2") || get("administrative_area_level_3");
+                    }
+                    if (!landmark) {
+                        landmark = get("point_of_interest") || get("establishment");
+                    }
+                    if (!pinCode) {
+                        pinCode = get("postal_code");
+                    }
+                    
+                    if (locality && subLocality && landmark && pinCode) {
+                        break;
                     }
                 }
                 
-                fillFromComponents(mergedComponents, latVal, lngVal);
+                onFillRef.current({
+                    locality: locality || undefined,
+                    subLocality: subLocality || undefined,
+                    landmark: landmark || undefined,
+                    pinCode: pinCode || undefined,
+                    lat: latVal.toFixed(6),
+                    lng: lngVal.toFixed(6),
+                });
             }
         });
-    }, [fillFromComponents]); // fillFromComponents is stable so this is too
+    }, []); // stable — reads onFillRef.current at runtime
     // ── Init map ──────────────────────────────────────────────────────────────
     useEffect(() => {
         if (!loaded || !mapRef.current)
