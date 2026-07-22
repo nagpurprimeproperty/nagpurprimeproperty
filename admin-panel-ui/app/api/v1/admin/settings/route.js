@@ -23,6 +23,8 @@ export async function GET(req) {
         maintenanceTitle: 'Under Maintenance',
         maintenanceDescription: 'We are performing scheduled maintenance to improve our platform. We will be back online shortly.',
         maintenanceLiveAt: null,
+        androidAppLink: '',
+        iosAppLink: '',
       });
     }
     return NextResponse.json({ success: true, data: settings });
@@ -50,6 +52,8 @@ export async function PUT(req) {
       maintenanceTitle: (body.maintenanceTitle || 'Under Maintenance').trim(),
       maintenanceDescription: (body.maintenanceDescription || '').trim(),
       maintenanceLiveAt: body.maintenanceLiveAt ? new Date(body.maintenanceLiveAt) : null,
+      androidAppLink: (body.androidAppLink || '').trim(),
+      iosAppLink: (body.iosAppLink || '').trim(),
     };
 
     const settings = await Setting.findOneAndUpdate(
