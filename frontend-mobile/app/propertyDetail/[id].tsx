@@ -441,28 +441,35 @@ function getSecondarySpecsList(type: string, details: any) {
   return list;
 }
 
-function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolean }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const safeUri = videoUrl ? decodeURIComponent(videoUrl) : null;
-  const player = useVideoPlayer(safeUri ? { uri: safeUri } : null, (p) => {
-    p.loop = false; // Don't loop — continuous decoding wastes GPU & memory
+function InnerVideoPlayer({
+  safeUri,
+  isPlaying,
+}: {
+  safeUri: string;
+  isPlaying: boolean;
+}) {
+  const player = useVideoPlayer({ uri: safeUri }, (p) => {
+    p.loop = false;
     p.bufferOptions = {
       maxBufferBytes: 2 * 1024 * 1024, // 2MB buffer limit to prevent Android OOM
       prioritizeTimeOverSizeThreshold: false,
     };
   });
 
-  // Pause and release the native player when this slide unmounts.
-  // Without this, visiting multiple property detail screens leaves multiple
-  // native video players alive simultaneously, each holding 2MB+ of buffer.
+  useEffect(() => {
+    if (!player) return;
+    if (isPlaying) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [player, isPlaying]);
+
   useEffect(() => {
     return () => {
       if (player) {
         try {
           player.pause();
-          // expo-video v2 exposes .release() — call if available
           if (typeof (player as any).release === 'function') {
             (player as any).release();
           }
@@ -473,42 +480,58 @@ function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolea
     };
   }, [player]);
 
+  return (
+    <VideoView
+      player={player}
+      style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
+      contentFit="cover"
+      nativeControls={false}
+    />
+  );
+}
+
+function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolean }) {
+  const [isPlayerMounted, setIsPlayerMounted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const isFocused = useIsFocused();
-  // Pause video when screen loses focus or this slide is no longer visible
+
+  const safeUri = videoUrl ? decodeURIComponent(videoUrl) : null;
+
+  // Unmount native player and release memory when screen loses focus, slide changes, or URL changes
   useEffect(() => {
-    if ((!isActive || !isFocused) && player && isPlaying) {
-      player.pause();
+    if (!isActive || !isFocused) {
       setIsPlaying(false);
+      setIsPlayerMounted(false);
     }
-  }, [isActive, isFocused, player, isPlaying]);
+  }, [isActive, isFocused, videoUrl]);
 
   const togglePlay = () => {
-    if (!player) return;
-    if (isPlaying) {
-      player.pause();
+    if (!isPlayerMounted) {
+      setIsPlayerMounted(true);
+      setIsPlaying(true);
     } else {
-      player.play();
+      setIsPlaying((prev) => !prev);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const openFullscreen = () => {
-    if (player) player.pause();
+    // Pause and unmount inline player before opening fullscreen so 2 players never run simultaneously
     setIsPlaying(false);
+    setIsPlayerMounted(false);
     setIsFullscreen(true);
   };
 
-  if (!safeUri || !player) return null;
+  if (!safeUri) return null;
 
   return (
     <View style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}>
       <Pressable onPress={openFullscreen} style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}>
-        <VideoView
-          player={player}
-          style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
-          contentFit="cover"
-          nativeControls={false}
-        />
+        {isPlayerMounted ? (
+          <InnerVideoPlayer safeUri={safeUri} isPlaying={isPlaying} />
+        ) : (
+          <View style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT, backgroundColor: "#000000" }} />
+        )}
         <View
           style={{
             position: "absolute",
@@ -581,6 +604,20 @@ function FullscreenVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClos
     p.play();
   });
 
+  const handleClose = useCallback(() => {
+    if (player) {
+      try {
+        player.pause();
+        if (typeof (player as any).release === 'function') {
+          (player as any).release();
+        }
+      } catch {
+        // Silently ignore
+      }
+    }
+    onClose();
+  }, [player, onClose]);
+
   useEffect(() => {
     if (!player) return;
     const sub = player.addListener('statusChange', (status) => {
@@ -590,6 +627,14 @@ function FullscreenVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClos
     });
     return () => {
       sub.remove();
+      try {
+        player.pause();
+        if (typeof (player as any).release === 'function') {
+          (player as any).release();
+        }
+      } catch {
+        // Silently ignore
+      }
     };
   }, [player]);
 
@@ -600,7 +645,7 @@ function FullscreenVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClos
       animationType="fade"
       transparent={false}
       visible={true}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       supportedOrientations={['portrait', 'landscape']}
     >
       <View style={{ flex: 1, backgroundColor: '#000000', justifyContent: 'center', alignItems: 'center' }}>
@@ -618,10 +663,7 @@ function FullscreenVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClos
         )}
 
         <TouchableOpacity
-          onPress={() => {
-            player.pause();
-            onClose();
-          }}
+          onPress={handleClose}
           style={{
             position: 'absolute',
             top: 40,

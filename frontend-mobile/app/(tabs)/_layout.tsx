@@ -212,7 +212,10 @@ export default function TabLayout() {
         options={{
           title: "",
           tabBarStyle: { display: "none" },
-        }}
+          // unmountOnBlur is a valid React Navigation tab option; Expo Router's
+          // TypeScript types don't expose it directly, hence the cast.
+          unmountOnBlur: true,
+        } as any}
       />
       <Tabs.Screen name="saved" options={{ title: "Saved" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />

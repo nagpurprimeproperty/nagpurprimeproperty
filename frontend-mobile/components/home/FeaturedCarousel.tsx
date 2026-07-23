@@ -7,6 +7,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef, useState, memo, useMemo } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import { Dimensions, ScrollView, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -289,6 +290,7 @@ const FeaturedCard = memo(({
 // ─── Main Component ───────────────────────────────────────────────────────────
 const FeaturedCarousel = memo(({ data }: any) => {
   const { colors } = useTheme();
+  const isFocused = useIsFocused();
   const [activeIndex, setActiveIndex] = useState(0);
   const activeIndexRef = useRef(0);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
@@ -350,14 +352,18 @@ const FeaturedCarousel = memo(({ data }: any) => {
     }
   }, []);
 
-  // Only depend on `total` — not on startAutoScroll/stopAutoScroll refs, which
-  // are stable useCallback values. Including them causes the effect to re-run
-  // (and restart the interval) whenever `total` changes, creating redundant timers.
+  // Start or stop auto-scroll based on both data availability and tab focus.
+  // The interval is paused when the Home tab is not visible (isFocused = false),
+  // preventing background CPU/battery drain while other tabs are active.
   useEffect(() => {
-    if (total > 1) startAutoScroll();
+    if (total > 1 && isFocused) {
+      startAutoScroll();
+    } else {
+      stopAutoScroll();
+    }
     return () => stopAutoScroll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total]);
+  }, [total, isFocused]);
 
   // ── Snap / scroll tracking ─────────────────────────────────────────────────
   const handleMomentumScrollEnd = (e: any) => {

@@ -47,18 +47,22 @@ function PropertyImageCarousel({
   const keyExtractor = useCallback((_: string, idx: number) => String(idx), []);
 
   const renderItem = useCallback(
-    ({ item }: { item: string }) => (
-      <Image
-        source={{ uri: getUri(item) }}
-        style={{ width, height }}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        transition={150}
-        onError={() =>
-          setFailedImages((prev) => ({ ...prev, [item]: true }))
-        }
-      />
-    ),
+    ({ item }: { item: string }) => {
+      const uri = getUri(item);
+      return (
+        <Image
+          source={{ uri, width: Math.ceil(width * 1.5), height: Math.ceil(height * 1.5) }}
+          style={{ width, height }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={uri}
+          transition={150}
+          onError={() =>
+            setFailedImages((prev) => ({ ...prev, [item]: true }))
+          }
+        />
+      );
+    },
     [width, height, getUri],
   );
 
@@ -84,7 +88,8 @@ function PropertyImageCarousel({
   }
 
   if (slideCount === 1) {
-    const uri = images[0];
+    const rawUri = images[0];
+    const uri = getUri(rawUri);
     return (
       <View
         style={[
@@ -94,13 +99,14 @@ function PropertyImageCarousel({
         ]}
       >
         <Image
-          source={{ uri: getUri(uri) }}
+          source={{ uri, width: Math.ceil(width * 1.5), height: Math.ceil(height * 1.5) }}
           style={{ width, height }}
           contentFit="cover"
           cachePolicy="memory-disk"
+          recyclingKey={uri}
           transition={150}
           onError={() =>
-            setFailedImages((prev) => ({ ...prev, [uri]: true }))
+            setFailedImages((prev) => ({ ...prev, [rawUri]: true }))
           }
         />
       </View>

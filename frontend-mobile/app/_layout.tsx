@@ -23,75 +23,15 @@ import * as SplashScreen from "expo-splash-screen";
 import { Platform, Text, TextInput } from "react-native";
 import "../global.css";
 
-// ─── Global Inter font injection ──────────────────────────────────────────────
-// React Native does NOT cascade fontFamily like CSS on the web.
-// Additionally, fontWeight alone won't pick the right Inter variant file —
-// we must map each weight to its named font asset explicitly.
-//
-// Strategy: override Text & TextInput render via defaultProps so that
-// every component in the entire app automatically gets the correct
-// Inter variant (Regular / Medium / SemiBold / Bold) based on fontWeight.
+// Set static default font properties once at module initialization without patching internals
+if ((Text as any).defaultProps == null) (Text as any).defaultProps = {};
+(Text as any).defaultProps.style = { fontFamily: "Inter_400Regular" };
 
-const INTER_WEIGHT_MAP: Record<string, string> = {
-  "100": "Inter_400Regular",
-  "200": "Inter_400Regular",
-  "300": "Inter_400Regular",
-  "400": "Inter_400Regular",
-  normal: "Inter_400Regular",
-  "500": "Inter_500Medium",
-  "600": "Inter_600SemiBold",
-  "700": "Inter_700Bold",
-  bold: "Inter_700Bold",
-  "800": "Inter_700Bold",
-  "900": "Inter_700Bold",
-};
-
-function resolveInterFamily(weight?: string | number): string {
-  if (!weight) return "Inter_400Regular";
-  return INTER_WEIGHT_MAP[String(weight)] ?? "Inter_400Regular";
-}
-
-// Patch Text
-// Cache: fontWeight string -> fontFamily string. Computed once per weight, then reused.
-const _fontFamilyCache: Record<string, string> = {};
-const _cachedInterFamily = (weight?: string | number): string => {
-  const key = String(weight ?? '');
-  if (!_fontFamilyCache[key]) {
-    _fontFamilyCache[key] = resolveInterFamily(weight);
-  }
-  return _fontFamilyCache[key];
-};
-
-const OriginalTextRender = (Text as any).render;
-if (OriginalTextRender && !(Text as any).__interPatched) {
-  (Text as any).__interPatched = true;
-  (Text as any).render = function (props: any, ref: any) {
-    const flatStyle = props.style
-      ? Array.isArray(props.style)
-        ? Object.assign({}, ...props.style.filter(Boolean))
-        : props.style
-      : {};
-    const fontFamily =
-      flatStyle.fontFamily ?? _cachedInterFamily(flatStyle.fontWeight);
-    const patchedStyle = { fontFamily, ...flatStyle };
-    return OriginalTextRender({ ...props, style: patchedStyle }, ref);
-  };
-} else {
-  // Fallback for RN versions without .render
-  if (Text.defaultProps == null) (Text as any).defaultProps = {};
-  (Text.defaultProps as any).style = { fontFamily: "Inter_400Regular" };
-}
-
-// Patch TextInput
-if (TextInput.defaultProps == null) (TextInput as any).defaultProps = {};
-(TextInput.defaultProps as any).style = { fontFamily: "Inter_400Regular" };
+if ((TextInput as any).defaultProps == null) (TextInput as any).defaultProps = {};
+(TextInput as any).defaultProps.style = { fontFamily: "Inter_400Regular" };
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Dev-only tooling ─────────────────────────────────────────────────────────
-// __DEV__ is replaced by `false` in production builds by Metro, so the entire
-// branch below is statically dead code and tree-shaken from the bundle.
-// The dynamic import() prevents Metro from following the module graph even in
-// development unless this branch is actually entered at runtime.
 const ReactQueryDevtools = __DEV__ && Platform.OS === "web"
   ? lazy(() =>
       import("@tanstack/react-query-devtools").then((m) => ({
@@ -108,10 +48,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 configureNotificationHandler();
 
 function AppContent() {
-  // Listen to Socket.IO events and keep notification cache in sync
   useSocket();
 
-  // Navigate to notification screen when user taps a push notification
   useEffect(() => {
     const cleanup = setupNotificationResponseListener();
     return cleanup;

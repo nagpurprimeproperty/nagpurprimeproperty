@@ -3,6 +3,7 @@ import colors from '@/theme/colors';
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback } from "react";
+import { prepareImageForUpload } from "@/shared/utils/imagePrep";
 import {
     ActivityIndicator,
     Alert,
@@ -160,7 +161,14 @@ export function Step5Media() {
         selectionLimit: maxPhotos - photoCount,
         exif: false,
       });
-      if (!result.canceled) result.assets.forEach((a) => addPhoto(a.uri));
+      if (!result.canceled) {
+        // Resize each picked photo before it enters the store.
+        // prepareImageForUpload falls back to the original URI on error — no drops.
+        for (const a of result.assets) {
+          const preparedUri = await prepareImageForUpload(a.uri);
+          addPhoto(preparedUri);
+        }
+      }
     } catch {
       Alert.alert("Error", "Could not open photo library.");
     } finally {
@@ -177,8 +185,11 @@ export function Step5Media() {
         quality: 0.85,
         exif: false,
       });
-      if (!result.canceled && result.assets.length > 0)
-        addPhoto(result.assets[0].uri);
+      if (!result.canceled && result.assets.length > 0) {
+        // Resize the captured photo before it enters the store.
+        const preparedUri = await prepareImageForUpload(result.assets[0].uri);
+        addPhoto(preparedUri);
+      }
     } catch {
       Alert.alert("Error", "Could not open camera.");
     } finally {
@@ -249,7 +260,7 @@ export function Step5Media() {
           {photos.map((uri, index) => (
             <View key={uri} className="relative">
               <Image
-                source={{ uri }}
+                source={{ uri, width: 200, height: 200 }}
                 className="w-[100px] h-[100px] rounded-2xl"
                 contentFit="cover"
                 cachePolicy="memory-disk"

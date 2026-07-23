@@ -16,6 +16,7 @@ import * as FileSystem from 'expo-file-system';
 import { usePropertyWizardStore, PREDEFINED_AMENITIES } from '@/store/propertyWizardStore';
 import { usePropertyUploadStore } from '@/store/propertyUploadStore';
 import { uploadFile } from '@/services/uploadService';
+import { prepareImageForUpload } from '@/shared/utils/imagePrep';
 import { toast } from 'react-hot-toast/headless';
 import { validateStepPhotos } from '@/lib/validation';
 import { Camera, Image as ImageIcon, Trash2, Star, Plus, List, ArrowRight, Check, AlertCircle, Video, CheckCircle, CloudUpload } from 'lucide-react-native';
@@ -218,16 +219,19 @@ export default function WizardPhotosScreen() {
       });
       if (!result.canceled) {
         const newUris: string[] = [];
-        result.assets.forEach((a) => {
-          addPhoto(a.uri);
-          newUris.push(a.uri);
+        // Resize each picked photo before it enters the store or upload queue.
+        // prepareImageForUpload falls back to the original URI on error — no drops.
+        for (const a of result.assets) {
+          const preparedUri = await prepareImageForUpload(a.uri);
+          addPhoto(preparedUri);
+          newUris.push(preparedUri);
           if (errors.photos) {
             const updated = { ...errors };
             delete updated.photos;
             setErrors(updated);
           }
-        });
-        // ── Eagerly upload picked photos in the background ──
+        }
+        // ── Eagerly upload resized photos in the background ──
         newUris.forEach((uri) => uploadPhotoInBackground(uri));
       }
     } catch {
@@ -247,15 +251,16 @@ export default function WizardPhotosScreen() {
         exif: false,
       });
       if (!result.canceled && result.assets.length > 0) {
-        const uri = result.assets[0].uri;
-        addPhoto(uri);
+        // Resize the captured photo before it enters the store or upload queue.
+        const preparedUri = await prepareImageForUpload(result.assets[0].uri);
+        addPhoto(preparedUri);
         if (errors.photos) {
           const updated = { ...errors };
           delete updated.photos;
           setErrors(updated);
         }
-        // ── Eagerly upload camera photo in the background ──
-        uploadPhotoInBackground(uri);
+        // ── Eagerly upload resized camera photo in the background ──
+        uploadPhotoInBackground(preparedUri);
       }
     } catch {
       toast.error('Could not open camera.');
@@ -449,9 +454,11 @@ export default function WizardPhotosScreen() {
               >
                 {/* Image */}
                 <Image
-                  source={{ uri }}
+                  source={{ uri, width: 300, height: 220 }}
                   style={{ height: 110, borderRadius: 18 }}
                   className="w-full bg-slate-100"
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
                 />
 
                 {/* Cover Photo Badge */}

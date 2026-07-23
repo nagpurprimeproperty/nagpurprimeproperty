@@ -251,6 +251,33 @@ export default function Home() {
     createCall,
   ]);
 
+  const listFooter = useMemo(() => {
+    if (isLoadingNextPage) {
+      return (
+        <View style={{ gap: 16, marginTop: 5 }}>
+          <PropertyCardSkeleton />
+          <PropertyCardSkeleton />
+        </View>
+      );
+    }
+    if (hasMore) {
+      return (
+        <View className="py-6 items-center">
+          <TouchableOpacity
+            onPress={loadMore}
+            activeOpacity={0.8}
+            className="bg-orange-50 border border-orange-100 px-6 py-3.5 rounded-2xl flex-row items-center justify-center min-w-[180px]"
+          >
+            <Text className="text-orange-500 font-black text-xs uppercase tracking-widest">
+              Load More
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return null;
+  }, [isLoadingNextPage, hasMore, loadMore]);
+
   return (
     <ScreenWrapper>
       <Header />
@@ -271,26 +298,7 @@ export default function Home() {
           scrollEventThrottle={16}
           ListHeaderComponent={listHeader}
           renderItem={renderItem}
-          ListFooterComponent={
-            isLoadingNextPage ? (
-              <View style={{ gap: 16, marginTop: 5 }}>
-                <PropertyCardSkeleton />
-                <PropertyCardSkeleton />
-              </View>
-            ) : hasMore ? (
-              <View className="py-6 items-center">
-                <TouchableOpacity
-                  onPress={loadMore}
-                  activeOpacity={0.8}
-                  className="bg-orange-50 border border-orange-100 px-6 py-3.5 rounded-2xl flex-row items-center justify-center min-w-[180px]"
-                >
-                  <Text className="text-orange-500 font-black text-xs uppercase tracking-widest">
-                    Load More
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null
-          }
+          ListFooterComponent={listFooter}
         />
       )}
     </ScreenWrapper>

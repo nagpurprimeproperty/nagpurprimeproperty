@@ -1,14 +1,16 @@
-﻿import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme";
 import { usePopularLocalities } from "@/hooks/useLocalityHook";
 import { useLocalityStore } from "@/store/localityStore";
 import { router } from "expo-router";
-import { FlatList, Text, View, Pressable, ScrollView } from "react-native";
+import { FlatList, Text, View, Pressable, ScrollView, StyleSheet } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import SectionDivider from "@/shared/components/SectionDivider";
 import SectionHeader from "@/shared/components/SectionHeader";
 import { MapPin, Building2, Home, Store, Compass, Navigation, Check } from "lucide-react-native";
+import { useMemo, useCallback } from "react";
+
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -70,15 +72,20 @@ export default function TrendingLocalitiesSection({ enabled = true }: { enabled?
     ? apiResponse.data
     : FALLBACK_LOCALITIES;
 
-  // Format localities to standard schema
-  const localities = rawLocalities.map((item: any) => ({
-    locality: item.locality || item._id || "",
-    count: item.count || 0,
-    latitude: item.latitude || null,
-    longitude: item.longitude || null,
-  })).filter(item => item.locality);
+  // Memoize the map+filter — rawLocalities only changes when the API responds.
+  const localities = useMemo(() =>
+    rawLocalities
+      .map((item: any) => ({
+        locality: item.locality || item._id || "",
+        count: item.count || 0,
+        latitude: item.latitude || null,
+        longitude: item.longitude || null,
+      }))
+      .filter((item) => item.locality),
+    [rawLocalities]
+  );
 
-  const handleCardPress = async (item: any) => {
+  const handleCardPress = useCallback(async (item: any) => {
     if (selectedLocality === item.locality) {
       await useLocalityStore.getState().setSelectedLocality(null);
     } else {
@@ -88,11 +95,11 @@ export default function TrendingLocalitiesSection({ enabled = true }: { enabled?
         item.longitude
       );
     }
-  };
+  }, [selectedLocality]);
 
-  const handleSeeAll = () => {
+  const handleSeeAll = useCallback(() => {
     router.push("/(tabs)/search");
-  };
+  }, []);
 
   if (isLoading) {
     return (
