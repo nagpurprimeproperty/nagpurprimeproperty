@@ -94,13 +94,15 @@ export function PropertyMedia({
                   e.preventDefault();
                   go(idx);
                 }}
-                className={cn(
-                  "h-1.5 rounded-full transition-all",
+                className="relative flex h-6 w-6 items-center justify-center"
+                aria-label={s.type === "video" ? "Video tour" : `Image ${idx + 1}`}
+              >
+                <span className={cn(
+                  "h-1.5 rounded-full transition-all block",
                   idx === i ? "w-5 bg-primary" : "w-1.5 bg-foreground/40",
                   s.type === "video" && idx !== i && "bg-primary/60",
-                )}
-                aria-label={s.type === "video" ? "Video tour" : `Image ${idx + 1}`}
-              />
+                )} />
+              </button>
             ))}
           </div>
         </>

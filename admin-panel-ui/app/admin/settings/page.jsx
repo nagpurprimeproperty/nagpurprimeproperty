@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Shield, Info, FileText, Phone, ChevronRight, Globe, AlertTriangle, Loader2, Save } from "lucide-react";
+import { Shield, Info, FileText, Phone, ChevronRight, Globe, AlertTriangle, Loader2, Save, Smartphone } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminPageHeader } from "@/components/admin/common/admin-page-header";
 import { Switch } from "@/components/ui/switch";
@@ -75,7 +75,9 @@ export default function SettingsPage() {
         isComingSoonMode: false,
         maintenanceTitle: "Under Maintenance",
         maintenanceDescription: "",
-        maintenanceLiveAt: ""
+        maintenanceLiveAt: "",
+        androidAppLink: "",
+        iosAppLink: ""
     });
 
     useEffect(() => {
@@ -85,7 +87,9 @@ export default function SettingsPage() {
                 isComingSoonMode: settings.isComingSoonMode ?? false,
                 maintenanceTitle: settings.maintenanceTitle ?? "Under Maintenance",
                 maintenanceDescription: settings.maintenanceDescription ?? "",
-                maintenanceLiveAt: toLocalDatetimeString(settings.maintenanceLiveAt)
+                maintenanceLiveAt: toLocalDatetimeString(settings.maintenanceLiveAt),
+                androidAppLink: settings.androidAppLink ?? "",
+                iosAppLink: settings.iosAppLink ?? ""
             });
             setIsDirty(false);
         }
@@ -244,6 +248,80 @@ export default function SettingsPage() {
                             {!canWrite && (
                                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                                     <p className="text-sm text-amber-800">You have read-only access. Contact an admin to change the platform status.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Mobile App Download Links Card */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Smartphone className="h-5 w-5 text-primary" />
+                        Mobile Application Links
+                    </CardTitle>
+                    <CardDescription>
+                        Configure the Google Play and App Store links displayed on the website.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {isLoading ? (
+                        <div className="space-y-4 py-2">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    ) : isError ? (
+                        <div className="text-sm text-destructive flex items-center gap-2">
+                            Failed to load platform settings. Please try again.
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="android-link">Google Play Store Link</Label>
+                                    <Input
+                                        id="android-link"
+                                        type="url"
+                                        value={formData.androidAppLink}
+                                        onChange={(e) => updateField("androidAppLink", e.target.value)}
+                                        placeholder="https://play.google.com/store/apps/details?id=..."
+                                        disabled={!canWrite}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="ios-link">Apple App Store Link</Label>
+                                    <Input
+                                        id="ios-link"
+                                        type="url"
+                                        value={formData.iosAppLink}
+                                        onChange={(e) => updateField("iosAppLink", e.target.value)}
+                                        placeholder="https://apps.apple.com/app/..."
+                                        disabled={!canWrite}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Save Actions */}
+                            {canWrite && (
+                                <div className="flex items-center justify-between border-t pt-4">
+                                    <div>
+                                        {isDirty && !updateMutation.isPending && (
+                                            <p className="text-xs text-amber-600">You have unsaved changes</p>
+                                        )}
+                                    </div>
+                                    <Button
+                                        onClick={handleSave}
+                                        disabled={updateMutation.isPending || !isDirty}
+                                        className="gap-2 min-w-32"
+                                    >
+                                        {updateMutation.isPending ? (
+                                            <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
+                                        ) : (
+                                            <><Save className="h-4 w-4" />Save Changes</>
+                                        )}
+                                    </Button>
                                 </div>
                             )}
                         </div>

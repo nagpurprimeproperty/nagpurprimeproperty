@@ -65,6 +65,10 @@ export async function generateMetadata({ searchParams }) {
 async function getPropertiesForParams(params) {
   const queryParams = { ...params }
 
+  if (!queryParams.limit) {
+    queryParams.limit = 6
+  }
+
   if (queryParams.type) {
     queryParams.propertyType = queryParams.type
     delete queryParams.type
@@ -110,7 +114,7 @@ async function getPropertiesForParams(params) {
     data: result.data || [],
     total: result.total || 0,
     page: result.page || 1,
-    limit: result.limit || 12,
+    limit: result.limit || 6,
     totalPages: result.totalPages || 1,
   }
 }

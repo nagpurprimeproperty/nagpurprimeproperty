@@ -196,7 +196,7 @@ function PropertiesContent({ initialProperties, initialAreas }) {
   // ── Build API filters from current state (memoized to avoid query key churn) ────────────
   const filters = useMemo(() => ({
     page,
-    limit: 12,
+    limit: 6,
     ...(type              && { type }),
     ...(bhk               && { bhk }),
     ...(area              && { areaSlug: area }),
@@ -354,7 +354,7 @@ function PropertiesContent({ initialProperties, initialAreas }) {
         </aside>
 
         {/* Results area */}
-        <div className="min-w-0">
+        <div className="min-w-0 flex flex-col h-full">
           {/* Mobile filter button */}
           <div className="mb-4 flex items-center justify-between lg:hidden">
             <Sheet>
@@ -416,13 +416,13 @@ function PropertiesContent({ initialProperties, initialAreas }) {
               </div>
             </div>
           ) : (
-            <div className={cn("transition-opacity duration-200", (isLoading || isPlaceholderData) && "opacity-50 pointer-events-none")}>
+            <div className={cn("transition-opacity duration-200 flex flex-col flex-1", (isLoading || isPlaceholderData) && "opacity-50 pointer-events-none")}>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {properties.map((p, i) => <PropertyCard key={p._id || p.id} p={p} index={i} />)}
               </div>
               
               {totalPages > 1 && (
-                <Pagination className="mt-10">
+                <Pagination className="mt-auto pt-10">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if (page > 1) handlePageChange(page - 1); }} className={page === 1 ? 'pointer-events-none opacity-50' : ''} />

@@ -34,7 +34,7 @@ export function useUpdateSettings() {
         onError: (err) => {
             toast({
                 title: "Failed to update settings",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },

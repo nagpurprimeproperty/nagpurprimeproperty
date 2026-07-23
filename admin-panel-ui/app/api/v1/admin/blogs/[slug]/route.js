@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/server/src/config/db.js';
 import Blog from '@/server/src/models/blog.model.js';
-import { requireAuth } from '@/server/src/middlewares/auth.next.js';
+import { requireAuth, requirePermission } from '@/server/src/middlewares/auth.next.js';
 import { handleApiError } from '@/server/src/utils/route-helpers.js';
 
 /** GET /api/v1/admin/blogs/[slug] */
@@ -9,6 +9,9 @@ export async function GET(req, { params }) {
   try {
     const auth = requireAuth(req);
     if (auth instanceof NextResponse) return auth;
+    const permErr = await requirePermission(auth.user, 'GET', 'blogs');
+    if (permErr) return permErr;
+
     await connectDB();
     const { slug } = await params;
     const blog = await Blog.findOne({ slug }).lean();
@@ -24,6 +27,9 @@ export async function PUT(req, { params }) {
   try {
     const auth = requireAuth(req);
     if (auth instanceof NextResponse) return auth;
+    const permErr = await requirePermission(auth.user, 'PUT', 'blogs');
+    if (permErr) return permErr;
+
     await connectDB();
     const { slug } = await params;
     const body = await req.json();
@@ -43,6 +49,9 @@ export async function DELETE(req, { params }) {
   try {
     const auth = requireAuth(req);
     if (auth instanceof NextResponse) return auth;
+    const permErr = await requirePermission(auth.user, 'DELETE', 'blogs');
+    if (permErr) return permErr;
+
     await connectDB();
     const { slug } = await params;
     const blog = await Blog.findOneAndDelete({ slug });

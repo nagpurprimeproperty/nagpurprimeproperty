@@ -91,22 +91,24 @@ export function Header() {
               </span>
             )}
           </Link>
-          <Button
-            className="hidden md:inline-flex gap-1.5 btn-premium-cta"
-            size="sm"
-            onClick={() => setDownloadOpen(true)}
-          >
-            <Plus className="h-4 w-4" /> Add Property Free
-          </Button>
+          <div className="hidden md:block">
+            <Button
+              className="gap-1.5 btn-premium-cta"
+              size="sm"
+              onClick={() => setDownloadOpen(true)}
+            >
+              <Plus className="h-4 w-4" /> Add Property Free
+            </Button>
+          </div>
           {user ? (
-            <Link href="/profile">
-              <Button variant="outline" size="sm" className="hidden md:inline-flex">
+            <Link href="/profile" className="hidden md:inline-flex">
+              <Button variant="outline" size="sm" className="w-full">
                 <User className="mr-1.5 h-4 w-4" /> {user.name.split(' ')[0]}
               </Button>
             </Link>
           ) : (
-            <Link href="/login">
-              <Button variant="hero" size="sm">Login</Button>
+            <Link href="/login" className="hidden md:inline-flex">
+              <Button variant="hero" size="sm" className="w-full">Login</Button>
             </Link>
           )}
           <button

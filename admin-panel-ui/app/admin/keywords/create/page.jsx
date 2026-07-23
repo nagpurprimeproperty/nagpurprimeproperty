@@ -12,6 +12,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { PermissionGate, Unauthorized } from "@/components/utils/permission-gate";
 
 const CATEGORIES = ["General", "Property Type", "Budget", "Intent", "Area", "Amenity", "Other"];
 
@@ -52,18 +53,23 @@ export default function CreateKeywordPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create keyword");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed to create keyword");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Keyword created!", description: `"${form.keyword}" is now active.` });
       router.push("/admin/keywords");
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 w-full min-w-0">
+    <PermissionGate module="keywords" action="write" fallback={<Unauthorized />}>
+      <div className="space-y-6 w-full min-w-0">
       <AdminPageHeader
         title="Add SEO Keyword"
         description="Create a new keyword chip that will appear on the homepage"
@@ -219,6 +225,7 @@ export default function CreateKeywordPage() {
         </div>
       </form>
     </div>
+    </PermissionGate>
   );
 }
 

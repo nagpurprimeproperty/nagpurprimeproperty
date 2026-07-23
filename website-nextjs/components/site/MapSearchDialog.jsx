@@ -233,16 +233,40 @@ export function MapSearchDialog({
   const handleReverseGeocode = useCallback((pos) => {
     if (!window.google) return;
     const geocoder = new google.maps.Geocoder();
+    console.log("Geocoding coordinates:", pos);
     geocoder.geocode({ location: pos }, (results, status) => {
-      if (status === 'OK' && results?.[0]) {
+      console.log("Geocoding response status:", status, "results:", results);
+      if (status === 'OK' && results && results.length > 0) {
         setSearchQuery(results[0].formatted_address || '');
-        const localityName = resolveLocalityName(results[0].address_components || []);
+        
+        let localityName = '';
+        for (const res of results) {
+          const comps = res.address_components || [];
+          const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? '';
+          localityName = get('sublocality_level_1') || get('sublocality') || get('neighborhood') || get('locality');
+          if (localityName && localityName !== 'Nagpur') {
+            break;
+          }
+        }
+        
+        // Fallback to "Nagpur" if no specific sublocality/neighborhood is found
+        if (!localityName) {
+          for (const res of results) {
+            const comps = res.address_components || [];
+            const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? '';
+            localityName = get('locality');
+            if (localityName) {
+              break;
+            }
+          }
+        }
+        
         if (localityName) {
           setSelectedLocality(localityName);
         }
       }
     });
-  }, [resolveLocalityName]);
+  }, []);
 
   // Initialize Map with a small timeout to let dialog mounting animation complete
   useEffect(() => {

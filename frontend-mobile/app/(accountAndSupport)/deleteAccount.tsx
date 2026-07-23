@@ -17,50 +17,81 @@ import {
   MessageSquare,
   CreditCard,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast/headless";
 
 import ScreenHeader from "@/shared/components/ScreenHeader";
 import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import colors from "@/theme/colors";
-import { useDeleteProfileMutation } from "@/features/profile";
-import ConfirmationOverlay from "@/shared/components/ui/ConfirmationOverlay";
+import { useAuthStore } from "@/features/auth";
+import { disconnectSocket } from "@/config/socket";
+import { requestDeletionOTP, confirmDeletion } from "@/features/auth/services/authService";
 
 const CONFIRMATION_PHRASE = "DELETE MY ACCOUNT";
 
 export default function DeleteAccount() {
   const router = useRouter();
-  const deleteMutation = useDeleteProfileMutation();
+  const queryClient = useQueryClient();
+  const logoutFromStore = useAuthStore((state) => state.logout);
+  const phone = useAuthStore((state) => state.phone);
+  const user = useAuthStore((state) => state.user);
 
+  const userPhone = phone || user?.mobile || "";
+
+  const [step, setStep] = useState<"confirm" | "otp">("confirm");
   const [confirmText, setConfirmText] = useState("");
   const [isChecked, setIsChecked] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [otpText, setOtpText] = useState("");
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isFormValid =
     confirmText.trim().toUpperCase() === CONFIRMATION_PHRASE && isChecked;
 
-  const handleDeletePress = () => {
+  const handleRequestOtp = async () => {
     if (!isFormValid) return;
     setErrorMsg(null);
-    setShowConfirmation(true);
+    setLoading(true);
+    try {
+      if (!userPhone) {
+        throw new Error("Unable to retrieve your mobile number. Please contact support.");
+      }
+      await requestDeletionOTP(userPhone);
+      setStep("otp");
+      toast.success("Verification OTP sent.");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to send verification OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    setShowConfirmation(false);
-    deleteMutation.mutate(undefined, {
-      onSuccess: () => {
-        // Redirection is handled automatically by the auth state listener 
-        // because useDeleteProfileMutation logs the user out on success,
-        // which triggers hydration/state update and moves the user to auth/home.
-        // But to be absolutely safe, let's navigate to home.
-        router.replace("/(tabs)/home");
-      },
-      onError: (err) => {
-        setErrorMsg(err.message || "Failed to delete account. Please try again.");
-      },
-    });
+  const handleConfirmDelete = async () => {
+    if (otpText.length !== 4) {
+      setErrorMsg("Please enter the 4-digit OTP code.");
+      return;
+    }
+    setErrorMsg(null);
+    setLoading(true);
+    try {
+      await confirmDeletion(userPhone, otpText);
+      
+      // Cleanup session and state
+      disconnectSocket();
+      logoutFromStore();
+      queryClient.clear();
+      
+      toast.success("Account deleted successfully.");
+      router.replace("/(tabs)/home");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Invalid OTP code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,133 +120,194 @@ export default function DeleteAccount() {
           </Text>
         </Animated.View>
 
-        <Text style={styles.sectionTitle}>What you will lose:</Text>
+        {step === "confirm" && (
+          <>
+            <Text style={styles.sectionTitle}>What you will lose:</Text>
 
-        <View style={styles.impactList}>
-          {[
-            {
-              icon: Building2,
-              title: "Your Listings",
-              desc: "All your active and drafted property listings will be permanently deleted.",
-            },
-            {
-              icon: Users,
-              title: "Active Leads",
-              desc: "Any prospective buyer or tenant leads you have collected will be deleted.",
-            },
-            {
-              icon: MessageSquare,
-              title: "Enquiries & Messages",
-              desc: "All chat histories, enquiries, and communication will be cleared.",
-            },
-            {
-              icon: CreditCard,
-              title: "Property Listing Plans",
-              desc: "Active subscriptions will be terminated. There are no refunds for remaining time.",
-            },
-          ].map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <Animated.View
-                key={item.title}
-                entering={FadeInDown.delay(100 + index * 50).duration(250)}
-                style={styles.impactItem}
-              >
-                <View style={styles.impactIconBg}>
-                  <Icon size={18} color="#475569" strokeWidth={2.2} />
-                </View>
-                <View style={styles.impactContent}>
-                  <Text style={styles.impactTitle}>{item.title}</Text>
-                  <Text style={styles.impactDesc}>{item.desc}</Text>
-                </View>
-              </Animated.View>
-            );
-          })}
-        </View>
+            <View style={styles.impactList}>
+              {[
+                {
+                  icon: Building2,
+                  title: "Your Listings",
+                  desc: "All your active and drafted property listings will be permanently deleted.",
+                },
+                {
+                  icon: Users,
+                  title: "Active Leads",
+                  desc: "Any prospective buyer or tenant leads you have collected will be deleted.",
+                },
+                {
+                  icon: MessageSquare,
+                  title: "Enquiries & Messages",
+                  desc: "All chat histories, enquiries, and communication will be cleared.",
+                },
+                {
+                  icon: CreditCard,
+                  title: "Subscription Plans",
+                  desc: "Active subscriptions will be terminated. There are no refunds for remaining time.",
+                },
+              ].map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Animated.View
+                    key={item.title}
+                    entering={FadeInDown.delay(100 + index * 50).duration(250)}
+                    style={styles.impactItem}
+                  >
+                    <View style={styles.impactIconBg}>
+                      <Icon size={18} color="#475569" strokeWidth={2.2} />
+                    </View>
+                    <View style={styles.impactContent}>
+                      <Text style={styles.impactTitle}>{item.title}</Text>
+                      <Text style={styles.impactDesc}>{item.desc}</Text>
+                    </View>
+                  </Animated.View>
+                );
+              })}
+            </View>
 
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(250)}
-          style={styles.formContainer}
-        >
-          <Text style={styles.inputLabel}>
-            Type <Text style={styles.boldText}>{CONFIRMATION_PHRASE}</Text> below to confirm:
-          </Text>
-          <TextInput
-            style={[
-              styles.textInput,
-              confirmText.toUpperCase() === CONFIRMATION_PHRASE && styles.textInputSuccess,
-            ]}
-            value={confirmText}
-            onChangeText={(text) => {
-              setConfirmText(text);
-              setErrorMsg(null);
-            }}
-            placeholder="DELETE MY ACCOUNT"
-            placeholderTextColor="#94A3B8"
-            autoCapitalize="characters"
-            editable={!deleteMutation.isPending}
-          />
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.checkboxRow}
-            onPress={() => {
-              if (deleteMutation.isPending) return;
-              setIsChecked(!isChecked);
-              setErrorMsg(null);
-            }}
-          >
-            <View
-              style={[
-                styles.checkbox,
-                isChecked && styles.checkboxChecked,
-              ]}
+            <Animated.View
+              entering={FadeInDown.delay(300).duration(250)}
+              style={styles.formContainer}
             >
-              {isChecked && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
-            </View>
-            <Text style={styles.checkboxLabel}>
-              I understand and agree that this action is irreversible and all my data will be permanently wiped.
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.inputLabel}>
+                Type <Text style={styles.boldText}>{CONFIRMATION_PHRASE}</Text> below to confirm:
+              </Text>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  confirmText.toUpperCase() === CONFIRMATION_PHRASE && styles.textInputSuccess,
+                ]}
+                value={confirmText}
+                onChangeText={(text) => {
+                  setConfirmText(text);
+                  setErrorMsg(null);
+                }}
+                placeholder="DELETE MY ACCOUNT"
+                placeholderTextColor="#94A3B8"
+                autoCapitalize="characters"
+                editable={!loading}
+              />
 
-          {errorMsg && (
-            <View style={styles.errorBox}>
-              <AlertCircle size={16} color={colors.error} />
-              <Text style={styles.errorText}>{errorMsg}</Text>
-            </View>
-          )}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.checkboxRow}
+                onPress={() => {
+                  if (loading) return;
+                  setIsChecked(!isChecked);
+                  setErrorMsg(null);
+                }}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    isChecked && styles.checkboxChecked,
+                  ]}
+                >
+                  {isChecked && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  I understand and agree that this action is irreversible and all my data will be permanently wiped.
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[
-              styles.deleteButton,
-              (!isFormValid || deleteMutation.isPending) && styles.deleteButtonDisabled,
-            ]}
-            onPress={handleDeletePress}
-            disabled={!isFormValid || deleteMutation.isPending}
+              {errorMsg && (
+                <View style={styles.errorBox}>
+                  <AlertCircle size={16} color={colors.error} />
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[
+                  styles.deleteButton,
+                  (!isFormValid || loading) && styles.deleteButtonDisabled,
+                ]}
+                onPress={handleRequestOtp}
+                disabled={!isFormValid || loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <>
+                    <Trash2 size={18} color="#FFFFFF" style={styles.buttonIcon} />
+                    <Text style={styles.deleteButtonText}>Request Deletion OTP</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
+          </>
+        )}
+
+        {step === "otp" && (
+          <Animated.View
+            entering={FadeInDown.duration(300)}
+            style={styles.formContainer}
           >
-            {deleteMutation.isPending ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <>
-                <Trash2 size={18} color="#FFFFFF" style={styles.buttonIcon} />
-                <Text style={styles.deleteButtonText}>Permanently Delete My Account</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </ScrollView>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                setErrorMsg(null);
+                setStep("confirm");
+              }}
+              style={styles.backButton}
+              disabled={loading}
+            >
+              <ArrowLeft size={16} color="#64748B" />
+              <Text style={styles.backButtonText}>Back</Text>
+            </TouchableOpacity>
 
-      <ConfirmationOverlay
-        visible={showConfirmation}
-        variant="danger"
-        title="Delete Your Account?"
-        message="Are you absolutely sure? This will delete all your listings, leads, messages, and profile forever. You cannot undo this action."
-        confirmLabel="Yes, Delete Account"
-        cancelLabel="Cancel"
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setShowConfirmation(false)}
-      />
+            <Text style={styles.otpLabel}>
+              We have sent a verification code to your registered mobile number:{"\n"}
+              <Text style={styles.boldText}>
+                {userPhone.slice(0, 3)}****{userPhone.slice(-3)}
+              </Text>
+            </Text>
+
+            <Text style={styles.inputLabel}>Enter 4-Digit OTP:</Text>
+            <TextInput
+              style={styles.textInput}
+              value={otpText}
+              onChangeText={(text) => {
+                setOtpText(text.replace(/\D/g, "").slice(0, 4));
+                setErrorMsg(null);
+              }}
+              placeholder="e.g. 1234"
+              placeholderTextColor="#94A3B8"
+              keyboardType="number-pad"
+              maxLength={4}
+              editable={!loading}
+            />
+
+            {errorMsg && (
+              <View style={styles.errorBox}>
+                <AlertCircle size={16} color={colors.error} />
+                <Text style={styles.errorText}>{errorMsg}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={[
+                styles.deleteButton,
+                (otpText.length !== 4 || loading) && styles.deleteButtonDisabled,
+              ]}
+              onPress={handleConfirmDelete}
+              disabled={otpText.length !== 4 || loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <Trash2 size={18} color="#FFFFFF" style={styles.buttonIcon} />
+                  <Text style={styles.deleteButtonText}>Confirm &amp; Delete Account</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+      </ScrollView>
     </ScreenWrapper>
   );
 }
@@ -311,8 +403,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: "600",
   },
+  otpLabel: {
+    fontSize: 13,
+    color: "#475569",
+    lineHeight: 20,
+    fontWeight: "500",
+    marginBottom: 20,
+  },
   boldText: {
-    fontWeight: "900",
+    fontWeight: "950",
     color: "#0F172A",
   },
   textInput: {
@@ -401,5 +500,17 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginRight: 8,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingVertical: 4,
+  },
+  backButtonText: {
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "700",
+    marginLeft: 4,
   },
 });

@@ -82,3 +82,23 @@ export const deleteUserProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+export const requestAccountDeletion = async (req, res, next) => {
+  try {
+    const { mobile } = req.body;
+    const otp = await UserService.requestDeletion(mobile);
+    res.json({ success: true, message: 'Account deletion OTP generated successfully', data: { otp } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const confirmAccountDeletion = async (req, res, next) => {
+  try {
+    const { mobile, otp } = req.body;
+    await UserService.confirmDeletion(mobile, otp);
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};

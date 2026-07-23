@@ -68,7 +68,7 @@ export function useCreateProperty() {
             queryClient.invalidateQueries({ queryKey: propertyKeys.all });
             toast({ title: "Property created", description: `"${res.data.title}" has been added.` });
         },
-        onError: (err) => toast({ title: "Creation failed", description: err?.message ?? "Something went wrong", variant: "destructive" }),
+        onError: (err) => toast({ title: "Creation failed", description: err, variant: "destructive" }),
     });
 }
 // ─── Update ───────────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ export function useUpdateProperty(id) {
             queryClient.setQueryData(propertyKeys.detail(id), res.data);
             toast({ title: "Property updated", description: `"${res.data.title}" saved.` });
         },
-        onError: (err) => toast({ title: "Update failed", description: err?.message ?? "Something went wrong", variant: "destructive" }),
+        onError: (err) => toast({ title: "Update failed", description: err, variant: "destructive" }),
     });
 }
 // ─── Update Status ────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ export function useUpdatePropertyStatus() {
         },
         onError: (err, { id }) => {
             setUpdating(id, false);
-            toast({ title: "Status update failed", description: err?.message, variant: "destructive" });
+            toast({ title: "Status update failed", description: err, variant: "destructive" });
         },
     });
 }
@@ -121,7 +121,7 @@ export function useToggleFeatured() {
                 title: res.data.featured ? "Marked as Featured" : "Removed from Featured",
             });
         },
-        onError: (err) => toast({ title: "Failed", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Failed", description: err, variant: "destructive" }),
     });
 }
 // ─── Remove Photos ────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ export function useRemovePhotos(id) {
             queryClient.setQueryData(propertyKeys.detail(id), res.data);
             toast({ title: "Photos removed" });
         },
-        onError: (err) => toast({ title: "Failed to remove photos", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Failed to remove photos", description: err, variant: "destructive" }),
     });
 }
 // ─── Delete ───────────────────────────────────────────────────────────────────
@@ -147,6 +147,6 @@ export function useDeleteProperty() {
             queryClient.invalidateQueries({ queryKey: propertyKeys.all });
             toast({ title: "Property deleted", description: `"${property.title}" removed.`, variant: "destructive" });
         },
-        onError: (err) => toast({ title: "Deletion failed", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Deletion failed", description: err, variant: "destructive" }),
     });
 }

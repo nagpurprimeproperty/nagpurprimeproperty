@@ -104,12 +104,14 @@
   html {
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
+    overflow-x: clip; /* definitively prevents horizontal scroll at viewport level */
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
+    overflow-x: clip; /* prevent shimmer/animated elements from creating horizontal scrollbar without breaking sticky position */
   }
   h1, h2, h3, h4, h5 {
     font-family: var(--font-display);
@@ -318,13 +320,10 @@
 }
 
 /* Add Property button premium glowing and shimmering styling */
+/* Composited glow — opacity+transform run on GPU, zero main-thread cost per frame */
 @keyframes premium-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.55 0.22 35 / 0.95), 0 4px 14px oklch(0.55 0.22 35 / 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 12px oklch(0.55 0.22 35 / 0), 0 8px 30px oklch(0.55 0.22 35 / 0.9);
-  }
+  0%, 100% { opacity: 0.5; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
 
 @keyframes shimmer-swipe {
@@ -340,10 +339,10 @@
   background: linear-gradient(135deg, oklch(0.65 0.22 38) 0%, oklch(0.75 0.20 55) 50%, oklch(0.58 0.22 35) 100%) !important;
   background-size: 200% 100% !important;
   color: oklch(1 0 0) !important;
-  font-weight: 700 !important; /* Make text bolder */
+  font-weight: 700 !important;
   font-family: var(--font-display) !important;
   border: none !important;
-  border-radius: 9999px !important; /* Pill design for modern premium look */
+  border-radius: 9999px !important;
   padding: 0.5rem 1.25rem !important;
   position: relative !important;
   overflow: hidden !important;
@@ -351,8 +350,9 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  animation: premium-glow 1.2s infinite ease-in-out !important; /* Speed up to 1.2s for higher urgency/attention */
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease !important;
+  /* Static glow shadow - no animated ::before (filter+animation is non-composited) */
+  box-shadow: 0 0 18px oklch(0.55 0.22 35 / 0.45), 0 4px 14px oklch(0.55 0.22 35 / 0.35) !important;
 }
 
 /* Shimmer sweep overlay */
@@ -372,7 +372,9 @@
     rgba(255, 255, 255, 0) 100%
   ) !important;
   transform: translateX(-150%) skewX(-25deg) !important;
-  animation: shimmer-swipe 3.5s infinite linear !important; /* Slightly faster shimmer */
+  animation: shimmer-swipe 3.5s infinite linear !important;
+  /* No will-change: transform — compositor-promoted children can escape
+     the parent's overflow:hidden clip in Chrome, causing page-level overflow */
   pointer-events: none !important;
 }
 

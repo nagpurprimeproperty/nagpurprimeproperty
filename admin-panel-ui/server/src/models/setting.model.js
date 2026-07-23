@@ -28,6 +28,14 @@ const settingSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    androidAppLink: {
+      type: String,
+      default: '',
+    },
+    iosAppLink: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );

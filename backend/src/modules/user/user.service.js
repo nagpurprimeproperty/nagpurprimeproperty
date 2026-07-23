@@ -141,9 +141,9 @@ const userService = {
     return { properties, leads, enquiries, plans };
   },
 
-    generateOTP: (user) => {
-    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
-    const expiry = new Date(Date.now() + 1 * 60 * 1000); // Expires in 1 minutes
+  generateOTP: (user) => {
+    const otp = '1234'; // static OTP for Play Store verification
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // Expires in 5 minutes
     user.otp = otp;
     user.otpExpiry = expiry;
     user.save();
@@ -164,6 +164,22 @@ const userService = {
 
   getStats: async (userId) => {
     return userRepository.getStats(userId);
+  },
+
+  requestDeletion: async (mobile) => {
+    const user = await userRepository.findByMobile(mobile);
+    if (!user) throw { status: 404, message: 'User not found with this mobile number' };
+    const otp = userService.generateOTP(user);
+    return otp;
+  },
+
+  confirmDeletion: async (mobile, otp) => {
+    const user = await userRepository.findByMobile(mobile).select('+otp +otpExpiry');
+    if (!user) throw { status: 404, message: 'User not found' };
+    if (user.otp !== otp) throw { status: 400, message: 'Invalid OTP' };
+    if (user.otpExpiry < new Date()) throw { status: 400, message: 'OTP expired' };
+    await userRepository.deleteById(user._id);
+    return true;
   },
 
   /**

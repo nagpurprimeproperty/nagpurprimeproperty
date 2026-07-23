@@ -28,27 +28,33 @@ export async function PUT(req) {
 
     await connectDB();
 
-    const formData = await req.formData();
-    const avatarFile = formData.get('avatar');
+    const contentType = req.headers.get('content-type') || '';
+    let body = {};
+    let fileObj = null;
 
-    // Collect remaining text fields into body object
-    const body = {};
-    for (const [key, value] of formData.entries()) {
-      if (key !== 'avatar') body[key] = value;
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      const avatarFile = formData.get('avatar');
+
+      // Collect remaining text fields into body object
+      for (const [key, value] of formData.entries()) {
+        if (key !== 'avatar') body[key] = value;
+      }
+
+      // Convert File → multer-style object if present
+      if (avatarFile && typeof avatarFile === 'object') {
+        fileObj = {
+          buffer: Buffer.from(await avatarFile.arrayBuffer()),
+          originalname: avatarFile.name,
+          mimetype: avatarFile.type,
+        };
+      }
+    } else {
+      body = await req.json();
     }
 
     const parsed = adminUpdateSchema.safeParse(body);
     if (!parsed.success) return zodErrorResponse(parsed.error);
-
-    // Convert File → multer-style object if present
-    let fileObj = null;
-    if (avatarFile && typeof avatarFile === 'object') {
-      fileObj = {
-        buffer: Buffer.from(await avatarFile.arrayBuffer()),
-        originalname: avatarFile.name,
-        mimetype: avatarFile.type,
-      };
-    }
 
     const data = await AdminService.updateProfile(auth.user.id, parsed.data, fileObj);
     return NextResponse.json(successResponse(data, 'Profile updated'));

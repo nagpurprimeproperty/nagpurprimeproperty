@@ -80,7 +80,7 @@ export function useCreateSubAdmin() {
         onError: (err) => {
             toast({
                 title: 'Creation failed',
-                description: err?.message ?? 'Something went wrong',
+                description: err,
                 variant: 'destructive',
             });
         },
@@ -109,7 +109,7 @@ export function useToggleSubAdminStatus() {
             setToggling(sa._id, false);
             toast({
                 title: 'Status update failed',
-                description: err?.message ?? 'Something went wrong',
+                description: err,
                 variant: 'destructive',
             });
         },
@@ -132,7 +132,7 @@ export function useDeleteSubAdmin() {
         onError: (err) => {
             toast({
                 title: 'Deletion failed',
-                description: err?.message ?? 'Something went wrong',
+                description: err,
                 variant: 'destructive',
             });
         },
@@ -151,7 +151,7 @@ export function useUpdatePermissions(subAdminId) {
         onError: (err) => {
             toast({
                 title: 'Save failed',
-                description: err?.message ?? 'Something went wrong',
+                description: err,
                 variant: 'destructive',
             });
         },

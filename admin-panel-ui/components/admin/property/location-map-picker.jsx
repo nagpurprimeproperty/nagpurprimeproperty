@@ -43,13 +43,50 @@ export function LocationMapPicker({ lat, lng, onFill, disabled }) {
     // ── Stable reverseGeocode ─────────────────────────────────────────────────
     const reverseGeocode = useCallback((latVal, lngVal) => {
         const geocoder = new google.maps.Geocoder();
+        console.log("Geocoding coordinates:", latVal, lngVal);
         geocoder.geocode({ location: { lat: latVal, lng: lngVal } }, (results, status) => {
-            if (status === "OK" && results?.[0]) {
+            console.log("Geocoding response status:", status, "results:", results);
+            if (status === "OK" && results && results.length > 0) {
                 setAddress(results[0].formatted_address);
-                fillFromComponents(results[0].address_components ?? [], latVal, lngVal);
+                
+                let locality = "";
+                let subLocality = "";
+                let landmark = "";
+                let pinCode = "";
+                
+                for (const res of results) {
+                    const comps = res.address_components ?? [];
+                    const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? "";
+                    
+                    if (!locality) {
+                        locality = get("sublocality_level_1") || get("sublocality") || get("neighborhood");
+                    }
+                    if (!subLocality) {
+                        subLocality = get("sublocality_level_2") || get("administrative_area_level_3");
+                    }
+                    if (!landmark) {
+                        landmark = get("point_of_interest") || get("establishment");
+                    }
+                    if (!pinCode) {
+                        pinCode = get("postal_code");
+                    }
+                    
+                    if (locality && subLocality && landmark && pinCode) {
+                        break;
+                    }
+                }
+                
+                onFillRef.current({
+                    locality: locality || undefined,
+                    subLocality: subLocality || undefined,
+                    landmark: landmark || undefined,
+                    pinCode: pinCode || undefined,
+                    lat: latVal.toFixed(6),
+                    lng: lngVal.toFixed(6),
+                });
             }
         });
-    }, [fillFromComponents]); // fillFromComponents is stable so this is too
+    }, []); // stable — reads onFillRef.current at runtime
     // ── Init map ──────────────────────────────────────────────────────────────
     useEffect(() => {
         if (!loaded || !mapRef.current)

@@ -59,3 +59,30 @@ export const logout = async () => {
   const response = await apiClient.post<LogoutResponse>("/auth/logout");
   return response.data;
 };
+
+export interface RequestDeletionResponse {
+  success: boolean;
+  message: string;
+  data?: { otp: string };
+}
+
+export interface ConfirmDeletionResponse {
+  success: boolean;
+  message: string;
+}
+
+export const requestDeletionOTP = async (mobile: string) => {
+  const response = await apiClient.post<RequestDeletionResponse>(
+    "/auth/request-deletion",
+    { mobile },
+  );
+  return response.data;
+};
+
+export const confirmDeletion = async (mobile: string, otp: string) => {
+  const response = await apiClient.post<ConfirmDeletionResponse>(
+    "/auth/confirm-deletion",
+    { mobile, otp },
+  );
+  return response.data;
+};

@@ -50,14 +50,20 @@ export function MapPreview({
     map.addListener("click", (e) => {
       if (!e.latLng) return;
       const geocoder = new google.maps.Geocoder();
+      console.log("MapPreview geocoding coordinates:", e.latLng.lat(), e.latLng.lng());
       geocoder.geocode({ location: e.latLng }, (results, status) => {
-        if (status === "OK" && results?.[0]) {
-          const comps = results[0].address_components || [];
-          const sublocality = comps.find((c) =>
-            c.types.includes("sublocality_level_1") ||
-            c.types.includes("sublocality") ||
-            c.types.includes("neighborhood")
-          )?.long_name;
+        console.log("MapPreview geocoding response status:", status, "results:", results);
+        if (status === "OK" && results && results.length > 0) {
+          let sublocality = '';
+          for (const res of results) {
+            const comps = res.address_components || [];
+            const get = (type) => comps.find((c) => c.types.includes(type))?.long_name ?? '';
+            sublocality = get('sublocality_level_1') || get('sublocality') || get('neighborhood');
+            if (sublocality) {
+              break;
+            }
+          }
+          
           if (sublocality) {
             onSelectLocality?.(sublocality);
           }

@@ -1,11 +1,30 @@
 import { Apple, Smartphone, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export function AppDownloadModal({
   open,
   onOpenChange,
 } ) {
+  const [links, setLinks] = useState({ android: "", ios: "" });
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/settings")
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.success && res.data) {
+            setLinks({
+              android: res.data.androidAppLink || "",
+              ios: res.data.iosAppLink || "",
+            });
+          }
+        })
+        .catch((err) => console.error("Error fetching app links:", err));
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md overflow-hidden p-0">
@@ -36,8 +55,14 @@ export function AppDownloadModal({
           </div>
           <div className="space-y-2">
             <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
+              href={links.android || "#"}
+              target={links.android ? "_blank" : undefined}
+              rel={links.android ? "noopener noreferrer" : undefined}
+              onClick={(e) => {
+                if (!links.android) {
+                  e.preventDefault();
+                }
+              }}
               className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-left hover:border-primary"
             >
               <Smartphone className="h-5 w-5 text-primary" />
@@ -47,8 +72,14 @@ export function AppDownloadModal({
               </div>
             </a>
             <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
+              href={links.ios || "#"}
+              target={links.ios ? "_blank" : undefined}
+              rel={links.ios ? "noopener noreferrer" : undefined}
+              onClick={(e) => {
+                if (!links.ios) {
+                  e.preventDefault();
+                }
+              }}
               className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-left hover:border-primary"
             >
               <Apple className="h-5 w-5 text-primary" />

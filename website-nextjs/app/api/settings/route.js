@@ -14,6 +14,8 @@ export async function GET() {
         maintenanceTitle: 'Under Maintenance',
         maintenanceDescription: 'We are performing scheduled maintenance to improve our platform. We will be back online shortly.',
         maintenanceLiveAt: null,
+        androidAppLink: '',
+        iosAppLink: '',
       });
     }
     return NextResponse.json({ success: true, data: settings });

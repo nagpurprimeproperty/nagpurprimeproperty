@@ -67,7 +67,7 @@ export function useCreateUser() {
         onError: (err) => {
             toast({
                 title: "Creation failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },
@@ -87,7 +87,7 @@ export function useUpdateUser(id) {
         onError: (err) => {
             toast({
                 title: "Update failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },
@@ -118,7 +118,7 @@ export function useToggleUserStatus() {
             setToggling(user._id, false);
             toast({
                 title: "Status update failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },
@@ -141,7 +141,7 @@ export function useDeleteUser() {
         onError: (err) => {
             toast({
                 title: "Deletion failed",
-                description: err?.message ?? "Something went wrong",
+                description: err,
                 variant: "destructive",
             });
         },

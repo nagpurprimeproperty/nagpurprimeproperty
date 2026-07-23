@@ -57,7 +57,7 @@ export function useCreatePlan() {
             queryClient.invalidateQueries({ queryKey: planKeys.all });
             toast({ title: "Plan created", description: `"${res.data.name}" is now live.` });
         },
-        onError: (err) => toast({ title: "Failed to create", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Failed to create", description: err, variant: "destructive" }),
     });
 }
 // ─── Update ───────────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ export function useUpdatePlan(id) {
             queryClient.invalidateQueries({ queryKey: planKeys.detail(id) });
             toast({ title: "Plan updated", description: `"${res.data.name}" saved.` });
         },
-        onError: (err) => toast({ title: "Failed to update", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Failed to update", description: err, variant: "destructive" }),
     });
 }
 // ─── Toggle status ────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export function useTogglePlanStatus() {
                     : `"${plan.name}" deactivated`,
             });
         },
-        onError: (err) => toast({ title: "Failed", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Failed", description: err, variant: "destructive" }),
     });
 }
 // ─── Delete ───────────────────────────────────────────────────────────────────
@@ -101,6 +101,6 @@ export function useDeletePlan() {
             queryClient.invalidateQueries({ queryKey: planKeys.all });
             toast({ title: `"${plan.name}" deleted`, variant: "destructive" });
         },
-        onError: (err) => toast({ title: "Deletion failed", description: err?.message, variant: "destructive" }),
+        onError: (err) => toast({ title: "Deletion failed", description: err, variant: "destructive" }),
     });
 }

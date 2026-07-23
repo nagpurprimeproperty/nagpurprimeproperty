@@ -12,6 +12,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { PermissionGate, Unauthorized } from "@/components/utils/permission-gate";
 
 const CATEGORIES = ["General", "Property Type", "Budget", "Intent", "Area", "Amenity", "Other"];
 
@@ -63,11 +64,15 @@ export default function EditKeywordPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update");
+      if (!res.ok) {
+        const error = new Error(data.message || "Failed to update");
+        error.errors = data.errors;
+        throw error;
+      }
       toast({ title: "Updated!", description: `"${form.keyword}" has been saved.` });
       router.push("/admin/keywords");
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -93,7 +98,8 @@ export default function EditKeywordPage() {
   }
 
   return (
-    <div className="space-y-6 w-full min-w-0">
+    <PermissionGate module="keywords" action="write" fallback={<Unauthorized />}>
+      <div className="space-y-6 w-full min-w-0">
       <AdminPageHeader
         title="Edit SEO Keyword"
         description={`Editing: "${form.keyword}"`}
@@ -253,6 +259,7 @@ export default function EditKeywordPage() {
         </div>
       </form>
     </div>
+    </PermissionGate>
   );
 }
 
