@@ -260,7 +260,7 @@ export function Step5Media() {
           {photos.map((uri, index) => (
             <View key={uri} className="relative">
               <Image
-                source={{ uri }}
+                source={{ uri, width: 200, height: 200 }}
                 className="w-[100px] h-[100px] rounded-2xl"
                 contentFit="cover"
                 cachePolicy="memory-disk"

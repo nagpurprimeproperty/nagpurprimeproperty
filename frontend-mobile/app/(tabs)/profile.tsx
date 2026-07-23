@@ -511,7 +511,7 @@ export default function ProfileScreen() {
               <SectionDivider label="Property Management" />
               <MenuItem icon={Home}  label="My Properties"     delay={100} onPress={goMyProperties}  active={animationsTriggered} colors={colors} />
               <MenuItem icon={Users} label="Leads"             delay={130} onPress={goLeads}          active={animationsTriggered} colors={colors} />
-              <MenuItem icon={Star}  label="Subscription Plans" delay={160} onPress={goSubscription}  active={animationsTriggered} colors={colors} />
+              <MenuItem icon={Star}  label="Property Listing Plans" delay={160} onPress={goSubscription}  active={animationsTriggered} colors={colors} />
             </View>
 
             <View className="mb-3 mt-2">

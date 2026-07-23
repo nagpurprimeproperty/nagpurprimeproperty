@@ -27,6 +27,13 @@ module.exports = {
         warning: "#F59E0B",
       },
       fontFamily: {
+        sans: ["Inter_400Regular"],
+        normal: ["Inter_400Regular"],
+        medium: ["Inter_500Medium"],
+        semibold: ["Inter_600SemiBold"],
+        bold: ["Inter_700Bold"],
+        extrabold: ["Inter_700Bold"],
+        black: ["Inter_700Bold"],
         inter: ["Inter_400Regular"],
         "inter-medium": ["Inter_500Medium"],
         "inter-semibold": ["Inter_600SemiBold"],

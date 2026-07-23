@@ -454,9 +454,11 @@ export default function WizardPhotosScreen() {
               >
                 {/* Image */}
                 <Image
-                  source={{ uri }}
+                  source={{ uri, width: 300, height: 220 }}
                   style={{ height: 110, borderRadius: 18 }}
                   className="w-full bg-slate-100"
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
                 />
 
                 {/* Cover Photo Badge */}

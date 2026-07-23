@@ -290,7 +290,7 @@ export default function SubscriptionScreen() {
   return (
     <ScreenWrapper>
       <ScreenHeader
-        title="Subscription Plans"
+        title="Property Listing Plans"
         subtitle="Choose the right plan for your business"
       />
 

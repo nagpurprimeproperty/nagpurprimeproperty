@@ -110,7 +110,7 @@ export default function DeleteAccount() {
             },
             {
               icon: CreditCard,
-              title: "Subscription Plans",
+              title: "Property Listing Plans",
               desc: "Active subscriptions will be terminated. There are no refunds for remaining time.",
             },
           ].map((item, index) => {
