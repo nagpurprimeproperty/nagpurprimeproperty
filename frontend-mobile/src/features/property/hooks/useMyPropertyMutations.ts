@@ -1,4 +1,4 @@
-﻿import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteMyProperty,
   toggleFeaturedMyProperty,
@@ -8,6 +8,7 @@ import {
   type PropertyDetailResponse,
 } from "@/features/property/services/propertyService";
 import { propertyKeys, myPropertyKeys } from "@/features/property/keys/propertyKeys";
+import { subscriptionKeys } from "@/api/keys/subscriptionKeys";
 
 // ─── Delete ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export const useCreateMyProperty = () => {
     mutationFn: (payload) => createMyProperty(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: myPropertyKeys.all });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.mine() });
     },
   });
 };
