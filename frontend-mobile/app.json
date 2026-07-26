@@ -10,7 +10,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ayushbharne.nagpurPrimeProperty"
+      "bundleIdentifier": "com.nagpurprimeproperty.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Nagpur Prime Property requires camera access to allow property sellers and agents to capture photos of their real estate property directly within the app for their listing.",
+        "NSPhotoLibraryUsageDescription": "Nagpur Prime Property requires photo library access to allow property sellers to select and upload photos and videos of their property when creating or updating a listing.",
+        "NSPhotoLibraryAddUsageDescription": "Nagpur Prime Property requires access to save property brochures and images to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ayushbharne.nagpurPrimeProperty"
+      "package": "com.nagpurprimeproperty.app"
     },
     "web": {
       "bundler": "metro",
@@ -44,6 +50,19 @@
           "dark": {
             "backgroundColor": "#F97316"
           }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nagpur Prime Property requires photo library access to allow property sellers to select and upload photos and videos of their property when creating or updating a listing.",
+          "cameraPermission": "Nagpur Prime Property requires camera access to allow property sellers and agents to capture photos of their real estate property directly within the app for their listing."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses."
         }
       ],
       "expo-video"
