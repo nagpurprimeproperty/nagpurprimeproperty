@@ -48,8 +48,8 @@ export function Header() {
           />
           <div className="leading-tight">
             <div className="font-display text-base font-bold sm:text-lg max-w-[140px] truncate sm:max-w-none">Nagpur Prime Property</div>
-            <div className="hidden text-[10px] uppercase tracking-widest text-muted-foreground sm:block">
-              Verified Listings
+            <div className="hidden text-[10px] uppercase tracking-wider text-muted-foreground sm:block">
+              Nagpur Ka Apna Property App
             </div>
           </div>
         </Link>
