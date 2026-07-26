@@ -47,7 +47,7 @@ export function Header() {
             className="rounded-xl object-cover shadow-elegant"
           />
           <div className="leading-tight">
-            <div className="font-display text-base font-bold sm:text-lg max-w-[140px] truncate sm:max-w-none">Nagpur Prime Property</div>
+            <div className="font-display text-base font-bold sm:text-lg whitespace-nowrap">Nagpur Prime Property</div>
             <div className="hidden text-[10px] uppercase tracking-wider text-muted-foreground sm:block">
               Nagpur Ka Apna Property App
             </div>
