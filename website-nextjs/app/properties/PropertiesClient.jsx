@@ -179,13 +179,16 @@ function PropertiesContent({ initialProperties, initialAreas }) {
     setType(searchParams.get('type') || null)
     setBhk(searchParams.get('bhk') ? Number(searchParams.get('bhk')) : null)
     setArea(searchParams.get('areaSlug') || null)
-    setLocalQuery(searchParams.get('search') || '')
-    setQuery(searchParams.get('search') || '')
+    const urlSearch = searchParams.get('search') || ''
+    if (urlSearch !== query) {
+      setLocalQuery(urlSearch)
+      setQuery(urlSearch)
+    }
     setListingCategory(searchParams.get('listingCategory') || null)
     const a = searchParams.get('amenities')
     setSelectedAmenities(a ? a.split(',').filter(Boolean) : [])
     setPage(searchParams.get('page') ? Number(searchParams.get('page')) : 1)
-  }, [searchParams])
+  }, [searchParams, query])
 
   const handlePageChange = useCallback((newPage) => {
     setPage(newPage)
@@ -295,7 +298,7 @@ function PropertiesContent({ initialProperties, initialAreas }) {
         <div className="mt-5 grid gap-4 rounded-2xl border border-border bg-card p-4 shadow-soft md:grid-cols-[1fr_320px]">
           <div className="min-w-0">
             <LocationSearch
-              value={query}
+              value={localQuery}
               onChange={handleQuery}
               onSelect={(s) => { if (s.areaSlug) handleArea(s.areaSlug) }}
               placeholder="Search by locality…"
