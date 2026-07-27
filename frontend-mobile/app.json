@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "nagpurPrimeProperty",
-    "slug": "nagpurPrimeProperty",
+    "name": "Nagpur Prime Property",
+    "slug": "nagpur-prime-property",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/applogo.png",
@@ -75,7 +75,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "877c91e2-5c56-42c8-9d6b-8f363df8c34c"
+        "projectId": "24483faf-3d08-49c3-a8f5-0a96eac1b0cb"
       }
     }
   }
