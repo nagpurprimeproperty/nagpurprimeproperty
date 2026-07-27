@@ -27,16 +27,27 @@ module.exports = ({ config }) => ({
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
-  supportsTablet: true,
-  bundleIdentifier: "com.nagpurprimeproperty.app",
-  googleServicesFile:
-    process.env.GOOGLE_SERVICES_INFO_PLIST ||
-    "./GoogleService-Info.plist",
-
-  config: {
-    usesNonExemptEncryption: false,
+    supportsTablet: true,
+    bundleIdentifier: "com.nagpurprimeproperty.app",
+    googleServicesFile:
+      process.env.GOOGLE_SERVICES_INFO_PLIST ||
+      "./GoogleService-Info.plist",
+    config: {
+      usesNonExemptEncryption: false,
+    },
+    infoPlist: {
+      NSCameraUsageDescription:
+        "Nagpur Prime Property requires access to your camera to take photos and videos of your real estate property (such as apartments or houses) to attach to your property listing.",
+      NSPhotoLibraryUsageDescription:
+        "Nagpur Prime Property requires access to your photo library to let you select and upload existing property photos and brochures to your property listing.",
+      NSPhotoLibraryAddUsageDescription:
+        "Nagpur Prime Property requires access to save property images, floor plans, and brochures to your photo library.",
+      NSMicrophoneUsageDescription:
+        "Nagpur Prime Property requires access to your microphone to record audio while capturing property walk-through videos for your listing.",
+      NSLocationWhenInUseUsageDescription:
+        "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses.",
+    },
   },
-},
   android: {
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
     adaptiveIcon: {
@@ -84,6 +95,17 @@ module.exports = ({ config }) => ({
         dark: {
           backgroundColor: "#000000",
         },
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "Nagpur Prime Property requires access to your photo library to let you select and upload existing property photos and brochures to your property listing.",
+        cameraPermission:
+          "Nagpur Prime Property requires access to your camera to take photos and videos of your real estate property (such as apartments or houses) to attach to your property listing.",
+        microphonePermission:
+          "Nagpur Prime Property requires access to your microphone to record audio while capturing property walk-through videos for your listing.",
       },
     ],
     "expo-video",

@@ -57,7 +57,8 @@ export const useMySubscription = (enabled = true) => {
   return useQuery<MySubscriptionResponse, Error>({
     queryKey:  subscriptionKeys.mine(),
     queryFn:   () => getMySubscription(),
-    staleTime: 60 * 1000, // 1 min — active plan data can change
+    staleTime: 5 * 1000, // 5 sec — ensure updated admin limits reflect immediately
+    refetchOnMount: "always",
     enabled,
     retry: false, // 404 means no active plan, don't retry
   });

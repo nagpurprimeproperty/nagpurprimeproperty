@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, Platform, BackHandler, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'react-hot-toast/headless';
 
@@ -87,8 +87,17 @@ export default function AddProperty() {
 
   // ── Subscription limit check ─────────────────────────────────────────────────
   // enabled=false when not authenticated → zero network cost for guests
-  const { data: subData, isLoading: subLoading } = useMySubscription(isAuthenticated);
+  const { data: subData, isLoading: subLoading, isFetching: subFetching, refetch: refetchSub } = useMySubscription(isAuthenticated);
   const activeSub = subData?.data ?? null;
+
+  // Refetch subscription limit automatically whenever screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        refetchSub();
+      }
+    }, [isAuthenticated, refetchSub])
+  );
 
   // Derived block flags — only block on NEW property creation, never on edits
   const isNewProperty = !editingPropertyId;
@@ -99,11 +108,11 @@ export default function AddProperty() {
     !subLoading &&
     !!activeSub &&
     !activeSub.limits.isPropertyUploadUnlimited &&
-    activeSub.usage.propertiesPosted >= activeSub.limits.propertyUploads;
+    Number(activeSub.usage.propertiesPosted ?? 0) >= Number(activeSub.limits.propertyUploads ?? 0);
 
   // Derived display values for the limit-reached block (safe when activeSub is null)
-  const limitUsed     = activeSub?.usage.propertiesPosted ?? 0;
-  const limitTotal    = activeSub?.limits.propertyUploads ?? 0;
+  const limitUsed     = Number(activeSub?.usage.propertiesPosted ?? 0);
+  const limitTotal    = Number(activeSub?.limits.propertyUploads ?? 0);
   const limitPlanName = activeSub?.planName ?? 'Current Plan';
 
   // ── ALL hooks must be declared unconditionally before any early return ────────
@@ -394,11 +403,26 @@ export default function AddProperty() {
 
         <TouchableOpacity
           activeOpacity={0.85}
-          onPress={() => router.push('/(subscription)/subscription' as any)}
-          style={[ls.primaryBtn, shadows.button]}
+          onPress={() => refetchSub()}
+          disabled={subFetching}
+          style={[ls.primaryBtn, shadows.button, { marginBottom: 12, backgroundColor: colors.primary }]}
         >
-          <Ionicons name="arrow-up-circle" size={17} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={ls.primaryBtnText}>Upgrade Plan</Text>
+          {subFetching ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="refresh-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <Text style={ls.primaryBtnText}>Refresh Status</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push('/(subscription)/subscription' as any)}
+          style={[ls.secondaryBtn, { marginBottom: 12 }]}
+        >
+          <Text style={ls.secondaryBtnText}>Upgrade Plan</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
