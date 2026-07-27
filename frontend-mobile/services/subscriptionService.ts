@@ -25,6 +25,7 @@ export interface SubscriptionPlan {
   limits: PlanLimits;
   description: string;
   features: string[];
+  appleProductId?: string;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -174,5 +175,18 @@ export const getPurchaseHistory = async (
 
 export const getPurchaseById = async (id: string, config?: AxiosRequestConfig): Promise<PurchaseDetailResponse> => {
   const res = await apiClient.get<PurchaseDetailResponse>(`/subscriptions/purchase/${id}`, config);
+  return res.data;
+};
+
+export const activateIapPlan = async (
+  planId: string,
+  transactionId?: string,
+  config?: AxiosRequestConfig
+): Promise<MySubscriptionResponse> => {
+  const res = await apiClient.post<MySubscriptionResponse>(
+    `/subscriptions/purchase/activate-iap`,
+    { planId, transactionId },
+    config
+  );
   return res.data;
 };

@@ -32,7 +32,7 @@ import * as Haptics from "expo-haptics";
 
 import ScreenHeader from "@/shared/components/ScreenHeader";
 import ScreenWrapper from "@/shared/components/ScreenWrapper";
-import { usePlanDetail, usePurchasePlan, useMySubscription } from "@/hooks/useSubscriptionHooks";
+import { usePlanDetail, usePurchasePlan, useMySubscription, useActivateIapPlan } from "@/hooks/useSubscriptionHooks";
 import { useAuthStore } from "@/features/auth";
 import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
@@ -121,6 +121,10 @@ const sl = StyleSheet.create({
   text: { fontSize: 11, fontWeight: "900", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.8 },
 });
 
+import { Platform } from "react-native";
+import { getOfferings, purchasePackage, restorePurchases, identifyUser } from "@/services/revenueCatService";
+import { activateIapPlan } from "@/services/subscriptionService";
+
 // ─── Confirm Modal ─────────────────────────────────────────────────────────────
 
 function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }: {
@@ -128,6 +132,8 @@ function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }
   onCancel: () => void; onConfirm: () => void; loading: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const isIos = Platform.OS === "ios";
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
       <Pressable style={cm.backdrop} onPress={onCancel} />
@@ -142,7 +148,9 @@ function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }
         </View>
 
         <Text style={cm.note}>
-          You'll be redirected to Razorpay to complete your payment securely.
+          {isIos
+            ? "You'll complete your payment securely via Apple In-App Purchase."
+            : "You'll be redirected to Razorpay to complete your payment securely."}
         </Text>
 
         <View style={cm.actions}>
@@ -155,7 +163,7 @@ function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }
             ) : (
               <>
                 <ExternalLink size={15} color={colors.white} strokeWidth={2.5} />
-                <Text style={cm.payText}>Pay ₹{price}</Text>
+                <Text style={cm.payText}>{isIos ? `Subscribe · ₹${price}` : `Pay ₹${price}`}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -188,13 +196,16 @@ export default function SubscriptionDetailScreen() {
   const { id }   = useLocalSearchParams<{ id: string }>();
   const insets   = useSafeAreaInsets();
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [isIapLoading, setIsIapLoading] = useState(false);
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
   const { openAuth }        = useModal();
 
   const { data, isLoading, isError, error, refetch } = usePlanDetail(id);
   const { data: mySubData }  = useMySubscription(isAuthenticated);
   const purchaseMutation     = usePurchasePlan();
+  const activateIapMutation  = useActivateIapPlan();
 
   const plan          = data?.data;
   const activePlanId  = mySubData?.data?.planId?._id;
@@ -202,21 +213,76 @@ export default function SubscriptionDetailScreen() {
   const Icon          = plan ? getPlanIcon(plan.name) : Gift;
   const dark          = plan?.name.toLowerCase().includes("enterprise") ?? false;
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!isAuthenticated) { openAuth("subscription"); return; }
     setConfirmVisible(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    purchaseMutation.mutate(id!, {
-      onSuccess: (res) => {
-        const url = res.data?.paymentLinkUrl;
-        if (url) {
-          Linking.openURL(url).catch(() => toast.error("Could not open payment link"));
-        } else {
-          toast.success("Subscription activated!");
+
+    if (Platform.OS === "ios") {
+      setIsIapLoading(true);
+      try {
+        if (user?._id) {
+          await identifyUser(user._id);
         }
-      },
-      onError: (e) => toast.error(e.message || "Purchase failed"),
-    });
+        const offering = await getOfferings();
+        if (!offering || !offering.availablePackages.length) {
+          toast.error("No iOS subscription packages available right now");
+          setIsIapLoading(false);
+          return;
+        }
+
+        // Find package matching plan name or appleProductId, or default to first available
+        const pkg = offering.availablePackages.find(
+          (p: any) =>
+            p.product.identifier === plan?.appleProductId ||
+            p.product.identifier.toLowerCase().includes(plan?.name.toLowerCase() || "")
+        ) || offering.availablePackages[0];
+
+        const customerInfo = await purchasePackage(pkg);
+        if (customerInfo) {
+          await activateIapMutation.mutateAsync({
+            planId: id!,
+            transactionId: customerInfo.originalAppUserId,
+          });
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          toast.success("Apple Subscription activated successfully!");
+        }
+      } catch (err: any) {
+        toast.error(err?.message || "In-App Purchase failed");
+      } finally {
+        setIsIapLoading(false);
+      }
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      purchaseMutation.mutate(id!, {
+        onSuccess: (res) => {
+          const url = res.data?.paymentLinkUrl;
+          if (url) {
+            Linking.openURL(url).catch(() => toast.error("Could not open payment link"));
+          } else {
+            toast.success("Subscription activated!");
+          }
+        },
+        onError: (e) => toast.error(e.message || "Purchase failed"),
+      });
+    }
+  };
+
+  const handleRestore = async () => {
+    if (Platform.OS !== "ios") return;
+    setIsIapLoading(true);
+    try {
+      const customerInfo = await restorePurchases();
+      if (customerInfo && Object.keys(customerInfo.entitlements.active).length > 0) {
+        toast.success("Purchases restored successfully!");
+        refetch();
+      } else {
+        toast.error("No active purchases found to restore");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Restore failed");
+    } finally {
+      setIsIapLoading(false);
+    }
   };
 
   return (
@@ -321,10 +387,10 @@ export default function SubscriptionDetailScreen() {
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => isAuthenticated ? setConfirmVisible(true) : openAuth("subscription")}
-                disabled={purchaseMutation.isPending}
+                disabled={purchaseMutation.isPending || isIapLoading}
                 style={[ms.cta, dark && ms.ctaDark]}
               >
-                {purchaseMutation.isPending ? (
+                {purchaseMutation.isPending || isIapLoading ? (
                   <ActivityIndicator size="small" color={colors.white} />
                 ) : (
                   <>
@@ -336,6 +402,19 @@ export default function SubscriptionDetailScreen() {
                 )}
               </TouchableOpacity>
             )}
+
+            {Platform.OS === "ios" && (
+              <TouchableOpacity
+                onPress={handleRestore}
+                disabled={isIapLoading}
+                activeOpacity={0.7}
+                style={{ marginTop: 10, alignSelf: "center" }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "600", color: colors.textMuted, textDecorationLine: "underline" }}>
+                  Restore Purchases
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <ConfirmModal
@@ -344,7 +423,7 @@ export default function SubscriptionDetailScreen() {
             price={plan.price}
             onCancel={() => setConfirmVisible(false)}
             onConfirm={handlePurchase}
-            loading={purchaseMutation.isPending}
+            loading={purchaseMutation.isPending || isIapLoading}
           />
         </>
       ) : null}

@@ -116,3 +116,29 @@ export const getSubscriptionById = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * POST /api/v1/subscriptions/purchase/activate-iap
+ * Body: { planId, transactionId }
+ * Activates an Apple StoreKit In-App Purchase plan.
+ */
+export const activateIap = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { planId, transactionId } = req.body;
+
+    if (!planId) {
+      return res.status(400).json({ success: false, message: 'Plan ID is required' });
+    }
+
+    const subscription = await purchasePlanService.activateIap(userId, planId, transactionId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Apple IAP Subscription activated successfully',
+      data: subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

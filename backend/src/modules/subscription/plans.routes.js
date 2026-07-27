@@ -6,6 +6,7 @@ import {
   getMySubscription,
   getMyHistory,
   getSubscriptionById,
+  activateIap,
 } from './purchasePlan.controller.js';
 
 const router = Router();
@@ -17,6 +18,13 @@ router.post('/webhook', handleWebhook);
 
 // ── Authenticated routes ───────────────────────────────────────────────────
 router.use(userProtect);
+
+/**
+ * POST /api/v1/subscriptions/purchase/activate-iap
+ * Body: { planId, transactionId }
+ * Activates an Apple StoreKit In-App Purchase.
+ */
+router.post('/activate-iap', activateIap);
 
 /**
  * POST /api/v1/subscriptions/purchase/:id/create-order

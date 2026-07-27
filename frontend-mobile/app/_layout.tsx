@@ -47,10 +47,13 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 // Configure how foreground notifications are displayed (once at module load)
 configureNotificationHandler();
 
+import { initRevenueCat } from "@/services/revenueCatService";
+
 function AppContent() {
   useSocket();
 
   useEffect(() => {
+    initRevenueCat();
     const cleanup = setupNotificationResponseListener();
     return cleanup;
   }, []);

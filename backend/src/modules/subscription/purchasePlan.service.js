@@ -363,6 +363,72 @@ handleWebhook: async (rawBody, razorpaySignature) => {
   },
 
   /**
+   * Activate Apple StoreKit / RevenueCat IAP plan for a user.
+   */
+  activateIap: async (userId, planId, transactionId) => {
+    if (!mongoose.Types.ObjectId.isValid(planId)) {
+      throw { status: 400, message: 'Invalid plan ID' };
+    }
+
+    const plan = await planRepository.findById(planId);
+    if (!plan) throw { status: 404, message: 'Subscription plan not found' };
+    if (!plan.isActive) throw { status: 400, message: 'This plan is currently inactive' };
+
+    const startDate = new Date();
+    const endDate = calcEndDate(startDate, plan.duration, plan.durationUnit, plan.isDurationUnlimited);
+
+    // Expire any previous active subscription
+    await purchasePlanRepository.updateSubscription(
+      { userId, status: 'Active' },
+      { status: 'Cancelled' }
+    );
+
+    const subscription = await purchasePlanRepository.createSubscription({
+      userId,
+      planId: plan._id,
+      planName: plan.name,
+      startDate,
+      endDate,
+      status: 'Active',
+      paymentDetails: {
+        amountPaid: plan.price,
+        method: 'Apple IAP',
+        paymentId: transactionId || `iap_${Date.now()}`,
+      },
+      isFree: plan.isFree,
+      price: plan.price,
+      duration: plan.duration,
+      durationUnit: plan.durationUnit,
+      isDurationUnlimited: plan.isDurationUnlimited,
+      limits: plan.limits,
+    });
+
+    // Notify user & admin
+    import('../../services/notificationDelivery.service.js')
+      .then(async ({ sendNotification, sendAdminNotification }) => {
+        const user = await User.findById(userId).select('name mobile');
+        const userName = user?.name || user?.mobile || 'A user';
+
+        await sendNotification({
+          userId,
+          title: 'Apple In-App Purchase Successful',
+          message: `Your subscription plan "${plan.name}" has been activated.`,
+          type: 'PLAN_PURCHASED',
+        });
+
+        await sendAdminNotification({
+          title: 'New Apple IAP Purchase',
+          message: `${userName} purchased the plan "${plan.name}" via Apple IAP.`,
+          type: 'PLAN_PURCHASED',
+          metadata: { userId: userId.toString(), planName: plan.name, price: plan.price },
+        });
+      })
+      .catch((err) => console.error('[Notification] IAP plan notification failed:', err.message));
+
+    return subscription;
+  },
+
+  /**
    * Get a specific subscription by ID (must belong to the requesting user).
    */
   getSubscriptionById: async (userId, subscriptionId) => {

@@ -6,6 +6,7 @@ import {
   getMySubscription,
   getPurchaseHistory,
   getPurchaseById,
+  activateIapPlan,
 } from "@/services/subscriptionService";
 import type {
   PlansResponse,
@@ -45,6 +46,17 @@ export const usePurchasePlan = () => {
     mutationFn: (planId) => purchasePlan(planId),
     onSuccess:  () => {
       // Refresh active plan and history after a purchase
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.mine() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.history() });
+    },
+  });
+};
+
+export const useActivateIapPlan = () => {
+  const queryClient = useQueryClient();
+  return useMutation<MySubscriptionResponse, Error, { planId: string; transactionId?: string }>({
+    mutationFn: ({ planId, transactionId }) => activateIapPlan(planId, transactionId),
+    onSuccess:  () => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.mine() });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.history() });
     },
