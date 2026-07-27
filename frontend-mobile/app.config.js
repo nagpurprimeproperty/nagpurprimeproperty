@@ -141,6 +141,7 @@ module.exports = ({ config }) => {
   extra: {
     router: {},
     eas: {
+      projectId: "24483faf-3d08-49c3-a8f5-0a96eac1b0cb",
     },
   },
 };
