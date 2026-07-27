@@ -16,45 +16,58 @@
 //   $env:GOOGLE_MAPS_API_KEY="AIza..."     # PowerShell / Windows
 // ──────────────────────────────────────────────────────────────────────────────
 
-module.exports = ({ config }) => ({
-  ...config,
-  name: "Nagpur Prime Property",
-  slug: "nagpur-prime-property",
-  version: "1.0.0",
-  orientation: "portrait",
-  icon: "./assets/images/applogo.png",
-  scheme: "nagpurprimeproperty",
-  userInterfaceStyle: "automatic",
-  newArchEnabled: true,
-  ios: {
-    supportsTablet: true,
-    bundleIdentifier: "com.nagpurprimeproperty.app",
-    googleServicesFile:
-      process.env.GOOGLE_SERVICES_INFO_PLIST ||
-      "./GoogleService-Info.plist",
-    config: {
-      usesNonExemptEncryption: false,
+const fs = require("fs");
+const path = require("path");
+
+module.exports = ({ config }) => {
+  const iosGoogleServicesPath = process.env.GOOGLE_SERVICES_INFO_PLIST || "./GoogleService-Info.plist";
+  const androidGoogleServicesPath = process.env.GOOGLE_SERVICES_JSON || "./google-services.json";
+
+  const hasIosGoogleServices =
+    Boolean(process.env.GOOGLE_SERVICES_INFO_PLIST) ||
+    fs.existsSync(path.resolve(__dirname, iosGoogleServicesPath));
+
+  const hasAndroidGoogleServices =
+    Boolean(process.env.GOOGLE_SERVICES_JSON) ||
+    fs.existsSync(path.resolve(__dirname, androidGoogleServicesPath));
+
+  return {
+    ...config,
+    name: "Nagpur Prime Property",
+    slug: "nagpur-prime-property",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/applogo.png",
+    scheme: "nagpurprimeproperty",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.nagpurprimeproperty.app",
+      ...(hasIosGoogleServices ? { googleServicesFile: iosGoogleServicesPath } : {}),
+      config: {
+        usesNonExemptEncryption: false,
+      },
+      infoPlist: {
+        NSCameraUsageDescription:
+          "Nagpur Prime Property requires access to your camera to take photos and videos of your real estate property (such as apartments or houses) to attach to your property listing.",
+        NSPhotoLibraryUsageDescription:
+          "Nagpur Prime Property requires access to your photo library to let you select and upload existing property photos and brochures to your property listing.",
+        NSPhotoLibraryAddUsageDescription:
+          "Nagpur Prime Property requires access to save property images, floor plans, and brochures to your photo library.",
+        NSMicrophoneUsageDescription:
+          "Nagpur Prime Property requires access to your microphone to record audio while capturing property walk-through videos for your listing.",
+        NSLocationWhenInUseUsageDescription:
+          "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses.",
+      },
     },
-    infoPlist: {
-      NSCameraUsageDescription:
-        "Nagpur Prime Property requires access to your camera to take photos and videos of your real estate property (such as apartments or houses) to attach to your property listing.",
-      NSPhotoLibraryUsageDescription:
-        "Nagpur Prime Property requires access to your photo library to let you select and upload existing property photos and brochures to your property listing.",
-      NSPhotoLibraryAddUsageDescription:
-        "Nagpur Prime Property requires access to save property images, floor plans, and brochures to your photo library.",
-      NSMicrophoneUsageDescription:
-        "Nagpur Prime Property requires access to your microphone to record audio while capturing property walk-through videos for your listing.",
-      NSLocationWhenInUseUsageDescription:
-        "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses.",
-    },
-  },
-  android: {
-    googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
-    adaptiveIcon: {
-      backgroundColor: "#000000",
-      foregroundImage: "./assets/images/applogo.png",
-      monochromeImage: "./assets/images/applogo.png",
-    },
+    android: {
+      ...(hasAndroidGoogleServices ? { googleServicesFile: androidGoogleServicesPath } : {}),
+      adaptiveIcon: {
+        backgroundColor: "#000000",
+        foregroundImage: "./assets/images/applogo.png",
+        monochromeImage: "./assets/images/applogo.png",
+      },
     config: {
       googleMaps: {
         // GOOGLE_MAPS_API_KEY is injected by EAS Build secrets at build time.
@@ -128,8 +141,8 @@ module.exports = ({ config }) => ({
   extra: {
     router: {},
     eas: {
-      projectId: "24483faf-3d08-49c3-a8f5-0a96eac1b0cb",
     },
   },
-});
+};
+};
 

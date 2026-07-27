@@ -21,9 +21,7 @@ addpropertydocs.md
 *.p12
 *.key
 *.mobileprovision
-*.provisionprofile
-google-services.json
-GoogleService-Info.plist
+# Note: google-services.json and GoogleService-Info.plist are tracked so EAS Build includes them in the upload archive.
 
 # Metro
 .metro-health-check*
