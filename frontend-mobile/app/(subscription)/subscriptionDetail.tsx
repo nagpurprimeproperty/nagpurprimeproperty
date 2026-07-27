@@ -321,11 +321,6 @@ export default function SubscriptionDetailScreen() {
                 <Text style={[ms.heroPrice, dark && ms.heroPriceDark]}>
                   {plan.isFree ? "Free" : `₹${plan.price}`}
                 </Text>
-                {!plan.isFree && (
-                  <Text style={[ms.heroPer, dark && ms.heroPerDark]}>
-                    / {formatDuration(plan.duration, plan.durationUnit, plan.isDurationUnlimited)}
-                  </Text>
-                )}
               </View>
               {isCurrentPlan && (
                 <View style={ms.activeBadge}>
