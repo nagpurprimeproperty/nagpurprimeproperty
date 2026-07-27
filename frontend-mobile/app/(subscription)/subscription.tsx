@@ -176,9 +176,6 @@ function PlanCard({ plan, index, isCurrentPlan }: {
           <Text style={[pc.price, dark && pc.priceDark]}>
             {plan.isFree ? "Free" : `₹${plan.price}`}
           </Text>
-          {!plan.isFree && (
-            <Text style={[pc.per, dark && pc.perDark]}>/{plan.durationUnit}</Text>
-          )}
         </View>
       </View>
 
