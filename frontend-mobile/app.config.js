@@ -35,7 +35,7 @@ module.exports = ({ config }) => {
     ...config,
     name: "Nagpur Prime Property",
     slug: "nagpur-prime-property",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/applogo.png",
     scheme: "nagpurprimeproperty",
