@@ -1,6 +1,7 @@
 import CommunicationLog from '../../models/communicationLog.model.js';
 import mailService from '../../services/mail.service.js';
 import mongoose from 'mongoose';
+import env from '../../config/env.js';
 
 const communicationService = {
   /**
@@ -56,28 +57,118 @@ const communicationService = {
    * Send WhatsApp message (placeholder — integrate with WhatsApp Business API).
    */
   sendWhatsApp: async ({ to, body, templateId, metadata = {} }) => {
-    if (process.env.WHATSAPP_ENABLED !== 'true') {
-      const err = new Error('WhatsApp integration not configured');
+    if (!env.WHATSAPP_ENABLED) {
+      const err = new Error('WhatsApp integration not configured/enabled');
       err.status = 503;
       throw err;
     }
+
+    const cleanNumber = to.replace(/\D/g, '');
+    const recipientNumber = cleanNumber.length === 10 ? `91${cleanNumber}` : cleanNumber;
+
     const log = await CommunicationLog.create({
       type: 'whatsapp',
-      recipient: to,
-      body,
+      recipient: recipientNumber,
+      body: body || `Template: ${templateId}`,
       status: 'pending',
       templateId,
       metadata,
     });
 
-    // TODO: Integrate with actual WhatsApp Business API (e.g. Meta Cloud API, Twilio, MSG91)
-    log.status = 'failed';
-    log.failedAt = new Date();
-    log.errorMessage = 'WhatsApp integration not configured';
-    await log.save();
-    const err = new Error('WhatsApp integration not configured');
-    err.status = 503;
-    throw err;
+    try {
+      const payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientNumber,
+      };
+
+      if (templateId) {
+        let components = [];
+        if (metadata.components) {
+          components = metadata.components;
+        } else if (metadata.otp) {
+          components = [
+            {
+              type: 'body',
+              parameters: [
+                {
+                  type: 'text',
+                  text: metadata.otp,
+                },
+              ],
+            },
+            {
+              type: 'button',
+              sub_type: 'url',
+              index: '0',
+              parameters: [
+                {
+                  type: 'text',
+                  text: metadata.otp,
+                },
+              ],
+            },
+          ];
+        } else if (body) {
+          components = [
+            {
+              type: 'body',
+              parameters: [
+                {
+                  type: 'text',
+                  text: body,
+                },
+              ],
+            },
+          ];
+        }
+
+        payload.type = 'template';
+        payload.template = {
+          name: templateId,
+          language: { code: metadata.languageCode || 'en_US' },
+          components,
+        };
+      } else {
+        payload.type = 'text';
+        payload.text = { body };
+      }
+
+      const url = `https://graph.facebook.com/v20.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        const errMsg = responseData?.error?.message || `WhatsApp API responded with status ${response.status}`;
+        throw new Error(errMsg);
+      }
+
+      const messageId = responseData?.messages?.[0]?.id;
+      log.status = 'sent';
+      log.sentAt = new Date();
+      log.metadata = { ...log.metadata, messageId, apiResponse: responseData };
+      await log.save();
+
+      return { success: true, logId: log._id, messageId };
+    } catch (error) {
+      log.status = 'failed';
+      log.failedAt = new Date();
+      log.errorMessage = error?.message ? String(error.message).slice(0, 500) : 'WhatsApp service failure';
+      await log.save();
+
+      const err = new Error(log.errorMessage);
+      err.status = 500;
+      err.cause = error;
+      throw err;
+    }
   },
 
   /**

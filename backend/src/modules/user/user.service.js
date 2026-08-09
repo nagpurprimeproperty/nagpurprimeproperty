@@ -7,6 +7,8 @@ import PurchasePlans from '../subscription/purchaseSubscription.model.js';
 import Lead from '../lead/leads.model.js';
 import jwt from 'jsonwebtoken';
 import storageService from '../../services/storage.service.js';
+import env from '../../config/env.js';
+import communicationService from '../communication/communication.service.js';
 const userService = {
   /**
    * Create a new user
@@ -141,12 +143,30 @@ const userService = {
     return { properties, leads, enquiries, plans };
   },
 
-  generateOTP: (user) => {
-    const otp = '1234'; // static OTP for Play Store verification
+  generateOTP: async (user) => {
+    const isTestUser = user.mobile === '917620199092' || user.mobile === '1234567890';
+    const otp = isTestUser ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // Expires in 5 minutes
     user.otp = otp;
     user.otpExpiry = expiry;
-    user.save();
+    await user.save();
+
+    if (env.WHATSAPP_ENABLED && !isTestUser) {
+      try {
+        await communicationService.sendWhatsApp({
+          to: user.mobile,
+          body: `Your OTP is ${otp}`,
+          templateId: env.WHATSAPP_OTP_TEMPLATE_NAME,
+          metadata: {
+            otp,
+          },
+        });
+      } catch (err) {
+        console.error('Failed to send OTP via WhatsApp:', err.message);
+        throw { status: 500, message: `Failed to send OTP via WhatsApp: ${err.message}` };
+      }
+    }
+
     return otp;
   },
 
@@ -169,7 +189,7 @@ const userService = {
   requestDeletion: async (mobile) => {
     const user = await userRepository.findByMobile(mobile);
     if (!user) throw { status: 404, message: 'User not found with this mobile number' };
-    const otp = userService.generateOTP(user);
+    const otp = await userService.generateOTP(user);
     return otp;
   },
 

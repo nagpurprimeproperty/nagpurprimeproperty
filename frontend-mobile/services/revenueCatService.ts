@@ -67,6 +67,14 @@ export const getOfferings = async (): Promise<PurchasesOffering | null> => {
   try {
     await initRevenueCat();
     const offerings = await Purchases.getOfferings();
+    if (offerings.current && offerings.current.availablePackages.length > 0) {
+      return offerings.current;
+    }
+    // Fallback: return any available offering in offerings.all
+    const allOfferings = Object.values(offerings.all);
+    if (allOfferings.length > 0 && allOfferings[0].availablePackages.length > 0) {
+      return allOfferings[0];
+    }
     return offerings.current || null;
   } catch (err: any) {
     console.error("[RevenueCat] Fetch offerings error:", err?.message || err);
@@ -83,6 +91,26 @@ export const purchasePackage = async (
   if (Platform.OS !== "ios") return null;
   try {
     const { customerInfo } = await Purchases.purchasePackage(pkg);
+    return customerInfo;
+  } catch (err: any) {
+    if (err.userCancelled) {
+      console.log("[RevenueCat] User cancelled purchase");
+      return null;
+    }
+    throw err;
+  }
+};
+
+/**
+ * Purchase a product directly by Apple Product ID
+ */
+export const purchaseStoreKitProduct = async (
+  productId: string
+): Promise<CustomerInfo | null> => {
+  if (Platform.OS !== "ios") return null;
+  try {
+    await initRevenueCat();
+    const { customerInfo } = await Purchases.purchaseProduct(productId);
     return customerInfo;
   } catch (err: any) {
     if (err.userCancelled) {
