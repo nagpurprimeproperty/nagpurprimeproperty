@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "376499072792",
+    "project_id": "nagpur-prime-property-49e18",
+    "storage_bucket": "nagpur-prime-property-49e18.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376499072792:android:89635d6141d9c1cac2386d",
+        "android_client_info": {
+          "package_name": "com.nagpurprimeproperty.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyzdpYbvZPVe2_Rkjx3Krw7UhParW4bxI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376499072792:android:06b24083113f1d2ec2386d",
+        "android_client_info": {
+          "package_name": "com.nagpurprimeproperty.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyzdpYbvZPVe2_Rkjx3Krw7UhParW4bxI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
