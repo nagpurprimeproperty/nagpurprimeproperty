@@ -150,6 +150,8 @@ const userService = {
     user.otpExpiry = expiry;
     await user.save();
 
+    const isTestUser = user.mobile === '9999999999' || user.mobile === '7620199092' || user.mobile === '917620199092' || user.mobile === '1234567890';
+
     if (env.WHATSAPP_ENABLED && !isTestUser) {
       try {
         await communicationService.sendWhatsApp({
