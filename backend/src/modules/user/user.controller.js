@@ -7,8 +7,7 @@ export const  loginUser = async (req, res, next) => {
     const user = await UserService.findOrCreateByMobile(mobile, name);
     const otp = await UserService.generateOTP(user);
     
-    const isTestUser = mobile === '917620199092' || mobile === '1234567890';
-    const showOTP = !env.WHATSAPP_ENABLED || isTestUser || env.NODE_ENV !== 'production';
+    const showOTP = true;
 
     res.json({ 
       success: true,
@@ -97,8 +96,7 @@ export const requestAccountDeletion = async (req, res, next) => {
     const { mobile } = req.body;
     const otp = await UserService.requestDeletion(mobile);
     
-    const isTestUser = mobile === '917620199092' || mobile === '1234567890';
-    const showOTP = !env.WHATSAPP_ENABLED || isTestUser || env.NODE_ENV !== 'production';
+    const showOTP = true;
 
     res.json({ 
       success: true, 

@@ -144,8 +144,7 @@ const userService = {
   },
 
   generateOTP: async (user) => {
-    const isTestUser = user.mobile === '917620199092' || user.mobile === '1234567890';
-    const otp = isTestUser ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
+    const otp = '1234';
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // Expires in 5 minutes
     user.otp = otp;
     user.otpExpiry = expiry;
