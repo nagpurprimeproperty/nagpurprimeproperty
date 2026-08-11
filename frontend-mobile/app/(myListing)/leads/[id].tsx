@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,6 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Phone,
-  MessageCircle,
   User,
   Building2,
   Tag,
@@ -26,6 +24,7 @@ import {
   Zap,
   RefreshCw,
 } from 'lucide-react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { toast } from 'react-hot-toast/headless';
@@ -288,7 +287,7 @@ export default function LeadDetails() {
             {/* Phone */}
             {lead.phone ? (
               <TouchableOpacity onPress={onCall} activeOpacity={0.8} style={ms.phoneBtn}>
-                <Phone size={16} color="#16A34A" strokeWidth={2.5} />
+                <FontAwesome name="phone" size={16} color="#16A34A" />
                 <Text style={ms.phoneBtnText}>{lead.phone}</Text>
               </TouchableOpacity>
             ) : (
@@ -334,7 +333,7 @@ export default function LeadDetails() {
               { backgroundColor: lead.phone ? '#F0FDF4' : '#F8FAFC', borderColor: lead.phone ? '#BBF7D0' : '#E2E8F0' },
             ]}
           >
-            <Phone size={20} color={lead.phone ? '#16A34A' : '#CBD5E1'} strokeWidth={2.5} />
+            <FontAwesome name="phone" size={20} color={lead.phone ? '#16A34A' : '#CBD5E1'} />
           </TouchableOpacity>
 
           {/* WhatsApp */}
@@ -347,7 +346,7 @@ export default function LeadDetails() {
               { backgroundColor: lead.phone ? '#F0FFF4' : '#F8FAFC', borderColor: lead.phone ? '#86EFAC' : '#E2E8F0' },
             ]}
           >
-            <MessageCircle size={20} color={lead.phone ? '#25D366' : '#CBD5E1'} strokeWidth={2.5} />
+            <FontAwesome name="whatsapp" size={22} color={lead.phone ? '#25D366' : '#CBD5E1'} />
           </TouchableOpacity>
 
           {/* Update Status CTA */}
