@@ -42,6 +42,7 @@ module.exports = ({ config }) => {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
+      buildNumber: "7",
       supportsTablet: true,
       bundleIdentifier: "com.nagpurprimeproperty.app",
       ...(hasIosGoogleServices ? { googleServicesFile: iosGoogleServicesPath } : {}),
@@ -89,6 +90,9 @@ module.exports = ({ config }) => {
       "expo-build-properties",
       {
         android: {
+          // Enable R8 code minification and resource shrinking for release builds
+          enableMinifyInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
           // Allow HTTP (cleartext) traffic to dev/staging backend.
           // usesCleartextTraffic cannot be set directly in the android config
           // object (schema violation) — this is the correct Expo approach.
