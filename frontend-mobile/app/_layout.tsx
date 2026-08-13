@@ -19,7 +19,6 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import * as SplashScreen from "expo-splash-screen";
 import { Platform, Text, TextInput } from "react-native";
 import "../global.css";
 
@@ -41,8 +40,6 @@ const ReactQueryDevtools = __DEV__ && Platform.OS === "web"
   : null;
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Configure how foreground notifications are displayed (once at module load)
 configureNotificationHandler();
@@ -75,12 +72,6 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
-
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;

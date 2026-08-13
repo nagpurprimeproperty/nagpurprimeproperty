@@ -10,14 +10,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Phone,
-  MessageCircle,
   ChevronRight,
   Zap,
   CheckCircle2,
   XCircle,
   Users,
 } from 'lucide-react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -186,7 +185,7 @@ const LeadCard = React.memo(function LeadCard({ item, index }: { item: LeadItem;
           activeOpacity={0.75}
           style={[lc.iconBtn, { backgroundColor: item.phone ? '#F0FDF4' : '#F8FAFC', borderColor: item.phone ? '#BBF7D0' : '#E2E8F0' }]}
         >
-          <Phone size={18} color={item.phone ? '#16A34A' : '#CBD5E1'} strokeWidth={2.5} />
+          <FontAwesome name="phone" size={18} color={item.phone ? '#16A34A' : '#CBD5E1'} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -195,7 +194,7 @@ const LeadCard = React.memo(function LeadCard({ item, index }: { item: LeadItem;
           activeOpacity={0.75}
           style={[lc.iconBtn, { backgroundColor: item.phone ? '#F0FFF4' : '#F8FAFC', borderColor: item.phone ? '#86EFAC' : '#E2E8F0' }]}
         >
-          <MessageCircle size={18} color={item.phone ? '#25D366' : '#CBD5E1'} strokeWidth={2.5} />
+          <FontAwesome name="whatsapp" size={20} color={item.phone ? '#25D366' : '#CBD5E1'} />
         </TouchableOpacity>
       </View>
 

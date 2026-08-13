@@ -1,86 +1,73 @@
 /**
- * imagePrep.ts — zero-native-dependency image preparation utility.
+ * imagePrep.ts — client-side image resize + compression using expo-image-manipulator.
  *
- * Uses only expo-file-system (already linked) + React Native's built-in Image
- * API.  No native rebuild is required.
+ * Resizes any image whose longest side exceeds MAX_DIMENSION to MAX_DIMENSION px,
+ * then compresses to JPEG at COMPRESS_QUALITY.  Images already within bounds are
+ * only compressed (no resize step).  Remote URLs are returned as-is.
  *
- * Strategy: React Native's <Image> component can compress and resize images
- * entirely on the JS/Fabric thread when given specific props.  We use the
- * FileSystem.copyAsync path to cap file size, and rely on the upload backend
- * to do heavy-lifting resizing when needed.
- *
- * For full client-side resizing (expo-image-manipulator), run:
- *   npx expo install expo-image-manipulator
- *   expo run:android  (or expo run:ios)
- * and swap this file for the native version.
+ * expo-image-manipulator is imported dynamically (inside the function) so that a
+ * missing native module on an un-rebuilt dev client does NOT crash at import time
+ * or break the Expo Router route tree.  The crop/resize is simply skipped and the
+ * original URI is returned until the dev client is rebuilt.
  */
 
-import * as FileSystem from 'expo-file-system';
 import { Image } from 'react-native';
 
-/**
- * Returns the pixel dimensions of a local or remote image URI.
- * Resolves to { width: 0, height: 0 } on any error.
- */
-function getImageDimensions(
-  uri: string
-): Promise<{ width: number; height: number }> {
+const MAX_DIMENSION    = 1600;  // px — longest side cap
+const COMPRESS_QUALITY = 0.85;  // JPEG quality (0–1)
+
+/** Returns pixel dimensions of a local/remote image URI. */
+function getImageDimensions(uri: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     Image.getSize(
       uri,
       (width, height) => resolve({ width, height }),
-      () => resolve({ width: 0, height: 0 })
+      ()              => resolve({ width: 0, height: 0 }),
     );
   });
 }
 
-const MAX_DIMENSION = 1600;
-// Photos larger than this are flagged as oversized (>≈4 MP equivalent)
-const OVERSIZED_BYTES = 5 * 1024 * 1024; // 5 MB
-
 /**
- * Prepares a local image URI for upload.
- *
- * Current behaviour (no native resize module required):
- *  - Remote URIs are returned as-is (already on CDN).
- *  - Local URIs that are already ≤ MAX_DIMENSION on their longest side AND
- *    ≤ OVERSIZED_BYTES are returned as-is.
- *  - Oversized local URIs are copied to the app's cache directory so the
- *    upload path always reads from a stable local location, and a dev-mode
- *    warning is printed reminding you to enable native resizing.
- *
- * This provides the same API contract as the native version:
- *  - Always returns a usable URI (no crash, no dropped photo).
- *  - When native expo-image-manipulator is enabled later, swap this file.
+ * Prepares a local image URI for upload:
+ *  - Resizes so the longest side ≤ MAX_DIMENSION
+ *  - Compresses to JPEG at COMPRESS_QUALITY
+ *  - Returns the new cached URI (or the original URI on any error / missing native module)
  */
 export async function prepareImageForUpload(uri: string): Promise<string> {
-  // Remote URLs are already on the CDN — nothing to do.
+  // Remote URLs are already on CDN — nothing to do.
   if (uri.startsWith('http://') || uri.startsWith('https://')) return uri;
 
   try {
-    // Check file size to decide whether to warn.
-    const info = await FileSystem.getInfoAsync(uri, { size: true } as any);
-    const sizeBytes = info.exists ? (info as any).size ?? 0 : 0;
+    // Dynamic require so the missing native module doesn't crash at import time.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ImageManipulator = require('expo-image-manipulator');
 
-    // Check pixel dimensions.
     const { width, height } = await getImageDimensions(uri);
-    const longestSide = Math.max(width, height);
+    const longest = Math.max(width, height);
 
-    const isOversized = sizeBytes > OVERSIZED_BYTES || longestSide > MAX_DIMENSION;
+    const actions: { resize?: { width: number; height: number } }[] = [];
 
-    if (__DEV__ && isOversized) {
-      console.warn(
-        `[imagePrep] Large image detected (${(sizeBytes / (1024 * 1024)).toFixed(1)} MB, ` +
-        `${width}×${height}px). Client-side resize is disabled until expo-image-manipulator ` +
-        `is linked via a native rebuild (expo run:android / expo run:ios). ` +
-        `Uploading original URI.`
-      );
+    if (longest > MAX_DIMENSION && longest > 0) {
+      const scale = MAX_DIMENSION / longest;
+      actions.push({
+        resize: {
+          width:  Math.round(width  * scale),
+          height: Math.round(height * scale),
+        },
+      });
     }
 
-    // Return the original URI — the upload service handles the rest.
-    return uri;
-  } catch {
-    // Any error (file not found, permission denied, etc.) → return original URI.
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      actions,
+      { compress: COMPRESS_QUALITY, format: ImageManipulator.SaveFormat.JPEG },
+    );
+
+    return result.uri;
+  } catch (err) {
+    // Graceful fallback: return the original URI so photos are never dropped.
+    if (__DEV__) console.warn('[imagePrep] Resize/compress skipped (native module not ready?):', err);
     return uri;
   }
 }
+

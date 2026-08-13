@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "buildNumber": "7",
       "supportsTablet": true,
       "bundleIdentifier": "com.nagpurprimeproperty.app",
       "infoPlist": {
@@ -41,18 +42,7 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/applogo.png",
-          "imageWidth": 280,
-          "resizeMode": "contain",
-          "backgroundColor": "#F97316",
-          "dark": {
-            "backgroundColor": "#F97316"
-          }
-        }
-      ],
+
       [
         "expo-image-picker",
         {
