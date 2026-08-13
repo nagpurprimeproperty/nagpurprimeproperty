@@ -22,6 +22,7 @@ import { validateStepPhotos } from '@/lib/validation';
 import { Camera, Image as ImageIcon, Trash2, Star, Plus, List, ArrowRight, Check, AlertCircle, Video, CheckCircle, CloudUpload } from 'lucide-react-native';
 import colors from '@/theme/colors';
 import shadows from '@/theme/shadows';
+import ImageCropModal from '@/components/addProperty/ImageCropModal';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
 // ─── Video Preview ─────────────────────────────────────────────────────────────
@@ -103,6 +104,12 @@ export default function WizardPhotosScreen() {
   const [videoUploading, setVideoUploading] = useState(false);
   // Ref to count in-flight uploads so setUploadingMedia is accurate
   const inFlightCount = useRef(0);
+
+  // ── Crop modal state ────────────────────────────────────────────────────────
+  const [cropModalUri,     setCropModalUri]     = useState<string | null>(null);
+  const [cropModalVisible, setCropModalVisible] = useState(false);
+  // Queue of URIs waiting for crop (when user picks multiple photos at once)
+  const pendingCropQueue = useRef<string[]>([]);
 
   const markInFlight = (delta: 1 | -1) => {
     inFlightCount.current += delta;
@@ -206,68 +213,117 @@ export default function WizardPhotosScreen() {
   const maxPhotos = 15;
   const photoCount = photos.length;
 
+  // ── Crop modal helpers ──────────────────────────────────────────────────────
+
+  /** Called after the user confirms crop OR skips — adds photo to store and uploads */
+  const addPhotoAndUpload = useCallback((uri: string) => {
+    addPhoto(uri);
+    uploadPhotoInBackground(uri);
+    if (errors.photos) {
+      const updated = { ...errors };
+      delete updated.photos;
+      setErrors(updated);
+    }
+  }, [addPhoto, uploadPhotoInBackground, errors, setErrors]);
+
+  /** Opens crop modal for the next URI in queue (if any), else hides modal */
+  const processNextInQueue = useCallback((delay = 220) => {
+    const next = pendingCropQueue.current.shift();
+    if (next) {
+      // Brief delay lets the previous modal close before the next one opens
+      setTimeout(() => {
+        setCropModalUri(next);
+        setCropModalVisible(true);
+      }, delay);
+    } else {
+      setCropModalVisible(false);
+      setCropModalUri(null);
+    }
+  }, []);
+
+  /** User pressed "Crop & Use" in the modal */
+  const handleCropDone = useCallback((croppedUri: string) => {
+    addPhotoAndUpload(croppedUri);
+    setCropModalVisible(false);
+    processNextInQueue();
+  }, [addPhotoAndUpload, processNextInQueue]);
+
+  /** User pressed "Skip" in the modal — compress original then add */
+  const handleCropSkip = useCallback(async () => {
+    const original = cropModalUri;
+    setCropModalVisible(false);
+    processNextInQueue();
+    if (!original) return;
+    // Run resize/compress in background after closing modal (non-blocking UI)
+    try {
+      const preparedUri = await prepareImageForUpload(original);
+      addPhotoAndUpload(preparedUri);
+    } catch {
+      addPhotoAndUpload(original);
+    }
+  }, [cropModalUri, addPhotoAndUpload, processNextInQueue]);
+
+  /** User pressed X (cancel) — discard remaining queue */
+  const handleCropCancel = useCallback(() => {
+    pendingCropQueue.current = [];
+    setCropModalVisible(false);
+    setCropModalUri(null);
+  }, []);
+
+  // ── Photo pickers (now route through crop modal) ───────────────────────────
+
   const handlePickFromLibrary = useCallback(async () => {
     if (!(await requestMediaPermission())) return;
+    if (photoCount >= maxPhotos) {
+      toast.error(`You can upload a maximum of ${maxPhotos} photos.`);
+      return;
+    }
     setLoading(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsMultipleSelection: true,
-        quality: 0.8,
+        quality: 1,           // full quality — crop modal will compress
         selectionLimit: maxPhotos - photoCount,
         exif: false,
       });
-      if (!result.canceled) {
-        const newUris: string[] = [];
-        // Resize each picked photo before it enters the store or upload queue.
-        // prepareImageForUpload falls back to the original URI on error — no drops.
-        for (const a of result.assets) {
-          const preparedUri = await prepareImageForUpload(a.uri);
-          addPhoto(preparedUri);
-          newUris.push(preparedUri);
-          if (errors.photos) {
-            const updated = { ...errors };
-            delete updated.photos;
-            setErrors(updated);
-          }
-        }
-        // ── Eagerly upload resized photos in the background ──
-        newUris.forEach((uri) => uploadPhotoInBackground(uri));
+      if (!result.canceled && result.assets.length > 0) {
+        const [first, ...rest] = result.assets.map((a) => a.uri);
+        pendingCropQueue.current = rest; // queue remaining for sequential crop
+        setCropModalUri(first);
+        setCropModalVisible(true);
       }
     } catch {
       toast.error('Could not open photo library.');
     } finally {
       setLoading(false);
     }
-  }, [photoCount, addPhoto, errors, setErrors, uploadPhotoInBackground]);
+  }, [photoCount]);
 
   const handleTakePhoto = useCallback(async () => {
     if (!(await requestCameraPermission())) return;
+    if (photoCount >= maxPhotos) {
+      toast.error(`You can upload a maximum of ${maxPhotos} photos.`);
+      return;
+    }
     setLoading(true);
     try {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
-        quality: 0.8,
+        quality: 1,           // full quality — crop modal will compress
         exif: false,
       });
       if (!result.canceled && result.assets.length > 0) {
-        // Resize the captured photo before it enters the store or upload queue.
-        const preparedUri = await prepareImageForUpload(result.assets[0].uri);
-        addPhoto(preparedUri);
-        if (errors.photos) {
-          const updated = { ...errors };
-          delete updated.photos;
-          setErrors(updated);
-        }
-        // ── Eagerly upload resized camera photo in the background ──
-        uploadPhotoInBackground(preparedUri);
+        pendingCropQueue.current = [];
+        setCropModalUri(result.assets[0].uri);
+        setCropModalVisible(true);
       }
     } catch {
       toast.error('Could not open camera.');
     } finally {
       setLoading(false);
     }
-  }, [addPhoto, errors, setErrors, uploadPhotoInBackground]);
+  }, [photoCount]);
 
   const handlePickVideo = useCallback(async () => {
     if (!(await requestMediaPermission())) return;
@@ -683,6 +739,17 @@ export default function WizardPhotosScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* ── Image Crop Modal ── */}
+      {cropModalUri !== null && (
+        <ImageCropModal
+          visible={cropModalVisible}
+          uri={cropModalUri}
+          onCrop={handleCropDone}
+          onSkip={handleCropSkip}
+          onCancel={handleCropCancel}
+        />
+      )}
 
       {/* Add Custom Amenity Modal */}
       <Modal
