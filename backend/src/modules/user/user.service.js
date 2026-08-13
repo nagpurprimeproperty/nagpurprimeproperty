@@ -179,6 +179,8 @@ const userService = {
           },
         });
       } catch (err) {
+        // Clean up Redis keys so the user isn't stuck with a cooldown if sending failed
+        await redis.del(`otp:${mobile}`, `otp_cooldown:${mobile}`, `otp_attempts:${mobile}`);
         console.error('Failed to send OTP via WhatsApp:', err.message);
         throw { status: 500, message: `Failed to send OTP via WhatsApp: ${err.message}` };
       }
