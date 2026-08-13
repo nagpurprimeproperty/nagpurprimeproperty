@@ -97,7 +97,10 @@ const communicationService = {
                 },
               ],
             },
-            {
+          ];
+
+          if (env.WHATSAPP_OTP_TEMPLATE_HAS_BUTTON) {
+            components.push({
               type: 'button',
               sub_type: 'url',
               index: '0',
@@ -107,8 +110,8 @@ const communicationService = {
                   text: metadata.otp,
                 },
               ],
-            },
-          ];
+            });
+          }
         } else if (body) {
           components = [
             {
@@ -126,7 +129,7 @@ const communicationService = {
         payload.type = 'template';
         payload.template = {
           name: templateId,
-          language: { code: metadata.languageCode || 'en_US' },
+          language: { code: metadata.languageCode || env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en_US' },
           components,
         };
       } else {
@@ -134,7 +137,8 @@ const communicationService = {
         payload.text = { body };
       }
 
-      const url = `https://graph.facebook.com/v20.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+      const apiVersion = env.WHATSAPP_API_VERSION || 'v20.0';
+      const url = `https://graph.facebook.com/${apiVersion}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
