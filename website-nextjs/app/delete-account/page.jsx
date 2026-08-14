@@ -35,7 +35,11 @@ export default function DeleteAccountPage() {
         throw new Error(data.message || "Failed to send OTP.");
       }
       setStep("otp");
-      toast.success(`Verification OTP sent. OTP: ${data.data?.otp}`);
+      if (data.data?.otp) {
+        toast.success(`Verification OTP sent. OTP: ${data.data.otp}`);
+      } else {
+        toast.success("Verification OTP sent to your mobile number");
+      }
       setTimeout(() => otpRefs.current[0]?.focus(), 60);
     } catch (err) {
       toast.error(err.message || "User not found or error occurred.");
