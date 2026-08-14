@@ -9,7 +9,20 @@ const AdminService = {
   getProfile: async (adminId) => {
     const admin = await AdminRepository.findById(adminId);
     if (!admin) throw { status: 401, message: 'Unauthorized' };
-    return admin;
+
+    let permissions = null;
+    if (admin.role === 'sub-admin') {
+      permissions = await subAdminService.getPermissionsMap(admin._id);
+    }
+
+    const adminObj = admin.toObject ? admin.toObject() : admin;
+    if (adminObj.password) delete adminObj.password;
+
+    return {
+      ...adminObj,
+      role: admin.role,
+      permissions,
+    };
   },
 
   updateProfile: async (adminId, payload, file) => {

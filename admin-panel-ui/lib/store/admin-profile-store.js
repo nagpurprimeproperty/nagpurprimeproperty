@@ -11,6 +11,8 @@
 import { create } from "zustand";
 import { adminProfileApi } from "@/lib/api/admin-profile.api";
 import { ApiError } from "@/lib/api/client";
+import { usePermissionStore } from "@/lib/store/permission-store";
+
 export const useAdminProfileStore = create()((set) => ({
     profile: null,
     isLoading: false,
@@ -21,6 +23,9 @@ export const useAdminProfileStore = create()((set) => ({
         try {
             const res = await adminProfileApi.getProfile();
             set({ profile: res.data });
+            if (res.data) {
+                usePermissionStore.getState().setPermissions(res.data.role, res.data.permissions);
+            }
         }
         catch (err) {
             const message = err instanceof ApiError ? err.message : "Failed to load profile";

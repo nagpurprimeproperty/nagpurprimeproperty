@@ -28,7 +28,7 @@ export function createRedisConnection() {
     // BullMQ requirement: must be null so the library can manage retries itself
     maxRetriesPerRequest: null,
 
-    enableOfflineQueue: false, // Fail fast if Redis is disconnected — do not queue commands
+    enableOfflineQueue: true, // Queue commands during startup connection/handshake
 
     connectTimeout: 5000, // 5 s — don't block requests forever
 
