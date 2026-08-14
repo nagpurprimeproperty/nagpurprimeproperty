@@ -45,7 +45,11 @@ function LoginContent() {
       const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: "User" });
       setStep("otp");
       setResendIn(30);
-      toast.success(`OTP sent to your mobile number. OTP: ${otpVal}`);
+      if (typeof otpVal === 'string') {
+        toast.success(`OTP sent to your mobile number. OTP: ${otpVal}`);
+      } else {
+        toast.success("OTP sent to your mobile number");
+      }
       setTimeout(() => otpRefs.current[0]?.focus(), 60);
     } catch (err) {
       toast.error(err.message || "Failed to send OTP. Please try again.");

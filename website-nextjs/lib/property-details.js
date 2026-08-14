@@ -90,6 +90,14 @@ export function getDetailsList(p) {
   // RERA registration
   if (p.reraRegistered) specsTable.push({ label: 'RERA Registered', value: 'Yes' })
   if (p.reraNumber) specsTable.push({ label: 'RERA Number', value: p.reraNumber })
+  if (details.reraNumber) specsTable.push({ label: 'Agent RERA Number', value: details.reraNumber })
+  if (details.projectReraNumber) specsTable.push({ label: 'Project RERA ID', value: details.projectReraNumber })
+  if (details.reraValidityDate) {
+    const reraDate = new Date(details.reraValidityDate)
+    if (!isNaN(reraDate.getTime())) {
+      specsTable.push({ label: 'RERA Validity', value: reraDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) })
+    }
+  }
   if (p.projectName) specsTable.push({ label: 'Project Name', value: p.projectName })
   if (p.builderName) specsTable.push({ label: 'Builder', value: p.builderName })
 
@@ -111,6 +119,9 @@ export function getDetailsList(p) {
     if (pricing.bookingAmount) financeTable.push({ label: 'Booking Amount', value: `₹${pricing.bookingAmount.toLocaleString('en-IN')}` })
     if (pricing.gstApplicable !== undefined) financeTable.push({ label: 'GST Applicable', value: pricing.gstApplicable ? 'Yes' : 'No' })
     if (pricing.possessionTimeline) financeTable.push({ label: 'Possession Timeline', value: pricing.possessionTimeline })
+  }
+  if (details.isBankFinanceAvailable !== undefined && details.isBankFinanceAvailable !== null) {
+    financeTable.push({ label: 'Bank Finance Available', value: details.isBankFinanceAvailable ? 'Yes' : 'No' })
   }
   if (pricing.brokerage) financeTable.push({ label: 'Brokerage terms', value: pricing.brokerage })
 

@@ -199,9 +199,7 @@ function PlanBreakdownCards() {
                 <h3 className="text-lg font-semibold">{plan.planName}</h3>
               </div>
               <Badge variant="outline">
-                {plan.isDurationUnlimited
-                  ? formatInr(plan.price)
-                  : `${formatInr(plan.price)}${priceLabel(plan)}`}
+                {formatInr(plan.price)}
               </Badge>
             </div>
             <div className="space-y-3 text-sm">

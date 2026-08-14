@@ -34,6 +34,7 @@ export const DEFAULT_STATE = {
   reraNumber: "",
   projectReraNumber: "",
   reraValidityDate: "",
+  isBankFinanceAvailable: false,
   numberOfFloors: "",
   plotArea: "",
   parkingSlots: "",

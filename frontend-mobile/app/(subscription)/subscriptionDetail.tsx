@@ -122,7 +122,7 @@ const sl = StyleSheet.create({
 });
 
 import { Platform } from "react-native";
-import { getOfferings, purchasePackage, restorePurchases, identifyUser } from "@/services/revenueCatService";
+import { getOfferings, purchasePackage, purchaseStoreKitProduct, restorePurchases, identifyUser } from "@/services/revenueCatService";
 import { activateIapPlan } from "@/services/subscriptionService";
 
 // ─── Confirm Modal ─────────────────────────────────────────────────────────────
@@ -224,20 +224,24 @@ export default function SubscriptionDetailScreen() {
           await identifyUser(user._id);
         }
         const offering = await getOfferings();
-        if (!offering || !offering.availablePackages.length) {
-          toast.error("No iOS subscription packages available right now");
+        let customerInfo = null;
+
+        if (offering && offering.availablePackages.length > 0) {
+          const pkg = offering.availablePackages.find(
+            (p: any) =>
+              p.product.identifier === plan?.appleProductId ||
+              p.product.identifier.toLowerCase().includes(plan?.name.toLowerCase() || "")
+          ) || offering.availablePackages[0];
+          customerInfo = await purchasePackage(pkg);
+        } else if (plan?.appleProductId) {
+          // Fallback: Purchase directly by product ID
+          customerInfo = await purchaseStoreKitProduct(plan.appleProductId);
+        } else {
+          toast.error("Please configure RevenueCat Offerings or Apple Product ID in Dashboard");
           setIsIapLoading(false);
           return;
         }
 
-        // Find package matching plan name or appleProductId, or default to first available
-        const pkg = offering.availablePackages.find(
-          (p: any) =>
-            p.product.identifier === plan?.appleProductId ||
-            p.product.identifier.toLowerCase().includes(plan?.name.toLowerCase() || "")
-        ) || offering.availablePackages[0];
-
-        const customerInfo = await purchasePackage(pkg);
         if (customerInfo) {
           await activateIapMutation.mutateAsync({
             planId: id!,
@@ -321,11 +325,6 @@ export default function SubscriptionDetailScreen() {
                 <Text style={[ms.heroPrice, dark && ms.heroPriceDark]}>
                   {plan.isFree ? "Free" : `₹${plan.price}`}
                 </Text>
-                {!plan.isFree && (
-                  <Text style={[ms.heroPer, dark && ms.heroPerDark]}>
-                    / {formatDuration(plan.duration, plan.durationUnit, plan.isDurationUnlimited)}
-                  </Text>
-                )}
               </View>
               {isCurrentPlan && (
                 <View style={ms.activeBadge}>

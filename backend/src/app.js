@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import { apiLimiter } from './middlewares/rate-limit.middleware.js';
 import apiRouter from './api/index.js';
+import whatsappRouter from './modules/communication/whatsapp.routes.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 import env from './config/env.js';
 import cookieParser from 'cookie-parser';
@@ -71,6 +72,9 @@ app.use(apiLimiter);
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// WhatsApp webhook (public)
+app.use('/webhook', whatsappRouter);
 
 // API routes
 app.use('/api', apiRouter);

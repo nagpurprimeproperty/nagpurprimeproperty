@@ -1,13 +1,12 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import HeroSearchCard from './HeroSearchCard'
 import { Sparkles } from 'lucide-react'
 
-// Client layer: handles dynamic text (heading/subheading from CMS),
+// Client layer: handles dynamic background image, dynamic text (heading/subheading from CMS),
 // search card interactivity, and trust stats.
-// The hero <Image> is intentionally in the parent Server Component so the
-// browser preload scanner can discover it before any JS executes.
 export default function HeroBannerClient({ initial = {}, popularAreas = [] }) {
   const [aboutData, setAboutData] = useState(initial)
 
@@ -37,9 +36,25 @@ export default function HeroBannerClient({ initial = {}, popularAreas = [] }) {
     }
   }, [initial])
 
+  const bannerSrc = aboutData?.bannerImage || initial?.bannerImage
+
   return (
     <>
-      {/* Hero text + search — overlaid on the server-rendered <Image> */}
+      {/* Real background image set by admin (rendered directly without default image fallback) */}
+      {bannerSrc && (
+        <Image
+          src={bannerSrc}
+          alt="Nagpur skyline — find verified properties in Nagpur"
+          fill
+          priority
+          fetchPriority="high"
+          className="object-cover"
+          sizes="100vw"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-foreground/30 via-foreground/55 to-foreground/85" />
+
+      {/* Hero text + search */}
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
         <div className="max-w-4xl">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-background/15 px-3 py-1 text-xs font-semibold text-background backdrop-blur">

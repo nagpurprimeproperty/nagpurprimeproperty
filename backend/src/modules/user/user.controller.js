@@ -1,11 +1,20 @@
 import UserService from "./user.service.js";
+import env from "../../config/env.js";
 
 export const  loginUser = async (req, res, next) => {
   try {
     const { mobile, name } = req.body;
     const user = await UserService.findOrCreateByMobile(mobile, name);
     const otp = await UserService.generateOTP(user);
-    res.json({ success: true,message: 'OTP sent successfully', data: otp });
+    
+    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
+
+    res.json({ 
+      success: true,
+      message: 'OTP sent successfully', 
+      data: showOTP ? otp : undefined 
+    });
   } catch (error) {
     next(error);
   }
@@ -87,7 +96,15 @@ export const requestAccountDeletion = async (req, res, next) => {
   try {
     const { mobile } = req.body;
     const otp = await UserService.requestDeletion(mobile);
-    res.json({ success: true, message: 'Account deletion OTP generated successfully', data: { otp } });
+    
+    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
+
+    res.json({ 
+      success: true, 
+      message: 'Account deletion OTP generated successfully', 
+      data: showOTP ? { otp } : undefined 
+    });
   } catch (error) {
     next(error);
   }

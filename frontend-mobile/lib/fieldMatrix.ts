@@ -32,14 +32,11 @@ export interface FieldSection {
 
 const reraSection = (category: ListingCategory): FieldSection => ({
   title: 'RERA Details',
-  fields:
-    category === 'new'
-      ? [{ key: 'reraNumber', label: 'RERA Number', type: 'text', required: true, placeholder: 'e.g. P52100012345' }]
-      : [
-          { key: 'reraRegistered', label: 'RERA Registered', type: 'toggle', required: false },
-          { key: 'reraNumber',     label: 'RERA Number',     type: 'text',   required: false,
-            placeholder: 'e.g. P52100012345', conditionKey: 'reraRegistered', conditionValue: true },
-        ],
+  fields: [
+    { key: 'reraRegistered', label: 'RERA Registered', type: 'toggle', required: false },
+    { key: 'reraNumber',     label: 'Agent RERA Number', type: 'text',   required: false, placeholder: 'e.g. P52100012345' },
+    { key: 'projectReraNumber', label: 'Project RERA ID',   type: 'text',   required: false, placeholder: 'e.g. P52100012345' },
+  ],
 });
 
 const readyToMoveField: FieldDef = {
@@ -97,7 +94,37 @@ const commonFlatFields = (category: ListingCategory): FieldSection[] => [
 // ─── STEP 3 FIELD MATRIX ──────────────────────────────────────────────────────
 // Returns sections for Step 3 given category + propertyType
 
+
+
 export function getStep3Fields(
+  category: ListingCategory,
+  type: PropertyType
+): FieldSection[] {
+  const sections = getStep3FieldsInternal(category, type);
+
+  // Ensure RERA Details section is always included
+  const hasRera = sections.some(s => s.title === 'RERA Details');
+  if (!hasRera && sections.length > 0) {
+    sections.push(reraSection(category));
+  }
+
+  // Ensure Bank Finance Available toggle is included for sale properties
+  if (category !== 'rental' && sections.length > 0) {
+    const lastSection = sections[sections.length - 1];
+    if (lastSection && !lastSection.fields.some(f => f.key === 'isBankFinanceAvailable')) {
+      lastSection.fields.push({
+        key: 'isBankFinanceAvailable',
+        label: 'Bank Finance Available',
+        type: 'toggle',
+        required: false
+      });
+    }
+  }
+
+  return sections;
+}
+
+function getStep3FieldsInternal(
   category: ListingCategory,
   type: PropertyType
 ): FieldSection[] {

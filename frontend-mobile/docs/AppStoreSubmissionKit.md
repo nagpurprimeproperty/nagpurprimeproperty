@@ -94,13 +94,13 @@ This information is exclusively for Apple's App Review team and will not be disp
   > To sign in:
   > 1. Enter the demo phone number provided below.
   > 2. Tap "Send OTP".
-  > 3. Enter the 4-digit code displayed in the toast notification (e.g. `1234` or similar) to complete authentication.
+  > 3. Enter the static 4-digit code `1234` (which is also displayed in the toast notification) to complete authentication.
 
 ---
 
 ## 10. Demo Login Account
-* **Phone Number**: `9999999999` (or `+91 9999999999`)
-* **Verification Code (OTP)**: *Displayed in the top toast message during request*
+* **Phone Number**: `9999999999`
+* **Verification Code (OTP)**: `1234` (Static OTP)
 
 ---
 

@@ -78,9 +78,6 @@ export function PlanCard({ plan, canWrite, canDelete, onEdit, onDelete, onToggle
           <span className="text-3xl font-black text-white truncate">
             {formatCurrency(plan.price)}
           </span>
-          <span className="text-white/70 text-sm shrink-0">
-            /{plan.durationUnit.replace(/s$/, "")}
-          </span>
         </div>)}
       </div>
     </div>
