@@ -149,6 +149,14 @@ const locationSchema = z.object({
 // ─── Shared detail schemas ────────────────────────────────────────────────────
 
 /** Core fields shared by Flat, Builder Floor, Penthouse */
+const commonOptionalDetails = z.object({
+  reraRegistered: optionalBool(),
+  reraNumber: z.string().nullable().optional(),
+  projectReraNumber: z.string().nullable().optional(),
+  reraValidityDate: z.coerce.date().nullable().optional(),
+  isBankFinanceAvailable: optionalBool(),
+});
+
 const residentialBase = z.object({
   bhk: z.number({ coerce: true }).int().min(BHK_MIN_LENGTH_LIMIT).max(BHK_MAX_LENGTH_LIMIT, BHK_MAX_LENGTH_LIMIT_MESSAGE),
   bathrooms: z.number({ coerce: true }).int().min(BATHROOMS_MIN_LENGTH_LIMIT).max(BATHROOMS_MAX_LENGTH_LIMIT, BATHROOMS_MAX_LENGTH_LIMIT_MESSAGE),
@@ -164,9 +172,7 @@ const residentialBase = z.object({
   floorType: optionalEnum(FLOOR_TYPE, FLOOR_TYPE_MESSAGE),
   waterSupply: optionalEnum(WATER_SUPPLY, WATER_SUPPLY_MESSAGE),
   electricityStatus: optionalEnum(ELECTRICITY_STATUS, ELECTRICITY_STATUS_MESSAGE),
-  reraRegistered: optionalBool(),
-  reraNumber: z.string().nullable().optional(),
-});
+}).merge(commonOptionalDetails);
 
 const villaBase = z.object({
   bhk: z.number({ coerce: true }).int().min(BHK_MIN_LENGTH_LIMIT).max(BHK_MAX_LENGTH_LIMIT, BHK_MAX_LENGTH_LIMIT_MESSAGE),
@@ -186,11 +192,9 @@ const villaBase = z.object({
   waterSupply: optionalEnum(WATER_SUPPLY, WATER_SUPPLY_MESSAGE),
   floorType: optionalEnum(FLOOR_TYPE, FLOOR_TYPE_MESSAGE),
   ageOfProperty: optionalEnum(AGE_OF_PROPERTY, AGE_OF_PROPERTY_MESSAGE),
-  reraRegistered: optionalBool(),
-  reraNumber: z.string().nullable().optional(),
   petFriendly: optionalBool(),
   nonVegAllowed: optionalBool(),
-});
+}).merge(commonOptionalDetails);
 
 const penthouseExtra = z.object({
   terraceArea: optionalPosNum(),
@@ -224,7 +228,7 @@ const commercialOfficeBase = z.object({
   officeFireSafety: optionalBool(),
   dgBackup: optionalBool(),
   ageOfProperty: optionalEnum(AGE_OF_PROPERTY, AGE_OF_PROPERTY_MESSAGE),
-});
+}).merge(commonOptionalDetails);
 
 const shopBase = z.object({
   carpetArea: positiveNumber(),
@@ -240,7 +244,7 @@ const shopBase = z.object({
   footfallRating: optionalEnum(FOOTFALL_RATING_OPTIONS, FOOTFALL_RATING_OPTIONS_MESSAGE),
   suitableFor: z.array(z.enum(SUITABLE_FOR_OPTIONS, { errorMap: () => ({ message: SUITABLE_FOR_OPTIONS_MESSAGE }) })).optional(),
   ageOfProperty: optionalEnum(AGE_OF_PROPERTY, AGE_OF_PROPERTY_MESSAGE),
-});
+}).merge(commonOptionalDetails);
 
 const showroomBase = z.object({
   showroomArea: positiveNumber(),
@@ -252,7 +256,7 @@ const showroomBase = z.object({
   acInstalled: optionalBool(),
   mainRoadFacing: optionalBool(),
   ageOfProperty: optionalEnum(AGE_OF_PROPERTY, AGE_OF_PROPERTY_MESSAGE),
-});
+}).merge(commonOptionalDetails);
 
 const warehouseBase = z.object({
   warehouseArea: positiveNumber(),
@@ -266,7 +270,7 @@ const warehouseBase = z.object({
   officeSpaceInside: optionalBool(),
   midc: optionalBool(),
   ageOfProperty: optionalEnum(AGE_OF_PROPERTY, AGE_OF_PROPERTY_MESSAGE),
-});
+}).merge(commonOptionalDetails);
 
 const residentialPlotBase = z.object({
   plotAreaSqFt: positiveNumber(),
@@ -280,7 +284,7 @@ const residentialPlotBase = z.object({
   approvedBy: z.array(z.enum(APPROVED_BY_OPTIONS, { errorMap: () => ({ message: APPROVED_BY_OPTIONS_MESSAGE }) })).optional(),
   zoneType: optionalEnum(['Residential', 'Mixed Use'], 'Zone type must be one of Residential or Mixed Use'),
   fsiAvailable: optionalPosNum(),
-});
+}).merge(commonOptionalDetails);
 
 const agriLandBase = z.object({
   areaAcres: positiveNumber(),
@@ -298,7 +302,7 @@ const agriLandBase = z.object({
   ownershipType: z.enum(['Individual', 'Joint', 'Family'], {
     errorMap: () => ({ message: 'Ownership type for Agricultural Land must be Individual, Joint, or Family' }),
   }),
-});
+}).merge(commonOptionalDetails);
 
 // ─── Pricing schemas ──────────────────────────────────────────────────────────
 const resalePricing = z.object({
@@ -336,8 +340,8 @@ const newPricing = z.object({
 const newProjectDetails = z.object({
   projectName: z.string().min(1).max(PROJECT_NAME_MAX_LENGTH, PROJECT_NAME_MAX_LENGTH_MESSAGE),
   builderName: z.string().min(1).max(BUILDER_NAME_MAX_LENGTH, BUILDER_NAME_MAX_LENGTH_MESSAGE),
-  reraNumber: z.string().min(1, 'RERA Number is required for new projects'),
-  projectReraNumber: z.string().min(1, 'Project RERA Number is required for new projects'),
+  reraNumber: z.string().nullable().optional(),
+  projectReraNumber: z.string().nullable().optional(),
   reraValidityDate: z.coerce.date().nullable().optional(),
   constructionStatus: z.enum(CONSTRUCTION_STATUS_OPTIONS, { errorMap: () => ({ message: CONSTRUCTION_STATUS_OPTIONS_MESSAGE }) }),
   possessionDate: z.string().regex(POSSESSION_DATE_REGEX, POSSESSION_DATE_REGEX_MESSAGE),
@@ -560,8 +564,8 @@ export function validatePropertyPayload(payload) {
         schema = schema.merge(z.object({
           layoutProjectName: z.string().min(1).max(LAYOUT_PROJECT_NAME_MAX_LENGTH, LAYOUT_PROJECT_NAME_MAX_LENGTH_MESSAGE),
           builderName: z.string().min(1).max(BUILDER_NAME_MAX_LENGTH, BUILDER_NAME_MAX_LENGTH_MESSAGE),
-          reraNumber: z.string().min(1, 'RERA Number is required for new projects'),
-          projectReraNumber: z.string().min(1, 'Project RERA Number is required for new projects'),
+          reraNumber: z.string().nullable().optional(),
+          projectReraNumber: z.string().nullable().optional(),
           totalPlotsInLayout: optionalPosNum(),
           plotsAvailable: z.number({ coerce: true }).min(0).nullable().optional(),
           developmentStatus: z.enum(DEVELOPMENT_STATUS_OPTIONS, { errorMap: () => ({ message: DEVELOPMENT_STATUS_OPTIONS_MESSAGE }) }),

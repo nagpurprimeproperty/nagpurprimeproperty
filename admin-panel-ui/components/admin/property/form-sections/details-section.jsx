@@ -97,15 +97,7 @@ function NewProjectCoreFields({ form, set, errors, disabled, hideUnits = false }
       <Field label="Builder Name" required error={errors.builderName}>
         <Input value={form.builderName} onChange={(e) => set("builderName", e.target.value)} placeholder="ABC Constructions" maxLength={100} disabled={disabled} className={errors.builderName ? "border-destructive focus-visible:ring-destructive" : ""} />
       </Field>
-      <Field label="RERA Number" required error={errors.reraNumber}>
-        <Input value={form.reraNumber} onChange={(e) => set("reraNumber", e.target.value)} placeholder="P52100123456" disabled={disabled} className={errors.reraNumber ? "border-destructive focus-visible:ring-destructive" : ""} />
-      </Field>
-      <Field label="Project RERA Number" required error={errors.projectReraNumber}>
-        <Input value={form.projectReraNumber} onChange={(e) => set("projectReraNumber", e.target.value)} placeholder="Project RERA Number" disabled={disabled} className={errors.projectReraNumber ? "border-destructive focus-visible:ring-destructive" : ""} />
-      </Field>
-      <Field label="RERA Validity Date">
-        <Input type="date" value={form.reraValidityDate} onChange={(e) => set("reraValidityDate", e.target.value)} disabled={disabled} />
-      </Field>
+
       <Sel label="Construction Status" required value={form.constructionStatus} onChange={(v) => set("constructionStatus", v)} options={CONSTRUCTION_STATUS_OPTIONS} disabled={disabled} error={errors.constructionStatus} />
       <Field label="Possession Date" required error={errors.possessionDate}>
         <Input type="date" value={form.possessionDate} onChange={(e) => set("possessionDate", e.target.value)} disabled={disabled} className={errors.possessionDate ? "border-destructive focus-visible:ring-destructive" : ""} />
@@ -259,15 +251,7 @@ function VillaFields({ form, set, errors, disabled, isNew, isResale, isRental })
           <Field label="Builder Name" required error={errors.builderName}>
             <Input value={form.builderName} onChange={(e) => set("builderName", e.target.value)} placeholder="ABC Constructions" maxLength={100} disabled={disabled} className={errors.builderName ? "border-destructive focus-visible:ring-destructive" : ""} />
           </Field>
-          <Field label="RERA Number" required error={errors.reraNumber}>
-            <Input value={form.reraNumber} onChange={(e) => set("reraNumber", e.target.value)} placeholder="P52100123456" disabled={disabled} className={errors.reraNumber ? "border-destructive focus-visible:ring-destructive" : ""} />
-          </Field>
-          <Field label="Project RERA Number" required error={errors.projectReraNumber}>
-            <Input value={form.projectReraNumber} onChange={(e) => set("projectReraNumber", e.target.value)} placeholder="Project RERA Number" disabled={disabled} className={errors.projectReraNumber ? "border-destructive focus-visible:ring-destructive" : ""} />
-          </Field>
-          <Field label="RERA Validity Date">
-            <Input type="date" value={form.reraValidityDate} onChange={(e) => set("reraValidityDate", e.target.value)} disabled={disabled} />
-          </Field>
+
           <Sel label="Construction Status" required value={form.constructionStatus} onChange={(v) => set("constructionStatus", v)} options={CONSTRUCTION_STATUS_OPTIONS} disabled={disabled} error={errors.constructionStatus} />
           <Field label="Possession Date" required error={errors.possessionDate}>
             <Input type="date" value={form.possessionDate} onChange={(e) => set("possessionDate", e.target.value)} disabled={disabled} className={errors.possessionDate ? "border-destructive focus-visible:ring-destructive" : ""} />
@@ -488,12 +472,7 @@ function ResidentialPlotFields({ form, set, errors, disabled, isNew, isResale })
           <Field label="Builder Name" required error={errors.builderName}>
             <Input value={form.builderName} onChange={(e) => set("builderName", e.target.value)} placeholder="ABC Developers" maxLength={100} disabled={disabled} className={errors.builderName ? "border-destructive focus-visible:ring-destructive" : ""} />
           </Field>
-          <Field label="RERA Number" required error={errors.reraNumber}>
-            <Input value={form.reraNumber} onChange={(e) => set("reraNumber", e.target.value)} placeholder="P52100123456" disabled={disabled} className={errors.reraNumber ? "border-destructive focus-visible:ring-destructive" : ""} />
-          </Field>
-          <Field label="Project RERA Number" required error={errors.projectReraNumber}>
-            <Input value={form.projectReraNumber} onChange={(e) => set("projectReraNumber", e.target.value)} placeholder="Project RERA (optional)" disabled={disabled} className={errors.projectReraNumber ? "border-destructive focus-visible:ring-destructive" : ""} />
-          </Field>
+
           <Field label="Total Plots in Layout">
             <NumInput value={form.totalPlotsInLayout} onChange={(v) => set("totalPlotsInLayout", v)} placeholder="200" min={1} disabled={disabled} />
           </Field>
@@ -592,6 +571,50 @@ export function DetailsSection({ form, set, errors = {}, disabled }) {
       <CardContent>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {fields}
+        </div>
+
+        <div className="mt-6 border-t pt-4">
+          <h4 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">
+            RERA & Financial Details (Optional)
+          </h4>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+            {form.propertyListedBy !== "Owner" && (
+              <Field label="Agent RERA Number">
+                <Input
+                  value={form.reraNumber}
+                  onChange={(e) => set("reraNumber", e.target.value)}
+                  placeholder="e.g. P52100123456"
+                  disabled={disabled}
+                />
+              </Field>
+            )}
+            <Field label="Project RERA Number">
+              <Input
+                value={form.projectReraNumber}
+                onChange={(e) => set("projectReraNumber", e.target.value)}
+                placeholder="e.g. P52100123456"
+                disabled={disabled}
+              />
+            </Field>
+            <Field label="RERA Validity Date">
+              <Input
+                type="date"
+                value={form.reraValidityDate}
+                onChange={(e) => set("reraValidityDate", e.target.value)}
+                disabled={disabled}
+              />
+            </Field>
+            {lc !== "Rental" && (
+              <div className="flex items-center h-10">
+                <ToggleRow
+                  label="Bank Finance Available"
+                  checked={form.isBankFinanceAvailable}
+                  onChange={(v) => set("isBankFinanceAvailable", v)}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

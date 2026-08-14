@@ -1407,6 +1407,12 @@ export default function PropertyDetailsScreen() {
                         <Text className="text-sm font-black text-slate-900">{pricing.priceNegotiable ? "Yes" : "No"}</Text>
                       </View>
                     )}
+                    {details.isBankFinanceAvailable !== undefined && details.isBankFinanceAvailable !== null && (
+                      <View className={`flex-row items-center justify-between pb-3.5 ${pricing.brokerage ? "border-b border-slate-100" : ""}`}>
+                        <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bank Finance Available</Text>
+                        <Text className="text-sm font-black text-slate-900">{details.isBankFinanceAvailable ? "Yes" : "No"}</Text>
+                      </View>
+                    )}
                     {pricing.brokerage && (
                       <View className="flex-row items-center justify-between">
                         <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Brokerage Fee</Text>

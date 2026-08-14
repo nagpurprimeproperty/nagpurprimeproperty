@@ -204,9 +204,14 @@ function buildPropertyDetails(form) {
             details.towerWing = form.towerWing;
         if (form.approvedBanks)
             details.approvedBanks = form.approvedBanks;
-        if (form.ccOcReceived)
-            details.ccOcReceived = form.ccOcReceived;
     }
+    details.reraRegistered = form.reraRegistered;
+    details.reraNumber = form.reraNumber || "";
+    details.projectReraNumber = form.projectReraNumber || "";
+    if (form.reraValidityDate) {
+        details.reraValidityDate = form.reraValidityDate;
+    }
+    details.isBankFinanceAvailable = form.isBankFinanceAvailable;
     return details;
 }
 
@@ -343,6 +348,7 @@ export function usePropertyForm() {
             reraNumber: d.reraNumber ?? "",
             projectReraNumber: d.projectReraNumber ?? "",
             reraValidityDate: d.reraValidityDate ? new Date(d.reraValidityDate).toISOString().split("T")[0] : "",
+            isBankFinanceAvailable: !!d.isBankFinanceAvailable,
             numberOfFloors: d.numberOfFloors ?? "",
             plotArea: String(d.plotArea ?? ""),
             parkingSlots: String(d.parkingSlots ?? ""),

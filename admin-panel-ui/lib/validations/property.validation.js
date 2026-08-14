@@ -92,6 +92,14 @@ function buildDetailsSchema(listingCategory, propertyType) {
     const isResale = listingCategory === "Resale";
     const isRental = listingCategory === "Rental";
     // ── Shared pieces ──────────────────────────────────────────────────────────
+    const commonOptionalDetails = z.object({
+        reraRegistered: z.boolean().optional(),
+        reraNumber: optStr(),
+        projectReraNumber: optStr(),
+        reraValidityDate: optStr(),
+        isBankFinanceAvailable: z.boolean().optional(),
+    });
+
     const residentialBase = z.object({
         bhk: intRange(0, 8, "BHK must be between 0 and 8"),
         bathrooms: intRange(0, 15, "Bathrooms must be between 0 and 15"),
@@ -107,8 +115,8 @@ function buildDetailsSchema(listingCategory, propertyType) {
         floorType: optEnum(FLOOR_TYPE, "Select a valid floor type"),
         waterSupply: optEnum(WATER_SUPPLY, "Select a valid water supply"),
         electricityStatus: optEnum(ELECTRICITY_STATUS, "Select a valid electricity status"),
-        reraNumber: optStr(),
-    });
+    }).merge(commonOptionalDetails);
+
     const villaBase = z.object({
         bhk: intRange(0, 8, "BHK must be between 0 and 8"),
         bathrooms: intRange(0, 15, "Bathrooms must be between 0 and 15"),
@@ -123,8 +131,7 @@ function buildDetailsSchema(listingCategory, propertyType) {
         waterSupply: optEnum(WATER_SUPPLY, "Select a valid water supply"),
         floorType: optEnum(FLOOR_TYPE, "Select a valid floor type"),
         ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
-        reraNumber: optStr(),
-    });
+    }).merge(commonOptionalDetails);
     const penthouseExtra = z.object({
         terraceArea: optPosNum("Terrace area must be greater than 0"),
     });
@@ -143,7 +150,7 @@ function buildDetailsSchema(listingCategory, propertyType) {
         cabinCount: optIntRange(0, 50, "Cabin count must be between 0 and 50"),
         openDesks: optIntRange(0, 200, "Open desks must be between 0 and 200"),
         ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
-    });
+    }).merge(commonOptionalDetails);
     const shopBase = z.object({
         carpetArea: posNum("Carpet area is required and must be greater than 0"),
         builtUpArea: optPosNum("Built-up area must be greater than 0"),
@@ -153,14 +160,14 @@ function buildDetailsSchema(listingCategory, propertyType) {
         ceilingHeight: optPosNum("Ceiling height must be greater than 0"),
         footfallRating: optEnum(FOOTFALL_RATING_OPTIONS, "Select a valid footfall rating"),
         ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
-    });
+    }).merge(commonOptionalDetails);
     const showroomBase = z.object({
         showroomArea: posNum("Showroom area is required and must be greater than 0"),
         numberOfShowroomFloors: optIntRange(1, 5, "Showroom floors must be between 1 and 5"),
         frontage: optPosNum("Frontage must be greater than 0"),
         ceilingHeight: optPosNum("Ceiling height must be greater than 0"),
         ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
-    });
+    }).merge(commonOptionalDetails);
     const warehouseBase = z.object({
         warehouseArea: posNum("Warehouse area is required and must be greater than 0"),
         warehouseHeight: posNum("Warehouse height is required and must be greater than 0"),
@@ -168,7 +175,7 @@ function buildDetailsSchema(listingCategory, propertyType) {
         openYardArea: optPosNum("Open yard area must be greater than 0"),
         powerLoad: optPosNum("Power load must be greater than 0"),
         ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
-    });
+    }).merge(commonOptionalDetails);
     const residentialPlotBase = z.object({
         plotAreaSqFt: posNum("Plot area (sq.ft) is required and must be greater than 0"),
         plotLength: optPosNum("Plot length must be greater than 0"),
@@ -177,7 +184,7 @@ function buildDetailsSchema(listingCategory, propertyType) {
         roadWidth: optPosNum("Road width must be greater than 0"),
         zoneType: optEnum(["Residential", "Mixed Use"], "Zone type must be Residential or Mixed Use"),
         fsiAvailable: optPosNum("FSI must be greater than 0"),
-    });
+    }).merge(commonOptionalDetails);
     const agriLandBase = z.object({
         areaAcres: posNum("Area (acres) is required and must be greater than 0"),
         areaHectares: optPosNum("Area (hectares) must be greater than 0"),
@@ -187,13 +194,13 @@ function buildDetailsSchema(listingCategory, propertyType) {
         soilType: optEnum(SOIL_TYPES, "Select a valid soil type"),
         distanceFromCity: optPosNum("Distance from city must be greater than 0"),
         ownershipType: reqEnum(["Individual", "Joint", "Family"], "Ownership type for Agricultural Land must be Individual, Joint, or Family"),
-    });
+    }).merge(commonOptionalDetails);
     // ── New project details ────────────────────────────────────────────────────
     const newProjectCore = z.object({
         projectName: z.string().min(1, "Project name is required").max(100),
         builderName: z.string().min(1, "Builder name is required").max(100),
-        reraNumber: z.string().min(1, "RERA Number is required for new projects"),
-        projectReraNumber: z.string().min(1, "Project RERA Number is required for new projects"),
+        reraNumber: optStr(),
+        projectReraNumber: optStr(),
         constructionStatus: reqEnum(CONSTRUCTION_STATUS_OPTIONS, "Select construction status"),
         possessionDate: z.string().min(1, "Possession date is required"),
         totalUnitsInProject: optPosNum("Total units must be greater than 0"),
@@ -206,8 +213,8 @@ function buildDetailsSchema(listingCategory, propertyType) {
     const newVillaProjectCore = z.object({
         projectName: z.string().min(1, "Project name is required").max(100),
         builderName: z.string().min(1, "Builder name is required").max(100),
-        reraNumber: z.string().min(1, "RERA Number is required for new projects"),
-        projectReraNumber: z.string().min(1, "Project RERA Number is required for new projects"),
+        reraNumber: optStr(),
+        projectReraNumber: optStr(),
         constructionStatus: reqEnum(CONSTRUCTION_STATUS_OPTIONS, "Select construction status"),
         possessionDate: z.string().min(1, "Possession date is required"),
         totalVillasInProject: optPosNum("Total villas must be greater than 0"),
@@ -218,8 +225,8 @@ function buildDetailsSchema(listingCategory, propertyType) {
     const newWarehouseCore = z.object({
         projectName: optStr(),
         builderName: optStr(),
-        reraNumber: z.string().min(1, "RERA Number is required for new projects"),
-        projectReraNumber: z.string().min(1, "Project RERA Number is required for new projects"),
+        reraNumber: optStr(),
+        projectReraNumber: optStr(),
         constructionStatus: reqEnum(["Under Construction", "Ready"], 'Construction status must be "Under Construction" or "Ready"'),
         possessionDate: z.string().min(1, "Possession date is required"),
     });
@@ -227,8 +234,8 @@ function buildDetailsSchema(listingCategory, propertyType) {
     const newResPlotCore = z.object({
         layoutProjectName: z.string().min(1, "Layout project name is required").max(100),
         builderName: z.string().min(1, "Builder name is required").max(100),
-        reraNumber: z.string().min(1, "RERA Number is required for new projects"),
-        projectReraNumber: z.string().min(1, "Project RERA Number is required for new projects"),
+        reraNumber: optStr(),
+        projectReraNumber: optStr(),
         totalPlotsInLayout: optPosNum("Total plots must be greater than 0"),
         plotsAvailable: optPosNum("Plots available must be 0 or more"),
         developmentStatus: reqEnum(DEVELOPMENT_STATUS_OPTIONS, "Select development status"),

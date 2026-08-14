@@ -77,7 +77,7 @@ const userService = {
   generateToken: (user) => {
      // use jwt to generate a token with user id and mobile as payload
     const payload = { id: user._id, mobile: user.mobile, };
-    const token = jwt.sign(payload, process.env.JWT_SECRET);
+    const token = jwt.sign(payload, env.JWT_SECRET);
     return token;
   },
 

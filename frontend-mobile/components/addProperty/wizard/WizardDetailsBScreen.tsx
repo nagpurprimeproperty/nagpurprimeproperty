@@ -15,6 +15,7 @@ import colors from '@/theme/colors';
 import shadows from '@/theme/shadows';
 
 export default function WizardDetailsBScreen() {
+  const step0 = useAddPropertyStore((s) => s.step0);
   const step1 = useAddPropertyStore((s) => s.step1);
   const step3 = useAddPropertyStore((s) => s.step3);
   const errors = useAddPropertyStore((s) => s.errors);
@@ -680,63 +681,7 @@ export default function WizardDetailsBScreen() {
               )}
             </View>
 
-            {/* RERA Number */}
-            <View className="mb-6">
-              <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
-                Agent RERA Number<Text style={{ color: colors.primary }}> *</Text>
-              </Text>
-              <TextInput
-                placeholder="e.g. P52100012345"
-                value={step3.reraNumber || ''}
-                onChangeText={(val: string) => handleSelectValue('reraNumber', val)}
-                placeholderTextColor={colors.textPlaceholder}
-                style={{
-                  height: 54,
-                  backgroundColor: '#FFFFFF',
-                  borderColor: errors.reraNumber ? colors.error : '#EBE4DB',
-                  borderWidth: errors.reraNumber ? 1.5 : 1,
-                  borderRadius: 16,
-                }}
-                className="px-5 text-slate-800 text-sm font-semibold"
-              />
-              {errors.reraNumber && (
-                <View className="flex-row items-center gap-1.5 mt-2">
-                  <AlertCircle size={12} color={colors.error} />
-                  <Text className="text-red-500 text-xs font-bold leading-4">
-                    {errors.reraNumber}
-                  </Text>
-                </View>
-              )}
-            </View>
 
-            {/* Project RERA Number */}
-            <View className="mb-6">
-              <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
-                Project RERA Number<Text style={{ color: colors.primary }}> *</Text>
-              </Text>
-              <TextInput
-                placeholder="e.g. P52100012345"
-                value={step3.projectReraNumber || ''}
-                onChangeText={(val: string) => handleSelectValue('projectReraNumber', val)}
-                placeholderTextColor={colors.textPlaceholder}
-                style={{
-                  height: 54,
-                  backgroundColor: '#FFFFFF',
-                  borderColor: errors.projectReraNumber ? colors.error : '#EBE4DB',
-                  borderWidth: errors.projectReraNumber ? 1.5 : 1,
-                  borderRadius: 16,
-                }}
-                className="px-5 text-slate-800 text-sm font-semibold"
-              />
-              {errors.projectReraNumber && (
-                <View className="flex-row items-center gap-1.5 mt-2">
-                  <AlertCircle size={12} color={colors.error} />
-                  <Text className="text-red-500 text-xs font-bold leading-4">
-                    {errors.projectReraNumber}
-                  </Text>
-                </View>
-              )}
-            </View>
 
             {/* Construction Status / Development Status */}
             {type === 'res_plot'
@@ -831,6 +776,69 @@ export default function WizardDetailsBScreen() {
                 {renderTextInput('approvedBanks', 'Approved Banks', 'e.g. HDFC, SBI, ICICI')}
                 {renderCardSelector('ccOcReceived', 'CC/OC Status', ['CC Received', 'OC Received', 'Both', 'None', 'Applied'])}
               </>
+            )}
+          </View>
+        )}
+
+        {/* RERA & Financial Details (Optional) */}
+        {type !== 'agri_land' && (
+          <View className="mt-4 border-t pt-4 border-slate-100 mb-6 px-5">
+            <View className="mb-6 flex-row items-center gap-2">
+              <View className="w-1 h-[18px] bg-orange-500 rounded-sm" />
+              <Text className="text-xs font-extrabold text-gray-700 tracking-widest uppercase">
+                RERA & Financial Details
+              </Text>
+            </View>
+
+            {/* Agent RERA Number */}
+            {step0.propertyListedBy !== 'Owner' && (
+              <View className="mb-6">
+                <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
+                  Agent RERA Number <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Optional)</Text>
+                </Text>
+                <TextInput
+                  placeholder="e.g. P52100012345"
+                  value={step3.reraNumber || ''}
+                  onChangeText={(val: string) => handleSelectValue('reraNumber', val)}
+                  placeholderTextColor={colors.textPlaceholder}
+                  style={{
+                    height: 54,
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#EBE4DB',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                  }}
+                  className="px-5 text-slate-800 text-sm font-semibold"
+                />
+              </View>
+            )}
+
+            {/* Project RERA Number */}
+            <View className="mb-6">
+              <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
+                Project RERA ID <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Optional)</Text>
+              </Text>
+              <TextInput
+                placeholder="e.g. P52100012345"
+                value={step3.projectReraNumber || ''}
+                onChangeText={(val: string) => handleSelectValue('projectReraNumber', val)}
+                placeholderTextColor={colors.textPlaceholder}
+                style={{
+                  height: 54,
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#EBE4DB',
+                  borderWidth: 1,
+                  borderRadius: 16,
+                }}
+                className="px-5 text-slate-800 text-sm font-semibold"
+              />
+            </View>
+
+            {/* Bank Finance Available Toggle */}
+            {step1.listingCategory !== 'rental' && (
+              <View className="mb-4">
+                {renderToggleRow('isBankFinanceAvailable', 'Bank Finance Available', 'Check if bank loans are available for this property')}
+              </View>
             )}
           </View>
         )}

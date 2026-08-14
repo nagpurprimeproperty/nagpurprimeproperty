@@ -323,6 +323,7 @@ const detailsSchema = new mongoose.Schema({
   totalPlotsInLayout:  { type: Number, min: 1, default: null },
   plotsAvailable:      { type: Number, min: 0, default: null },
   developmentStatus:   { type: String, enum: { values: [...DEVELOPMENT_STATUS_OPTIONS, null], message: DEVELOPMENT_STATUS_OPTIONS_MESSAGE }, default: null },
+  isBankFinanceAvailable: { type: Boolean, default: null },
 }, { _id: false });
 
 const pricingSchema = new mongoose.Schema({

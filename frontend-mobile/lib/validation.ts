@@ -249,12 +249,7 @@ export function validateStepDetailsB(
       }
     }
 
-    if (!step3Data.reraNumber || !String(step3Data.reraNumber).trim()) {
-      errors.reraNumber = 'RERA Number is required';
-    }
-    if (!step3Data.projectReraNumber || !String(step3Data.projectReraNumber).trim()) {
-      errors.projectReraNumber = 'Project RERA Number is required';
-    }
+
   }
 
   return errors;

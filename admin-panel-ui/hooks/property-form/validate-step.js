@@ -85,19 +85,13 @@ export function validateStep(stepIndex, form) {
         if (fullNewCoreTypes.includes(pt)) {
           if (!form.projectName?.trim()) errors.projectName = "Project Name is required";
           if (!form.builderName?.trim()) errors.builderName = "Builder Name is required";
-          if (requiresRera) {
-            if (!form.reraNumber?.trim()) errors.reraNumber = "RERA Number is required for new projects";
-            if (!form.projectReraNumber?.trim()) errors.projectReraNumber = "Project RERA Number is required for new projects";
-          }
+
           if (!form.constructionStatus) errors.constructionStatus = "Construction Status is required";
           if (!form.possessionDate) errors.possessionDate = "Possession Date is required";
         } else if (pt === "Villa/Independent House") {
           if (!form.projectName?.trim()) errors.projectName = "Project Name is required";
           if (!form.builderName?.trim()) errors.builderName = "Builder Name is required";
-          if (requiresRera) {
-            if (!form.reraNumber?.trim()) errors.reraNumber = "RERA Number is required for new projects";
-            if (!form.projectReraNumber?.trim()) errors.projectReraNumber = "Project RERA Number is required for new projects";
-          }
+
           if (!form.constructionStatus) errors.constructionStatus = "Construction Status is required";
           if (!form.possessionDate) errors.possessionDate = "Possession Date is required";
         } else if (pt === "Warehouse/Godown") {
@@ -106,10 +100,7 @@ export function validateStep(stepIndex, form) {
         } else if (pt === "Residential Plot") {
           if (!form.layoutProjectName?.trim()) errors.layoutProjectName = "Layout Project Name is required";
           if (!form.builderName?.trim()) errors.builderName = "Builder Name is required";
-          if (requiresRera) {
-            if (!form.reraNumber?.trim()) errors.reraNumber = "RERA Number is required for new projects";
-            if (!form.projectReraNumber?.trim()) errors.projectReraNumber = "Project RERA Number is required for new projects";
-          }
+
           if (!form.developmentStatus) errors.developmentStatus = "Development Status is required";
         }
       }
