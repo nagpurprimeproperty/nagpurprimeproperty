@@ -5,6 +5,9 @@ import Lead from '../lead/leads.model.js';
 import jwt from 'jsonwebtoken';
 import storageService from '../../services/storage.service.js';
 import { getOrSet } from '../../utils/cache.js';
+import env from '../../config/env.js';
+import communicationService from '../communication/communication.service.js';
+import { getRedis } from '../../config/redis.js';
 
 const userService = {
   /**
@@ -53,7 +56,7 @@ const userService = {
 
   generateToken: (user) => {
     const payload = { id: user._id, mobile: user.mobile };
-    const token = jwt.sign(payload, process.env.JWT_SECRET);
+    const token = jwt.sign(payload, env.JWT_SECRET);
     return token;
   },
 
@@ -119,23 +122,81 @@ const userService = {
     return { properties, leads, enquiries, plans: 0 };
   },
 
-  generateOTP: (user) => {
-    const otp = '1234'; // static OTP for Play Store verification
-    const expiry = new Date(Date.now() + 5 * 60 * 1000); // Expires in 5 minutes
-    user.otp = otp;
-    user.otpExpiry = expiry;
-    user.save();
+  generateOTP: async (user) => {
+    const mobile = user.mobile;
+    const redis = getRedis();
+
+    // Check resend cooldown
+    const cooldown = await redis.get(`otp_cooldown:${mobile}`);
+    if (cooldown) {
+      throw { status: 429, message: 'Please wait before requesting a new OTP' };
+    }
+
+    // Static test numbers for App/Google Play reviewers
+    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+
+    const otp = isStaticTestUser ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Store in Redis
+    await redis.set(`otp:${mobile}`, otp, 'EX', 300); // 5 minutes expiry
+    
+    // Set 60-second resend cooldown
+    await redis.set(`otp_cooldown:${mobile}`, '1', 'EX', 60);
+
+    // Clear failed verification attempts
+    await redis.del(`otp_attempts:${mobile}`);
+
+    if (env.WHATSAPP_ENABLED && !isStaticTestUser) {
+      try {
+        await communicationService.sendWhatsApp({
+          to: mobile,
+          body: `Your OTP is ${otp}`,
+          templateId: env.WHATSAPP_OTP_TEMPLATE_NAME,
+          metadata: {
+            otp,
+          },
+        });
+      } catch (err) {
+        // Clean up Redis keys so the user isn't stuck with a cooldown if sending failed
+        await redis.del(`otp:${mobile}`, `otp_cooldown:${mobile}`, `otp_attempts:${mobile}`);
+        console.error('Failed to send OTP via WhatsApp:', err.message);
+        throw { status: 500, message: `Failed to send OTP via WhatsApp: ${err.message}` };
+      }
+    }
+
     return otp;
   },
 
   verifyOTP: async (mobile, otp) => {
-    const user = await userRepository.findByMobile(mobile).select('+otp +otpExpiry');
+    const user = await userRepository.findByMobile(mobile);
     if (!user) throw { status: 404, message: 'User not found' };
-    if (user.otp !== otp) throw { status: 400, message: 'Invalid OTP' };
-    if (user.otpExpiry < new Date()) throw { status: 400, message: 'OTP expired' };
-    user.otp = null;
-    user.otpExpiry = null;
-    await user.save();
+
+    const redis = getRedis();
+
+    // Check failed attempts
+    const attemptsStr = await redis.get(`otp_attempts:${mobile}`);
+    const attempts = attemptsStr ? parseInt(attemptsStr, 10) : 0;
+    if (attempts >= 5) {
+      throw { status: 400, message: 'Too many failed verification attempts. Please request a new OTP.' };
+    }
+
+    const cachedOtp = await redis.get(`otp:${mobile}`);
+    if (!cachedOtp) {
+      throw { status: 400, message: 'OTP expired or not requested' };
+    }
+
+    if (cachedOtp !== otp) {
+      await redis.incr(`otp_attempts:${mobile}`);
+      if (!attemptsStr) {
+        await redis.expire(`otp_attempts:${mobile}`, 300);
+      }
+      throw { status: 400, message: 'Invalid OTP' };
+    }
+
+    // Success: clear OTP and attempts
+    await redis.del(`otp:${mobile}`);
+    await redis.del(`otp_attempts:${mobile}`);
+
     const token = userService.generateToken(user);
     return { user: user?.toJSON(), token };
   },
@@ -147,15 +208,40 @@ const userService = {
   requestDeletion: async (mobile) => {
     const user = await userRepository.findByMobile(mobile);
     if (!user) throw { status: 404, message: 'User not found with this mobile number' };
-    const otp = userService.generateOTP(user);
+    const otp = await userService.generateOTP(user);
     return otp;
   },
 
   confirmDeletion: async (mobile, otp) => {
-    const user = await userRepository.findByMobile(mobile).select('+otp +otpExpiry');
+    const user = await userRepository.findByMobile(mobile);
     if (!user) throw { status: 404, message: 'User not found' };
-    if (user.otp !== otp) throw { status: 400, message: 'Invalid OTP' };
-    if (user.otpExpiry < new Date()) throw { status: 400, message: 'OTP expired' };
+
+    const redis = getRedis();
+
+    // Check failed attempts
+    const attemptsStr = await redis.get(`otp_attempts:${mobile}`);
+    const attempts = attemptsStr ? parseInt(attemptsStr, 10) : 0;
+    if (attempts >= 5) {
+      throw { status: 400, message: 'Too many failed verification attempts. Please request a new OTP.' };
+    }
+
+    const cachedOtp = await redis.get(`otp:${mobile}`);
+    if (!cachedOtp) {
+      throw { status: 400, message: 'OTP expired or not requested' };
+    }
+
+    if (cachedOtp !== otp) {
+      await redis.incr(`otp_attempts:${mobile}`);
+      if (!attemptsStr) {
+        await redis.expire(`otp_attempts:${mobile}`, 300);
+      }
+      throw { status: 400, message: 'Invalid OTP' };
+    }
+
+    // Success: clear OTP and attempts
+    await redis.del(`otp:${mobile}`);
+    await redis.del(`otp_attempts:${mobile}`);
+
     await userRepository.deleteById(user._id);
     return true;
   },
