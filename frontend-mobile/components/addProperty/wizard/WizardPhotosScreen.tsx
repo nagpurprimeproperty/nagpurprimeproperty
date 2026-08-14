@@ -310,7 +310,7 @@ export default function WizardPhotosScreen() {
     try {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
-        quality: 1,           // full quality — crop modal will compress
+        quality: 0.85,        // 1.0 can produce >10 MB files that crash on Android
         exif: false,
       });
       if (!result.canceled && result.assets.length > 0) {
