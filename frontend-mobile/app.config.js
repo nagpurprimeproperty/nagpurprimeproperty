@@ -94,6 +94,11 @@ module.exports = ({ config }) => {
     [
       "expo-build-properties",
       {
+        ios: {
+          // Required for react-native-maps PROVIDER_GOOGLE on iOS.
+          // Google Maps iOS SDK is distributed as a framework and needs static linking.
+          useFrameworks: "static",
+        },
         android: {
           // Enable R8 code minification and resource shrinking for release builds
           enableMinifyInReleaseBuilds: true,
