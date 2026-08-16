@@ -48,6 +48,11 @@ module.exports = ({ config }) => {
       ...(hasIosGoogleServices ? { googleServicesFile: iosGoogleServicesPath } : {}),
       config: {
         usesNonExemptEncryption: false,
+        googleMaps: {
+          // Same key as Android — injected by EAS Build secret at build time.
+          // Expo writes this as GMSApiKey into Info.plist (never in JS bundle).
+          apiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyBKmIhSr8KalV8bv_XMWhAhp-le0LRLx6Y",
+        },
       },
       infoPlist: {
         NSCameraUsageDescription:
