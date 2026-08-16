@@ -41,6 +41,14 @@ module.exports = ({ config }) => {
     scheme: "nagpurprimeproperty",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
+    // Native splash color EXACTLY matches custom splash.tsx container (#FFF4EC).
+    // No image — so native splash is invisible cream screen.
+    // JS loads → SplashScreen.hideAsync() → custom splash.tsx starts (same bg color).
+    // User sees: seamless transition — feels like going directly to custom splash.
+    splash: {
+      backgroundColor: "#FFF4EC",
+      // No image → completely invisible native splash
+    },
     ios: {
       buildNumber: "7",
       supportsTablet: true,
@@ -149,4 +157,3 @@ module.exports = ({ config }) => {
   },
 };
 };
-
