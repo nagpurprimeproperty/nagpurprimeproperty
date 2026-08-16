@@ -10,7 +10,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com"
+        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_fTEGoHekHXtKHVuxaAoILicvldw"
       }
     },
     "preview": {
@@ -20,18 +21,20 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com"
+        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_fTEGoHekHXtKHVuxaAoILicvldw"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.nagpurprimeproperty.com/api/v1",
-        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com"
+        "EXPO_PUBLIC_SOCKET_URL": "https://api.nagpurprimeproperty.com",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_fTEGoHekHXtKHVuxaAoILicvldw"
       }
     }
   },
   "submit": {
     "production": {}
   }
-}
+}
