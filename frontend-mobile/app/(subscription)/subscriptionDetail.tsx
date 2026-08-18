@@ -251,6 +251,8 @@ export default function SubscriptionDetailScreen() {
           toast.success("Apple Subscription activated successfully!");
         }
       } catch (err: any) {
+        // User cancelled the Apple payment sheet — not an error, do nothing
+        if (err?.userCancelled) return;
         toast.error(err?.message || "In-App Purchase failed");
       } finally {
         setIsIapLoading(false);

@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import colors from "@/theme/colors";
 import { useAddPropertyStore } from "../../store/addPropertyStore";
 import { useLocalityStore } from "@/store/localityStore";
+import { useAuthStore } from "@/features/auth/store/authStore";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 // ⚠️  The Google Maps API key is NOT available in JS at all.
@@ -38,6 +39,33 @@ import { useLocalityStore } from "@/store/localityStore";
 //    present in the JS bundle.  See backend/src/routes/maps.ts.
 
 const MAPS_PROXY_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+/**
+ * Authenticated fetch for all maps-proxy calls.
+ *
+ * WHY: raw fetch() has no auth header → backend returns 401 with
+ * {message:"Unauthorized"} (no "status" field) → autocomplete silently
+ * fails on iOS (fresh session) while Android worked from a cached session.
+ *
+ * Mirrors apiClient: injects Bearer token + unwraps the backend response
+ * envelope ({success, data:{...}} → returns inner data directly).
+ */
+async function mapsFetch(url: string): Promise<any> {
+  const token = useAuthStore.getState().token;
+  const res = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Maps proxy HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  // Unwrap backend envelope — some endpoints return {success, data:{...}}
+  // while others return the Google response directly.
+  return json.data ?? json;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -169,8 +197,7 @@ export default function MapPickerScreen() {
     let needsFallback = false;
     try {
       const url = `${MAPS_PROXY_BASE}/maps/reverse-geocode?latlng=${lat},${lng}`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await mapsFetch(url);
       if (!mountedRef.current) return;
       if (data.status === "OK" && data.results.length > 0) {
         const parsed = parseGeocodingResult(data.results[0]);
@@ -238,10 +265,8 @@ export default function MapPickerScreen() {
         setGeocoding(true);
         try {
           const addressQuery = `${step2.locality}, Nagpur, Maharashtra, India`;
-          // Key-free: routed through backend proxy.
           const url = `${MAPS_PROXY_BASE}/maps/geocode?address=${encodeURIComponent(addressQuery)}`;
-          const res = await fetch(url);
-          const data = await res.json();
+          const data = await mapsFetch(url);
           if (data.status === "OK" && data.results.length > 0) {
             const loc = data.results[0].geometry.location;
             const p = { latitude: loc.lat, longitude: loc.lng };
@@ -288,7 +313,6 @@ export default function MapPickerScreen() {
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        // Key-free: routed through backend proxy.
         const url =
           `${MAPS_PROXY_BASE}/maps/autocomplete` +
           `?input=${encodeURIComponent(text)}` +
@@ -297,19 +321,19 @@ export default function MapPickerScreen() {
           `&location=21.1458,79.0882` +
           `&radius=50000` +
           `&strictbounds=false`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await mapsFetch(url);
         if (data.status === "OK" || data.status === "ZERO_RESULTS") {
           setPredictions(data.predictions || []);
           setShowDrop((data.predictions || []).length > 0);
         } else {
           if (__DEV__) {
-            console.error("Google Places Autocomplete API error:", data.error_message || data.status);
+            console.error("Google Places Autocomplete API error:", JSON.stringify(data));
           }
           setPredictions([]);
           setShowDrop(false);
         }
-      } catch {
+      } catch (err) {
+        if (__DEV__) console.error("[AutoComplete] fetch error:", err);
         setPredictions([]);
       } finally {
         setSearching(false);
@@ -324,14 +348,12 @@ export default function MapPickerScreen() {
     setPredictions([]);
     setShowDrop(false);
     try {
-      // Key-free: routed through backend proxy.
       const url =
         `${MAPS_PROXY_BASE}/maps/place-details` +
         `?place_id=${item.place_id}` +
         `&fields=geometry,address_components,formatted_address` +
         `&language=en`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await mapsFetch(url);
       if (data.status === "OK") {
         const loc = data.result.geometry.location;
         const p = { latitude: loc.lat, longitude: loc.lng };
@@ -355,10 +377,11 @@ export default function MapPickerScreen() {
         }
       } else {
         if (__DEV__) {
-          console.error("Google Place Details API error:", data.error_message || data.status);
+          console.error("Google Place Details API error:", JSON.stringify(data));
         }
       }
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.error("[PlaceDetails] fetch error:", err);
       // silently fall back — pin stays where it is
     }
   };
@@ -450,7 +473,7 @@ export default function MapPickerScreen() {
         showsMyLocationButton={false}
         showsCompass={false}
         showsTraffic={false}
-        mapType="standard"
+        mapType="hybrid"
       >
         {pin && (
           <Marker
