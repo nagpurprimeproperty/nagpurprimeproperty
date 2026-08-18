@@ -10,9 +10,9 @@ import {
   Image as RNImage,
 } from 'react-native';
 import { Image } from 'expo-image';
-// expo-image-manipulator is required dynamically inside handleCrop so that a
-// missing native module (un-rebuilt dev client) does not crash at import time
-// and break the Expo Router route tree.
+// Use the stable SDK-54 API — manipulateAsync was deprecated and caused
+// silent crop failures in production (falling back to onSkip / original image).
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Crop } from 'lucide-react-native';
 import colors from '@/theme/colors';
@@ -329,8 +329,13 @@ export default function ImageCropModal({
       const imgW = nativeSize.width  || containerSize.width;
       const imgH = nativeSize.height || containerSize.height;
 
-      if (rect.width === 0 || rect.height === 0) { onSkip(); return; }
+      // Guard: nothing to crop if dimensions are unknown
+      if (rect.width === 0 || rect.height === 0 || imgW === 0 || imgH === 0) {
+        onSkip();
+        return;
+      }
 
+      // Scale from display-rect coordinates → native image pixels
       const scaleX = imgW / rect.width;
       const scaleY = imgH / rect.height;
 
@@ -339,19 +344,26 @@ export default function ImageCropModal({
       const cropW   = Math.min(Math.max(Math.round(box.w * scaleX), 1), imgW - originX);
       const cropH   = Math.min(Math.max(Math.round(box.h * scaleY), 1), imgH - originY);
 
-      // Dynamic require — avoids crashing at import time when native module is
-      // not yet compiled into the dev client (requires expo run:android rebuild).
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const ImageManipulator = require('expo-image-manipulator');
+      // Extra bounds validation — out-of-range params crash the native module
+      if (originX >= imgW || originY >= imgH || cropW <= 0 || cropH <= 0) {
+        if (__DEV__) console.warn('[ImageCropModal] Crop bounds invalid, skipping:', { originX, originY, cropW, cropH, imgW, imgH });
+        onSkip();
+        return;
+      }
 
-      const result = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ crop: { originX, originY, width: cropW, height: cropH } }],
-        { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG },
-      );
-      onCrop(result.uri);
+      // Use the stable SDK-54 contextual API.
+      // manipulateAsync (deprecated) silently failed in production builds and
+      // caused onSkip() to fire, saving the original uncropped image.
+      const ctx = ImageManipulator.manipulate(uri);
+      ctx.crop({ originX, originY, width: cropW, height: cropH });
+      const imageRef = await ctx.renderAsync();
+      const saved = await imageRef.saveAsync({
+        compress: 0.85,
+        format: SaveFormat.JPEG,
+      });
+      onCrop(saved.uri);
     } catch (err) {
-      if (__DEV__) console.warn('[ImageCropModal] Crop failed (native module ready?):', err);
+      if (__DEV__) console.warn('[ImageCropModal] Crop failed:', err);
       onSkip();
     } finally {
       setIsCropping(false);

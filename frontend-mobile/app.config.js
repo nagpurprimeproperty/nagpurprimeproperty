@@ -120,6 +120,12 @@ module.exports = ({ config }) => {
     ],
     "expo-secure-store",
     "expo-router",
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission: "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses.",
+      },
+    ],
 
     [
       "expo-image-picker",
