@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -87,18 +87,27 @@ export default function EnquiryDetailScreen() {
   const enquiry  = data?.data;
   const imageUrl = enquiry?.photos?.[0];
 
-  // WhatsApp — open wa.me with broker name as context
+  // WhatsApp — open wa.me with broker phone and name as context
   const onWhatsApp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const broker = enquiry?.brokerName || 'the broker';
     const prop   = enquiry?.propertyName || 'the property';
+    const phone  = enquiry?.brokerPhone || enquiry?.brokerMobile;
     const msg    = `Hello ${broker}, I am interested in ${prop} and would like to get more information. I enquired via Nagpur Prime Property.`;
-    Linking.openURL(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
+    if (cleanPhone) {
+      Linking.openURL(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`);
+    } else {
+      Linking.openURL(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    }
   };
 
   const onCall = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // No phone in enquiry data — show intent; broker contact via WhatsApp
+    const phone = enquiry?.brokerPhone || enquiry?.brokerMobile;
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    }
   };
 
   if (!enquiryId) {
@@ -200,7 +209,9 @@ export default function EnquiryDetailScreen() {
                 </View>
                 <View style={ms.brokerInfo}>
                   <Text style={ms.brokerName}>{enquiry.brokerName || 'Broker'}</Text>
-                  <Text style={ms.brokerSub}>{enquiry.propertyType || 'Property enquiry'}</Text>
+                  <Text style={ms.brokerSub}>
+                    {enquiry.brokerPhone || enquiry.brokerMobile || enquiry.propertyType || 'Property enquiry'}
+                  </Text>
                 </View>
               </View>
               <View style={ms.divider} />
