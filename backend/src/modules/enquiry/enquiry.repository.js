@@ -90,6 +90,8 @@ const leadRepository = {
         },
         status: { $cond: [{ $eq: ['$status', 'New'] }, 'Pending', 'Responded'] },
         brokerName: '$broker.name',
+        brokerMobile: '$broker.mobile',
+        brokerPhone: '$broker.mobile',
         enquired: '$createdAt',
       }
     },
@@ -173,6 +175,8 @@ const leadRepository = {
             title: 1,
             status: { $cond: [{ $eq: ['$status', 'New'] }, 'Pending', 'Responded'] },
             brokerName: '$broker.name',
+            brokerMobile: '$broker.mobile',
+            brokerPhone: '$broker.mobile',
             enquired: '$createdAt',
           }
         },
