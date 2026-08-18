@@ -724,15 +724,19 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
     }
 
     if (details.shopFloor !== undefined && details.shopFloor !== null) {
-      const reverseFloorMap: Record<string, number> = {
-        'Lower Ground': -1,
-        'Ground': 0,
-        '1st': 1,
-        '2nd': 2,
-        '3rd+': 3,
-      };
-      if (reverseFloorMap[details.shopFloor] !== undefined) {
-        details.shopFloor = reverseFloorMap[details.shopFloor];
+      // The API returns shopFloor as the display string ('Lower Ground', 'Ground',
+      // '1st', '2nd', '3rd+') — this is exactly what the dropdown UI expects.
+      // Just validate it is one of the known options; if it somehow comes back as
+      // a number (legacy data), convert it to the matching label.
+      const validLabels = ['Lower Ground', 'Ground', '1st', '2nd', '3rd+'];
+      if (!validLabels.includes(details.shopFloor)) {
+        const floorVal = Number(details.shopFloor);
+        if (floorVal === -1)       details.shopFloor = 'Lower Ground';
+        else if (floorVal === 0)   details.shopFloor = 'Ground';
+        else if (floorVal === 1)   details.shopFloor = '1st';
+        else if (floorVal === 2)   details.shopFloor = '2nd';
+        else if (floorVal >= 3)    details.shopFloor = '3rd+';
+        // If still not mappable, leave as-is so the UI can show it.
       }
     }
 

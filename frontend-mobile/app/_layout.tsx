@@ -20,7 +20,13 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { Platform, Text, TextInput } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
+
+// Hide native splash instantly at module level — the earliest possible point.
+// expo-router calls preventAutoHideAsync() before this, so hideAsync() here
+// fires as soon as the JS bundle is evaluated. Custom splash.tsx handles branding.
+SplashScreen.hideAsync();
 
 // Set static default font properties once at module initialization without patching internals
 if ((Text as any).defaultProps == null) (Text as any).defaultProps = {};

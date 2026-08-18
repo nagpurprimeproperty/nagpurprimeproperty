@@ -20,6 +20,7 @@ import MapView, {
   MapPressEvent,
   Marker,
   PROVIDER_GOOGLE,
+  PROVIDER_DEFAULT,
   Region,
 } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -165,37 +166,66 @@ export default function MapPickerScreen() {
     if (!mountedRef.current) return;
     setGeocoding(true);
     setDetails(null);
+    let needsFallback = false;
     try {
       const url = `${MAPS_PROXY_BASE}/maps/reverse-geocode?latlng=${lat},${lng}`;
       const res = await fetch(url);
       const data = await res.json();
-      if (!mountedRef.current) return; // Check again after await
+      if (!mountedRef.current) return;
       if (data.status === "OK" && data.results.length > 0) {
         const parsed = parseGeocodingResult(data.results[0]);
         const cityLower = (parsed.city || "").toLowerCase();
         const districtLower = (parsed.district || "").toLowerCase();
-        
         if (!cityLower.includes("nagpur") && !districtLower.includes("nagpur")) {
-          Alert.alert(
-            "Invalid Location",
-            "not valid locality pls select nagpurs locality"
-          );
+          Alert.alert("Invalid Location", "not valid locality pls select nagpurs locality");
           setPin(null);
           setDetails(null);
         } else {
           setDetails(parsed);
         }
-      } else {
-        if (__DEV__) {
-          console.error("Google Geocoding API error (reverseGeocode):", data.error_message || data.status);
-        }
-        setDetails(null);
+        // Backend succeeded — skip fallback
+        if (mountedRef.current) setGeocoding(false);
+        return;
       }
+      // Backend returned non-OK (e.g. auth error when logged out)
+      needsFallback = true;
     } catch {
-      if (mountedRef.current) setDetails(null);
-    } finally {
-      if (mountedRef.current) setGeocoding(false);
+      // Network error or parse error — try device fallback
+      needsFallback = true;
     }
+
+    // ── Fallback: expo-location device geocoding (no auth, no API key needed) ──
+    // Covers: logged-out users, backend unreachable, API quota exceeded, etc.
+    if (needsFallback && mountedRef.current) {
+      try {
+        const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+        if (!mountedRef.current || results.length === 0) return;
+        const r = results[0];
+        const cityVal = r.city || r.subregion || "";
+        const districtVal = r.district || "";
+        if (
+          !cityVal.toLowerCase().includes("nagpur") &&
+          !districtVal.toLowerCase().includes("nagpur")
+        ) {
+          Alert.alert("Invalid Location", "not valid locality pls select nagpurs locality");
+          setPin(null);
+          setDetails(null);
+        } else {
+          setDetails({
+            area: r.district || r.name || r.city || "Nagpur",
+            subArea: r.street || "",
+            city: cityVal || "Nagpur",
+            district: districtVal,
+            pinCode: r.postalCode || "",
+            state: r.region || "Maharashtra",
+            fullDisplay: [r.name, r.street, r.city, r.region].filter(Boolean).join(", "),
+          });
+        }
+      } catch {
+        if (mountedRef.current) setDetails(null);
+      }
+    }
+    if (mountedRef.current) setGeocoding(false);
   }, []);
 
   useEffect(() => {
@@ -404,10 +434,11 @@ export default function MapPickerScreen() {
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Google Map */}
+      {/* Map — Apple Maps on iOS (PROVIDER_GOOGLE is broken with New Architecture on iOS),
+           Google Maps on Android */}
       <MapView
         ref={mapRef}
-        provider={PROVIDER_GOOGLE}
+        provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
         style={StyleSheet.absoluteFillObject}
         initialRegion={initRegion}
         onPress={(e: MapPressEvent) => {
@@ -444,10 +475,14 @@ export default function MapPickerScreen() {
         <TouchableOpacity
           style={S.iconBtn}
           onPress={() => {
-            if (mode === "search") {
-              router.navigate("/(screens)/location" as any);
+            // Use router.back() to pop this screen off the stack.
+            // router.navigate() was pushing a NEW screen causing an infinite loop.
+            if (router.canGoBack()) {
+              router.back();
+            } else if (mode === "search") {
+              router.replace("/(screens)/location" as any);
             } else {
-              router.navigate("/(tabs)/addProperty" as any);
+              router.replace("/(tabs)/addProperty" as any);
             }
           }}
         >

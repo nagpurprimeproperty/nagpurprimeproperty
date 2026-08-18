@@ -41,6 +41,14 @@ module.exports = ({ config }) => {
     scheme: "nagpurprimeproperty",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
+    // Native splash color EXACTLY matches custom splash.tsx container (#FFF4EC).
+    // No image — so native splash is invisible cream screen.
+    // JS loads → SplashScreen.hideAsync() → custom splash.tsx starts (same bg color).
+    // User sees: seamless transition — feels like going directly to custom splash.
+    splash: {
+      backgroundColor: "#FFF4EC",
+      // No image → completely invisible native splash
+    },
     ios: {
       buildNumber: "7",
       supportsTablet: true,
@@ -48,6 +56,11 @@ module.exports = ({ config }) => {
       ...(hasIosGoogleServices ? { googleServicesFile: iosGoogleServicesPath } : {}),
       config: {
         usesNonExemptEncryption: false,
+        googleMaps: {
+          // Same key as Android — injected by EAS Build secret at build time.
+          // Expo writes this as GMSApiKey into Info.plist (never in JS bundle).
+          apiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyBKmIhSr8KalV8bv_XMWhAhp-le0LRLx6Y",
+        },
       },
       infoPlist: {
         NSCameraUsageDescription:
@@ -89,6 +102,11 @@ module.exports = ({ config }) => {
     [
       "expo-build-properties",
       {
+        ios: {
+          // Required for react-native-maps PROVIDER_GOOGLE on iOS.
+          // Google Maps iOS SDK is distributed as a framework and needs static linking.
+          useFrameworks: "static",
+        },
         android: {
           // Enable R8 code minification and resource shrinking for release builds
           enableMinifyInReleaseBuilds: true,
@@ -102,6 +120,12 @@ module.exports = ({ config }) => {
     ],
     "expo-secure-store",
     "expo-router",
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission: "Nagpur Prime Property uses your location to display nearby real estate listings on the map and automatically populate property addresses.",
+      },
+    ],
 
     [
       "expo-image-picker",
@@ -139,4 +163,3 @@ module.exports = ({ config }) => {
   },
 };
 };
-
