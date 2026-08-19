@@ -1,4 +1,4 @@
-﻿import { useApiQuery } from "@/hooks/useApiQuery";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import {
   normalizePropertyItem,
   type PropertyApiItem,
@@ -13,6 +13,7 @@ export const useMyProperties = (params?: Record<string, unknown>, enabled = true
     "/properties/me",
     { params },
     enabled,
+    { staleTime: 1 * 60 * 1000, gcTime: 2 * 60 * 1000 },
   );
 
   const normalizedData = useMemo(() => {

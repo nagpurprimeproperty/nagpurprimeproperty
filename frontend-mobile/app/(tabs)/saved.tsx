@@ -58,6 +58,7 @@ export default function SavedScreen() {
 
   const {
     list: savedList,
+    setList,
     hasMore,
     isLoadingMore,
     initialLoading,
@@ -73,6 +74,26 @@ export default function SavedScreen() {
     page,
     setPage,
   });
+
+  // Immediately removes the item from the local accumulated list so the card
+  // disappears without waiting for a server round-trip.
+  //
+  // WHY: usePagination keeps a local `list` state for page > 1 (accumulated
+  // pages). The React Query cache update in useTogglePropertySave handles
+  // page 1 (data comes directly from the cache), but the accumulated list
+  // is local state that must be updated here.
+  const handleToggleSave = React.useCallback(
+    (id: string | void) => {
+      if (!id) return;
+      // Optimistically remove from local list (covers page > 1)
+      setList((prev: any[]) =>
+        prev.filter((item: any) => (item._id || item.id) !== id)
+      );
+      // Mutate: updates cache + calls backend (covers page 1 + backend sync)
+      toggleSave(id);
+    },
+    [toggleSave, setList]
+  );
 
   // Shared header used in every branch
   const header = (
@@ -90,12 +111,12 @@ export default function SavedScreen() {
         <PropertyCard
           item={item}
           isLiked={true}
-          onToggleSave={toggleSave}
+          onToggleSave={handleToggleSave}
           onCreateCallEnquiry={createCall}
         />
       </Animated.View>
     ),
-    [toggleSave, createCall]
+    [handleToggleSave, createCall]
   );
 
   const keyExtractor = React.useCallback(

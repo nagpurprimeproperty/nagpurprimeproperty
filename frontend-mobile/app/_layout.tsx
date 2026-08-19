@@ -10,6 +10,7 @@ import { queryClient } from "@/config/queryClient";
 import { configureNotificationHandler, setupNotificationResponseListener } from "@/lib/pushNotifications";
 import { useSocket } from "@/hooks/useSocket";
 import { ModalProvider } from "@/context/ModalContext";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { useEffect, lazy, Suspense } from "react";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
@@ -84,23 +85,25 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <BottomSheetModalProvider>
-            <AppContent />
-          </BottomSheetModalProvider>
-          <NativeHotToast />
-          {/* ReactQueryDevtools is lazily loaded and guarded by __DEV__.
-              Metro replaces __DEV__ with `false` in production, making this
-              entire subtree statically unreachable → zero bytes in the bundle. */}
-          {__DEV__ && Platform.OS === "web" && ReactQueryDevtools ? (
-            <Suspense fallback={null}>
-              <ReactQueryDevtools initialIsOpen={false} />
-            </Suspense>
-          ) : null}
-        </QueryClientProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <GlobalErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <QueryClientProvider client={queryClient}>
+            <BottomSheetModalProvider>
+              <AppContent />
+            </BottomSheetModalProvider>
+            <NativeHotToast />
+            {/* ReactQueryDevtools is lazily loaded and guarded by __DEV__.
+                Metro replaces __DEV__ with `false` in production, making this
+                entire subtree statically unreachable → zero bytes in the bundle. */}
+            {__DEV__ && Platform.OS === "web" && ReactQueryDevtools ? (
+              <Suspense fallback={null}>
+                <ReactQueryDevtools initialIsOpen={false} />
+              </Suspense>
+            ) : null}
+          </QueryClientProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </GlobalErrorBoundary>
   );
 }

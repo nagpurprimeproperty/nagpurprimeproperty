@@ -3,12 +3,12 @@ import Constants from 'expo-constants';
 
 declare var require: any;
 
-const isExpoGo = 
-  Constants.executionEnvironment === 'storeClient' || 
+const isExpoGo =
+  Constants.executionEnvironment === 'storeClient' ||
   Constants.appOwnership === 'expo';
 
 /**
- * Lazy loads expo-notifications to prevent errors/warnings on initialization 
+ * Lazy loads expo-notifications to prevent errors/warnings on initialization
  * inside Expo Go in SDK 53+.
  */
 const getNotificationsModule = () => {
@@ -26,16 +26,34 @@ const getNotificationsModule = () => {
 };
 
 /**
- * Requests notification permissions and returns the FCM/APNs device token.
+ * Requests notification permissions and returns the Expo Push Token.
+ *
+ * ── WHY Expo Push Token (not getDevicePushTokenAsync) ──────────────────────
+ *  getDevicePushTokenAsync() returns:
+ *    Android → FCM token    ✅ Works with FCM backend
+ *    iOS     → APNs token   ❌ FCM backend CANNOT use this — wrong format
+ *
+ *  getExpoPushTokenAsync() returns:
+ *    Both platforms → ExponentPushToken[...]  ✅
+ *    Expo's gateway routes:  iOS → APNs,  Android → FCM  internally.
+ * ───────────────────────────────────────────────────────────────────────────
+ *
+ * ── BACKEND REQUIREMENT ────────────────────────────────────────────────────
+ *  Backend must send notifications via Expo's push API (not raw FCM):
+ *    POST https://exp.host/--/api/v2/push/send
+ *    Body: { to: "ExponentPushToken[...]", title: "...", body: "..." }
+ *
+ *  Node.js backend — install: npm i expo-server-sdk
+ *    const { Expo } = require('expo-server-sdk');
+ *    const expo = new Expo();
+ *    await expo.sendPushNotificationsAsync([{ to: pushToken, title, body }]);
+ * ───────────────────────────────────────────────────────────────────────────
  *
  * Returns null if:
- *  - Permission is denied
- *  - Running inside Expo Go (remote push notifications are unsupported in Expo Go SDK 53)
- *  - Running on simulator/emulator without push support
+ *  - Permission denied
+ *  - Running inside Expo Go
+ *  - EAS projectId not found in config
  *  - Any error occurs
- *
- * NOTE: This is an Expo React Native app — we use expo-notifications, NOT the
- * web Firebase SDK. No service worker, no VAPID key needed.
  */
 export const getDevicePushToken = async (): Promise<string | null> => {
   if (__DEV__) {
@@ -47,28 +65,38 @@ export const getDevicePushToken = async (): Promise<string | null> => {
   const Notifications = getNotificationsModule();
   if (!Notifications) {
     if (__DEV__) {
-      console.warn('[PushNotifications] Push notifications are not supported in Expo Go.');
+      console.warn('[PushNotifications] Push notifications not supported in Expo Go.');
     }
     return null;
   }
+
   try {
-    // Request permission
+    // ── Step 1: Request permission ──────────────────────────────────────────
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync({
+        // iOS: explicitly request all alert types so system permission prompt is complete
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowAnnouncements: true,
+          provideAppNotificationSettings: true,
+        },
+      });
       finalStatus = status;
     }
 
     if (finalStatus !== 'granted') {
       if (__DEV__) {
-        console.warn('[PushNotifications] Permission denied');
+        console.warn('[PushNotifications] Permission denied — status:', finalStatus);
       }
       return null;
     }
 
-    // Android requires a notification channel
+    // ── Step 2: Android — create default notification channel ───────────────
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'default',
@@ -78,8 +106,29 @@ export const getDevicePushToken = async (): Promise<string | null> => {
       });
     }
 
-    // Get the native device push token (FCM on Android, APNs on iOS)
-    const tokenData = await Notifications.getDevicePushTokenAsync();
+    // ── Step 3: Get Expo Push Token ─────────────────────────────────────────
+    // Works on iOS (APNs) and Android (FCM) via Expo's push gateway.
+    // Requires EAS projectId — automatically present in EAS builds.
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      (Constants as any).easConfig?.projectId;
+
+    if (!projectId) {
+      if (__DEV__) {
+        console.warn(
+          '[PushNotifications] EAS projectId not found. ' +
+          'Ensure extra.eas.projectId is set in app.config.js.',
+        );
+      }
+      return null;
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+
+    if (__DEV__) {
+      console.log('[PushNotifications] Expo Push Token:', tokenData.data);
+    }
+
     return tokenData.data ?? null;
   } catch (err: any) {
     if (__DEV__) {
@@ -122,7 +171,6 @@ export const setupNotificationResponseListener = (): (() => void) => {
 
   const subscription = Notifications.addNotificationResponseReceivedListener(
     (_response: any) => {
-      // Navigate to the notification screen when user taps a push notification
       const { router } = require('expo-router');
       router.push('/notification');
     }

@@ -4,6 +4,7 @@ import Purchases, {
   PurchasesPackage,
   CustomerInfo,
   LOG_LEVEL,
+  PurchasesErrorCode,
 } from "react-native-purchases";
 
 const REVENUECAT_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || "";
@@ -23,12 +24,44 @@ export const initRevenueCat = async () => {
   }
 
   try {
-    if (__DEV__) {
-      await Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-    }
+    // ── Custom log handler MUST be set BEFORE configure() ──────────────────
+    // RevenueCat's configure() sets its own default handler only if no custom
+    // handler exists (line 179 in dist/purchases.js: if (!customLogHandler)).
+    //
+    // Problem: The SDK emits "🍎‼️ Purchase was cancelled." at LOG_LEVEL.ERROR
+    // which the default handler routes to console.error() — showing as a red
+    // error in Metro dev overlay and scaring devs. User cancelling the Apple
+    // payment sheet is EXPECTED behavior, not a real error.
+    //
+    // Fix: custom handler intercepts all RC log events and:
+    //   1. Silently drops any "cancelled/canceled" message
+    //   2. Routes real errors to console.warn (yellow) not console.error (red)
+    //   3. Drops DEBUG/INFO noise entirely
+    Purchases.setLogHandler((logLevel, message) => {
+      // User dismissed the Apple payment sheet — expected, not an error
+      if (
+        message.includes("cancelled") ||
+        message.includes("canceled") ||
+        message.includes("PURCHASE_CANCELLED")
+      ) {
+        return; // swallow completely — no console output
+      }
+
+      if (__DEV__) {
+        if (
+          logLevel === LOG_LEVEL.ERROR ||
+          logLevel === LOG_LEVEL.WARN
+        ) {
+          // Downgrade to console.warn so real RC errors are yellow, not red
+          console.warn("[RevenueCat]", message);
+        }
+        // DEBUG / INFO / VERBOSE → suppressed (too noisy)
+      }
+    });
+
     await Purchases.configure({ apiKey: REVENUECAT_IOS_KEY });
     isInitialized = true;
-    console.log("[RevenueCat] Initialized successfully");
+    if (__DEV__) console.log("[RevenueCat] Initialized successfully");
   } catch (err: any) {
     console.error("[RevenueCat] Initialization error:", err?.message || err);
   }
@@ -93,9 +126,12 @@ export const purchasePackage = async (
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     return customerInfo;
   } catch (err: any) {
-    if (err.userCancelled) {
-      console.log("[RevenueCat] User cancelled purchase");
-      return null;
+    // User dismissed the payment sheet — expected, not an error
+    if (
+      err.userCancelled ||
+      err.code === PurchasesErrorCode.purchaseCancelledError
+    ) {
+      return null; // Caller checks for null — no toast, no crash
     }
     throw err;
   }
@@ -113,9 +149,12 @@ export const purchaseStoreKitProduct = async (
     const { customerInfo } = await Purchases.purchaseProduct(productId);
     return customerInfo;
   } catch (err: any) {
-    if (err.userCancelled) {
-      console.log("[RevenueCat] User cancelled purchase");
-      return null;
+    // User dismissed the payment sheet — expected, not an error
+    if (
+      err.userCancelled ||
+      err.code === PurchasesErrorCode.purchaseCancelledError
+    ) {
+      return null; // Caller checks for null — no toast, no crash
     }
     throw err;
   }

@@ -1,4 +1,4 @@
-﻿import { useApiQuery } from "@/hooks/useApiQuery";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { type SearchSuggestion } from "@/features/property/services/propertyService";
 import { propertyKeys } from "@/features/property/keys/propertyKeys";
 
@@ -8,6 +8,6 @@ export const useSearchSuggestions = (query: string, enabled = true) => {
     "/properties/search/suggestions",
     { params: { query } },
     enabled,
-    { staleTime: 10 * 60 * 1000, gcTime: 15 * 60 * 1000 },
+    { staleTime: 1 * 60 * 1000, gcTime: 2 * 60 * 1000 },
   );
 };
