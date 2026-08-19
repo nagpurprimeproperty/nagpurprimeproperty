@@ -1,5 +1,8 @@
 import { apiClient } from "@/api/apiClient";
 import type { AxiosRequestConfig } from "axios";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import { Platform } from "react-native";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -207,4 +210,40 @@ export const activateIapPlan = async (
 export const getInvoiceDownloadUrl = (subscriptionId: string): string => {
   const baseURL = apiClient.defaults.baseURL || "";
   return `${baseURL}/subscriptions/purchase/${subscriptionId}/invoice`;
+};
+
+export const fetchInvoiceHtml = async (
+  subscriptionId: string,
+  config?: AxiosRequestConfig
+): Promise<string> => {
+  const res = await apiClient.get<string>(
+    `/subscriptions/purchase/${subscriptionId}/invoice`,
+    {
+      responseType: "text",
+      ...config,
+    }
+  );
+  return res.data;
+};
+
+export const downloadInvoicePdf = async (subscriptionId: string): Promise<void> => {
+  const html = await fetchInvoiceHtml(subscriptionId);
+  if (!html) {
+    throw new Error("Invoice content is empty");
+  }
+
+  if (Platform.OS === "web") {
+    await Print.printAsync({ html });
+  } else {
+    const { uri } = await Print.printToFileAsync({ html });
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(uri, {
+        UTI: ".pdf",
+        mimeType: "application/pdf",
+        dialogTitle: "Download Tax Invoice",
+      });
+    } else {
+      await Print.printAsync({ html });
+    }
+  }
 };

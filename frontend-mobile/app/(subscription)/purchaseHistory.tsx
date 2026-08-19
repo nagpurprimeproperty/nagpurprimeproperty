@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Linking,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RefreshCw, XCircle, Clock, Receipt, Download } from "lucide-react-native";
@@ -19,7 +21,7 @@ import { usePurchaseHistory } from "@/hooks/useSubscriptionHooks";
 import { useAuthStore } from "@/features/auth";
 import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
-import { getInvoiceDownloadUrl, type HistoryItem } from "@/services/subscriptionService";
+import { downloadInvoicePdf, type HistoryItem } from "@/services/subscriptionService";
 import { usePagination } from "@/shared/hooks/usePagination";
 import LoadMoreButton from "@/shared/components/LoadMoreButton";
 import PurchaseHistorySkeleton from "@/components/skeleton/PurchaseHistorySkeleton";
@@ -44,65 +46,81 @@ function statusStyle(s: string) {
 
 // ─── History Card ─────────────────────────────────────────────────────────────
 
-const HistoryCard = React.memo(({ item, index }: { item: HistoryItem; index: number }) => {
-  const router = useRouter();
-  const sc     = statusStyle(item.status);
+const HistoryCard = React.memo(
+  ({
+    item,
+    index,
+    onDownloadInvoice,
+    isDownloading,
+  }: {
+    item: HistoryItem;
+    index: number;
+    onDownloadInvoice: (id: string) => void;
+    isDownloading: boolean;
+  }) => {
+    const router = useRouter();
+    const sc = statusStyle(item.status);
 
-  return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index * 40, 120)).duration(220)} style={hc.card}>
-      {/* Header */}
-      <View style={hc.header}>
-        <View style={hc.left}>
-          <Text style={hc.planName}>{item.planName}</Text>
-          <Text style={hc.meta}>
-            {item.isFree ? "Free" : `₹${item.price}`}  ·  {item.duration} {item.durationUnit}
-          </Text>
+    return (
+      <Animated.View entering={FadeInDown.delay(Math.min(index * 40, 120)).duration(220)} style={hc.card}>
+        {/* Header */}
+        <View style={hc.header}>
+          <View style={hc.left}>
+            <Text style={hc.planName}>{item.planName}</Text>
+            <Text style={hc.meta}>
+              {item.isFree ? "Free" : `₹${item.price}`}  ·  {item.duration} {item.durationUnit}
+            </Text>
+          </View>
+          <View style={[hc.badge, { backgroundColor: sc.bg }]}>
+            <View style={[hc.dot, { backgroundColor: sc.dot }]} />
+            <Text style={[hc.badgeText, { color: sc.text }]}>{item.status}</Text>
+          </View>
         </View>
-        <View style={[hc.badge, { backgroundColor: sc.bg }]}>
-          <View style={[hc.dot, { backgroundColor: sc.dot }]} />
-          <Text style={[hc.badgeText, { color: sc.text }]}>{item.status}</Text>
+
+        {/* Divider */}
+        <View style={hc.divider} />
+
+        {/* Footer */}
+        <View style={hc.footer}>
+          <View style={hc.dateRow}>
+            <Clock size={12} color={colors.textLight} strokeWidth={2} />
+            <Text style={hc.date}>{fmtDate(item.startDate)} → {fmtDate(item.endDate)}</Text>
+          </View>
+          {item.paymentDetails?.method && (
+            <Text style={hc.method}>{item.paymentDetails.method}</Text>
+          )}
         </View>
-      </View>
 
-      {/* Divider */}
-      <View style={hc.divider} />
+        <View style={hc.btnRow}>
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: "/(subscription)/purchaseDetail", params: { id: item._id } })}
+            activeOpacity={0.8}
+            style={hc.receiptBtn}
+          >
+            <Receipt size={13} color={colors.primary} strokeWidth={2.5} />
+            <Text style={hc.receiptText}>View Receipt</Text>
+          </TouchableOpacity>
 
-      {/* Footer */}
-      <View style={hc.footer}>
-        <View style={hc.dateRow}>
-          <Clock size={12} color={colors.textLight} strokeWidth={2} />
-          <Text style={hc.date}>{fmtDate(item.startDate)} → {fmtDate(item.endDate)}</Text>
+          <TouchableOpacity
+            onPress={() => onDownloadInvoice(item._id)}
+            disabled={isDownloading}
+            activeOpacity={0.8}
+            style={[hc.invoiceBtn, isDownloading && { opacity: 0.7 }]}
+          >
+            {isDownloading ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <>
+                <Download size={13} color={colors.white} strokeWidth={2.5} />
+                <Text style={hc.invoiceText}>Invoice</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
-        {item.paymentDetails?.method && (
-          <Text style={hc.method}>{item.paymentDetails.method}</Text>
-        )}
-      </View>
-
-      <View style={hc.btnRow}>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: "/(subscription)/purchaseDetail", params: { id: item._id } })}
-          activeOpacity={0.8}
-          style={hc.receiptBtn}
-        >
-          <Receipt size={13} color={colors.primary} strokeWidth={2.5} />
-          <Text style={hc.receiptText}>View Receipt</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => {
-            const invoiceUrl = getInvoiceDownloadUrl(item._id);
-            Linking.openURL(invoiceUrl).catch(() => {});
-          }}
-          activeOpacity={0.8}
-          style={hc.invoiceBtn}
-        >
-          <Download size={13} color={colors.white} strokeWidth={2.5} />
-          <Text style={hc.invoiceText}>Invoice</Text>
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
-});
+      </Animated.View>
+    );
+  }
+);
 
 const hc = StyleSheet.create({
   card:       { backgroundColor: colors.surface, borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
@@ -134,10 +152,24 @@ export default function PurchaseHistoryScreen() {
   const { openAuth }        = useModal();
 
   const [page, setPage] = useState(1);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
   const { data, isLoading, isFetching, isError, error, refetch } = usePurchaseHistory(page, 10, isAuthenticated);
   
   const history = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
+
+  const handleInvoiceDownload = React.useCallback(async (subscriptionId: string) => {
+    if (downloadingId) return;
+    try {
+      setDownloadingId(subscriptionId);
+      await downloadInvoicePdf(subscriptionId);
+    } catch (err: any) {
+      Alert.alert("Download Failed", err?.message || "Could not download tax invoice.");
+    } finally {
+      setDownloadingId(null);
+    }
+  }, [downloadingId]);
 
   const {
     list: historyList,
@@ -177,9 +209,14 @@ export default function PurchaseHistoryScreen() {
 
   const renderItem = React.useCallback(
     ({ item, index }: { item: HistoryItem; index: number }) => (
-      <HistoryCard item={item} index={index} />
+      <HistoryCard
+        item={item}
+        index={index}
+        onDownloadInvoice={handleInvoiceDownload}
+        isDownloading={downloadingId === item._id}
+      />
     ),
-    []
+    [handleInvoiceDownload, downloadingId]
   );
 
   const keyExtractor = React.useCallback((item: HistoryItem) => item._id, []);

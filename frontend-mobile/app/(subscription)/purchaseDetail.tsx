@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Linking,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -28,7 +30,7 @@ import { useLocalSearchParams } from "expo-router";
 import ScreenHeader from "@/shared/components/ScreenHeader";
 import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { usePurchaseDetail } from "@/hooks/useSubscriptionHooks";
-import { getInvoiceDownloadUrl } from "@/services/subscriptionService";
+import { downloadInvoicePdf } from "@/services/subscriptionService";
 import colors from "@/theme/colors";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -171,10 +173,23 @@ const sl = StyleSheet.create({
 export default function PurchaseDetailScreen() {
   const { id }   = useLocalSearchParams<{ id: string }>();
   const insets   = useSafeAreaInsets();
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = React.useState(false);
 
   const { data, isLoading, isError, error, refetch } = usePurchaseDetail(id);
   const purchase = data?.data;
   const sc       = purchase ? statusStyle(purchase.status) : statusStyle("");
+
+  const handleInvoiceDownload = async () => {
+    if (isDownloadingInvoice || !purchase?._id) return;
+    try {
+      setIsDownloadingInvoice(true);
+      await downloadInvoicePdf(purchase._id);
+    } catch (err: any) {
+      Alert.alert("Download Failed", err?.message || "Could not download tax invoice.");
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
+  };
 
   return (
     <ScreenWrapper>
@@ -242,15 +257,19 @@ export default function PurchaseDetailScreen() {
 
               {/* Invoice Download Action */}
               <TouchableOpacity
-                onPress={() => {
-                  const invoiceUrl = getInvoiceDownloadUrl(purchase._id);
-                  Linking.openURL(invoiceUrl).catch(() => {});
-                }}
+                onPress={handleInvoiceDownload}
+                disabled={isDownloadingInvoice}
                 activeOpacity={0.8}
-                style={ms.invoiceBtn}
+                style={[ms.invoiceBtn, isDownloadingInvoice && { opacity: 0.7 }]}
               >
-                <Download size={15} color={colors.white} strokeWidth={2.5} />
-                <Text style={ms.invoiceBtnText}>Download Tax Invoice</Text>
+                {isDownloadingInvoice ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <>
+                    <Download size={15} color={colors.white} strokeWidth={2.5} />
+                    <Text style={ms.invoiceBtnText}>Download Tax Invoice</Text>
+                  </>
+                )}
               </TouchableOpacity>
 
               {purchase.paymentDetails.paymentLinkUrl && (
