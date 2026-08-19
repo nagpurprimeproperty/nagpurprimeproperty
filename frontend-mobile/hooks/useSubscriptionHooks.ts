@@ -22,18 +22,20 @@ import { subscriptionKeys } from "@/api/keys/subscriptionKeys";
 
 export const usePlans = (enabled = true) => {
   return useQuery<PlansResponse, Error>({
-    queryKey: subscriptionKeys.plans(),
-    queryFn:  () => getPlans(),
-    staleTime: 5 * 60 * 1000,
+    queryKey:  subscriptionKeys.plans(),
+    queryFn:   () => getPlans(),
+    staleTime: 1 * 60 * 1000,
+    gcTime:    2 * 60 * 1000,
     enabled,
   });
 };
 
 export const usePlanDetail = (id?: string, enabled = true) => {
   return useQuery<PlanDetailResponse, Error>({
-    queryKey: subscriptionKeys.plan(id),
-    queryFn:  () => getPlanById(id!),
-    staleTime: 5 * 60 * 1000,
+    queryKey:  subscriptionKeys.plan(id),
+    queryFn:   () => getPlanById(id!),
+    staleTime: 1 * 60 * 1000,
+    gcTime:    2 * 60 * 1000,
     enabled:   enabled && Boolean(id),
   });
 };
@@ -67,9 +69,10 @@ export const useActivateIapPlan = () => {
 
 export const useMySubscription = (enabled = true) => {
   return useQuery<MySubscriptionResponse, Error>({
-    queryKey:  subscriptionKeys.mine(),
-    queryFn:   () => getMySubscription(),
-    staleTime: 5 * 1000, // 5 sec — ensure updated admin limits reflect immediately
+    queryKey:       subscriptionKeys.mine(),
+    queryFn:        () => getMySubscription(),
+    staleTime:      5 * 1000,       // 5 sec — ensure updated admin limits reflect immediately
+    gcTime:         2 * 60 * 1000,  // 2 min
     refetchOnMount: "always",
     enabled,
     retry: false, // 404 means no active plan, don't retry
@@ -82,7 +85,8 @@ export const usePurchaseHistory = (page = 1, limit = 10, enabled = true) => {
   return useQuery<HistoryResponse, Error>({
     queryKey:  subscriptionKeys.historyPage(page, limit),
     queryFn:   () => getPurchaseHistory(page, limit),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
+    gcTime:    2 * 60 * 1000,
     enabled,
   });
 };
@@ -91,7 +95,8 @@ export const usePurchaseDetail = (id?: string, enabled = true) => {
   return useQuery<PurchaseDetailResponse, Error>({
     queryKey:  subscriptionKeys.purchase(id),
     queryFn:   () => getPurchaseById(id!),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
+    gcTime:    2 * 60 * 1000,
     enabled:   enabled && Boolean(id),
   });
 };

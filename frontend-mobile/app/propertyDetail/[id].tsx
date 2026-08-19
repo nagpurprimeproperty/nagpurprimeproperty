@@ -1222,9 +1222,11 @@ export default function PropertyDetailsScreen() {
               <Text className="text-[32px] font-black text-orange-500 tracking-tight">
                 ₹{property.price}
               </Text>
-              <Text className="text-[13px] font-medium text-slate-400 mt-0.5">
-                ~ ₹{property.pricePerSqft}/sqft
-              </Text>
+              {Boolean(property.pricePerSqft) && (
+                <Text className="text-[13px] font-medium text-slate-400 mt-0.5">
+                  ~ ₹{property.pricePerSqft}/sqft
+                </Text>
+              )}
             </View>
             <View className="flex-row gap-2">
               {!isOwner && (
@@ -1691,15 +1693,23 @@ export default function PropertyDetailsScreen() {
               <Text className="text-[20px] font-black text-slate-900 mb-4">
                 Similar properties
               </Text>
-              <View style={{ marginHorizontal: -4 }}>
-                <PropertyList
-                  data={similarProperties}
-                  horizontal
-                  fullSize
-                  onToggleSave={togglePropertySave}
-                  onCreateCallEnquiry={createCallEnquiry}
-                />
-              </View>
+              {similarProperties.length > 0 ? (
+                <View style={{ marginHorizontal: -4 }}>
+                  <PropertyList
+                    data={similarProperties}
+                    horizontal
+                    fullSize
+                    onToggleSave={togglePropertySave}
+                    onCreateCallEnquiry={createCallEnquiry}
+                  />
+                </View>
+              ) : (
+                <View className="items-center py-8 bg-slate-50 rounded-2xl">
+                  <Text className="text-slate-400 text-[14px] font-medium">
+                    No similar properties found
+                  </Text>
+                </View>
+              )}
             </>
           )}
         </View>

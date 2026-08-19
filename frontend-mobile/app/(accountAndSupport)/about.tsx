@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ScrollView, Text, View, TouchableOpacity, Linking } from 'react-native';
 import {
   Info,
@@ -22,27 +22,6 @@ import { useAboutUs } from '@/hooks/useSupportAndLegalHooks';
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-const StatBox = ({
-  label,
-  value,
-  index,
-}: {
-  label: string;
-  value: string;
-  index: number;
-}) => (
-  <Animated.View
-    entering={FadeInDown.delay(Math.min(200 + index * 40, 280)).duration(200)}
-    className="flex-1 bg-white p-4 rounded-xl items-center border border-slate-200 mx-1"
-  >
-    <Text className="text-[18px] font-black text-orange-500 tracking-tighter">
-      {value}
-    </Text>
-    <Text className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
-      {label}
-    </Text>
-  </Animated.View>
-);
 
 const FeatureItem = ({ text, index }: { text: string; index: number }) => (
   <Animated.View
@@ -114,15 +93,6 @@ export default function AboutScreen() {
 
   const page = data?.data;
   const content = page?.content;
-
-  const stats = content?.stats
-    ? [
-        { value: content.stats.properties, label: 'Listings' },
-        { value: content.stats.brokers, label: 'Brokers' },
-        { value: content.stats.users, label: 'Users' },
-        { value: content.stats.cities, label: 'Cities' },
-      ]
-    : [];
 
   return (
     <ScreenWrapper>
@@ -227,15 +197,6 @@ export default function AboutScreen() {
                   ))}
                 </View>
               </>
-            )}
-
-            {/* Stats Row */}
-            {stats.length > 0 && (
-              <View className="flex-row mb-10">
-                {stats.map((s, i) => (
-                  <StatBox key={i} value={s.value} label={s.label} index={i} />
-                ))}
-              </View>
             )}
 
             {/* Contact Info */}

@@ -1,4 +1,4 @@
-﻿import { useApiQuery } from "@/hooks/useApiQuery";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import {
   normalizePropertyDetail,
   type PropertyDetailResponse,
@@ -12,6 +12,7 @@ export const useMyPropertyDetail = (id?: string, enabled = true) => {
     `/properties/me/${id}`,
     undefined,
     Boolean(id) && enabled,
+    { staleTime: 1 * 60 * 1000, gcTime: 2 * 60 * 1000 },
   );
 
   const property = useMemo(() => {

@@ -23,8 +23,8 @@ export const propertyKeys = {
   similar: (id: string | undefined, params?: object) =>
     [...propertyKeys.all, 'similar', id, params ?? {}] as const,
 
-  /** Saved / bookmarked properties */
-  saved: () => [...propertyKeys.all, { isSaved: true }] as const,
+  /** Saved / bookmarked properties — prefix-matches list queries with isSaved:true */
+  saved: () => [...propertyKeys.lists(), { isSaved: true }] as const,
 
   /** Search auto-complete suggestions */
   suggestions: (query: string) =>
