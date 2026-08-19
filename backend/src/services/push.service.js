@@ -17,6 +17,20 @@ const pushService = {
           acc[key] = String(data[key]); // FCM requires string values
           return acc;
         }, {}),
+        apns: {
+          headers: {
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
+          payload: {
+            aps: {
+              alert: { title, body },
+              contentAvailable: true,
+              badge: 1,
+              sound: 'default',
+            },
+          },
+        },
       };
 
       const response = await messaging.send(message);
@@ -47,6 +61,20 @@ const pushService = {
           acc[key] = String(data[key]);
           return acc;
         }, {}),
+        apns: {
+          headers: {
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
+          payload: {
+            aps: {
+              alert: { title, body },
+              contentAvailable: true,
+              badge: 1,
+              sound: 'default',
+            },
+          },
+        },
       };
 
       const response = await messaging.sendMulticast(message);
@@ -78,6 +106,20 @@ const pushService = {
           acc[key] = String(data[key]);
           return acc;
         }, {}),
+        apns: {
+          headers: {
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
+          payload: {
+            aps: {
+              alert: { title, body },
+              contentAvailable: true,
+              badge: 1,
+              sound: 'default',
+            },
+          },
+        },
       };
 
       const response = await messaging.send(message);

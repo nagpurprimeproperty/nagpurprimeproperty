@@ -53,6 +53,9 @@ module.exports = ({ config }) => {
       buildNumber: "7",
       supportsTablet: true,
       bundleIdentifier: "com.nagpurprimeproperty.app",
+      entitlements: {
+        "aps-environment": "production",
+      },
       ...(hasIosGoogleServices ? { googleServicesFile: iosGoogleServicesPath } : {}),
       config: {
         usesNonExemptEncryption: false,
@@ -63,6 +66,7 @@ module.exports = ({ config }) => {
         },
       },
       infoPlist: {
+        UIBackgroundModes: ["remote-notification"],
         NSCameraUsageDescription:
           "Nagpur Prime Property requires access to your camera to take photos and videos of your real estate property (such as apartments or houses) to attach to your property listing.",
         NSPhotoLibraryUsageDescription:

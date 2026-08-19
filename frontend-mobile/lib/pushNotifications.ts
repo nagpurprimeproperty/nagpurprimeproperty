@@ -106,30 +106,40 @@ export const getDevicePushToken = async (): Promise<string | null> => {
       });
     }
 
-    // ── Step 3: Get Expo Push Token ─────────────────────────────────────────
-    // Works on iOS (APNs) and Android (FCM) via Expo's push gateway.
-    // Requires EAS projectId — automatically present in EAS builds.
-    const projectId =
-      Constants.expoConfig?.extra?.eas?.projectId ??
-      (Constants as any).easConfig?.projectId;
-
-    if (!projectId) {
-      if (__DEV__) {
-        console.warn(
-          '[PushNotifications] EAS projectId not found. ' +
-          'Ensure extra.eas.projectId is set in app.config.js.',
-        );
+    // ── Step 3: Get Native Device Push Token (FCM / APNs) ────────────────────
+    // Backend uses Firebase Admin SDK (firebase-admin) directly.
+    // getDevicePushTokenAsync() returns the native token (FCM on Android, APNs on iOS)
+    // required by Firebase Admin SDK.
+    let tokenStr: string | null = null;
+    try {
+      const deviceTokenData = await Notifications.getDevicePushTokenAsync();
+      if (deviceTokenData?.data) {
+        tokenStr = deviceTokenData.data;
+        if (__DEV__) {
+          console.log('[PushNotifications] Native Device Push Token:', deviceTokenData.type, tokenStr);
+        }
       }
-      return null;
+    } catch (deviceTokErr) {
+      if (__DEV__) {
+        console.warn('[PushNotifications] getDevicePushTokenAsync failed, trying Expo push token:', deviceTokErr);
+      }
     }
 
-    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    if (!tokenStr) {
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        (Constants as any).easConfig?.projectId;
 
-    if (__DEV__) {
-      console.log('[PushNotifications] Expo Push Token:', tokenData.data);
+      if (projectId) {
+        const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+        tokenStr = tokenData.data ?? null;
+        if (__DEV__) {
+          console.log('[PushNotifications] Expo Push Token fallback:', tokenStr);
+        }
+      }
     }
 
-    return tokenData.data ?? null;
+    return tokenStr;
   } catch (err: any) {
     if (__DEV__) {
       console.error('[PushNotifications] Failed to get push token:', err?.message ?? err);
