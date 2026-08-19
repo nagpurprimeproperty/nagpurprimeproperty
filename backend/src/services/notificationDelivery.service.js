@@ -83,7 +83,23 @@ const sendFCMWithRetry = async (token, { title, message, type, userId }, retries
             sound: 'default'
           }
         },
-        apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
+        apns: {
+          headers: {
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
+          payload: {
+            aps: {
+              alert: {
+                title,
+                body: message,
+              },
+              contentAvailable: true,
+              badge: 1,
+              sound: 'default',
+            },
+          },
+        },
       });
       return; // success
     } catch (err) {
