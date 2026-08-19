@@ -67,6 +67,14 @@ export function PlanFormFields({ register, control, watch, errors, disabled }) {
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="pf-gst">
+              GST (%)
+            </Label>
+            <Input id="pf-gst" type="number" min={0} max={100} disabled={disabled} {...register("gst", { valueAsNumber: true })}/>
+            {errors.gst && (<p className="text-xs text-destructive">{errors.gst.message}</p>)}
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="pf-duration">Duration Value</Label>
             <Input id="pf-duration" type="number" min={1} disabled={isDurationUnlimited || disabled} className={isDurationUnlimited ? "opacity-50" : ""} {...register("duration", { valueAsNumber: true })}/>
           </div>

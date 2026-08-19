@@ -40,6 +40,10 @@ const subscriptionSchema = new mongoose.Schema({
 
   isFree: { type: Boolean, default: false },
   price: { type: Number, required: true }, // e.g., 2999
+  gstRate: { type: Number, default: 18 },
+  gstAmount: { type: Number, default: 0 },
+  totalAmount: { type: Number },
+  invoiceNumber: { type: String },
   duration: { type: Number}, // e.g., 30, 90, 365
   durationUnit: {
     type: String,

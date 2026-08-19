@@ -6,6 +6,7 @@ import {
   getMySubscription,
   getMyHistory,
   getSubscriptionById,
+  downloadInvoice,
   activateIap,
 } from './purchasePlan.controller.js';
 
@@ -25,6 +26,12 @@ router.use(userProtect);
  * Activates an Apple StoreKit In-App Purchase.
  */
 router.post('/activate-iap', activateIap);
+
+/**
+ * GET /api/v1/subscriptions/purchase/:id/invoice
+ * Returns downloadable tax invoice for a subscription purchase.
+ */
+router.get('/:id/invoice', downloadInvoice);
 
 /**
  * POST /api/v1/subscriptions/purchase/:id/create-order

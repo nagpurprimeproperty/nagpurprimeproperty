@@ -15,6 +15,7 @@ export const createPlanSchema = z.object({
   name:                z.string().min(2, 'Name must be at least 2 characters').max(50),
   isFree:              z.boolean().default(false),
   price:               z.coerce.number().min(0),
+  gst:                 z.coerce.number().min(0).max(100).default(18),
   duration:            z.coerce.number().int().min(0).optional(),
   durationUnit:        z.enum(['days', 'months', 'years']).optional(),
   isDurationUnlimited: z.boolean().default(false),

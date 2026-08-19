@@ -103,8 +103,13 @@ const purchasePlanService = {
     const receiptUserId = userId.toString().slice(-8);
     const referenceId = `sub_${receiptUserId}_${Date.now()}`;
 
+    const gstRate = plan.gst !== undefined ? plan.gst : 18;
+    const gstAmount = plan.isFree ? 0 : Math.round(((plan.price * gstRate) / 100) * 100) / 100;
+    const totalAmount = plan.isFree ? 0 : Math.round((plan.price + gstAmount) * 100) / 100;
+    const invoiceNumber = `NPP-INV-${Date.now().toString().slice(-8)}`;
+
     const paymentLinkPayload = {
-      amount: Math.round(plan.price * 100),
+      amount: Math.round(totalAmount * 100),
       currency: 'INR',
       reference_id: referenceId,
       description: `Subscription: ${plan.name}`,
@@ -133,6 +138,10 @@ const purchasePlanService = {
       status: 'Pending',
       isFree: false,
       price: plan.price,
+      gstRate,
+      gstAmount,
+      totalAmount,
+      invoiceNumber,
       duration: plan.duration,
       durationUnit: plan.durationUnit,
       isDurationUnlimited: plan.isDurationUnlimited,
@@ -143,7 +152,7 @@ const purchasePlanService = {
     // 5. Create a PENDING transaction record
     await purchasePlanRepository.createTransaction({
       userId,
-      amount: plan.price,
+      amount: totalAmount,
       status: 'pending',
       paymentDetails: { paymentLinkId: paymentLink.id },
     });
@@ -157,6 +166,10 @@ const purchasePlanService = {
       keyId: env.RAZORPAY_KEY_ID,
       subscriptionId: subscription._id,
       planName: plan.name,
+      basePrice: plan.price,
+      gstRate,
+      gstAmount,
+      totalAmount,
     };
   },
 
@@ -383,6 +396,11 @@ handleWebhook: async (rawBody, razorpaySignature) => {
       { status: 'Cancelled' }
     );
 
+    const gstRate = plan.gst !== undefined ? plan.gst : 18;
+    const gstAmount = plan.isFree ? 0 : Math.round(((plan.price * gstRate) / 100) * 100) / 100;
+    const totalAmount = plan.isFree ? 0 : Math.round((plan.price + gstAmount) * 100) / 100;
+    const invoiceNumber = `NPP-INV-${Date.now().toString().slice(-8)}`;
+
     const subscription = await purchasePlanRepository.createSubscription({
       userId,
       planId: plan._id,
@@ -391,12 +409,16 @@ handleWebhook: async (rawBody, razorpaySignature) => {
       endDate,
       status: 'Active',
       paymentDetails: {
-        amountPaid: plan.price,
+        amountPaid: totalAmount,
         method: 'Apple IAP',
         paymentId: transactionId || `iap_${Date.now()}`,
       },
       isFree: plan.isFree,
       price: plan.price,
+      gstRate,
+      gstAmount,
+      totalAmount,
+      invoiceNumber,
       duration: plan.duration,
       durationUnit: plan.durationUnit,
       isDurationUnlimited: plan.isDurationUnlimited,
@@ -438,6 +460,128 @@ handleWebhook: async (rawBody, razorpaySignature) => {
       throw { status: 403, message: 'Access denied' };
     }
     return subscription;
+  },
+
+  /**
+   * Generate downloadable HTML invoice for a subscription purchase.
+   */
+  getInvoice: async (userId, subscriptionId) => {
+    const subscription = await purchasePlanRepository.findSubscriptionById(subscriptionId);
+    if (!subscription) throw { status: 404, message: 'Subscription not found' };
+    if (subscription.userId.toString() !== userId.toString()) {
+      throw { status: 403, message: 'Access denied' };
+    }
+
+    const user = await userRepository.findById(userId);
+    const invoiceNo = subscription.invoiceNumber || `INV-${subscription._id.toString().slice(-8).toUpperCase()}`;
+    const dateStr = new Date(subscription.createdAt || subscription.startDate).toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    });
+
+    const basePrice = subscription.price || 0;
+    const gstRate = subscription.gstRate !== undefined ? subscription.gstRate : 18;
+    const gstAmount = subscription.gstAmount !== undefined ? subscription.gstAmount : (subscription.isFree ? 0 : Math.round((basePrice * gstRate) / 100));
+    const totalAmount = subscription.totalAmount !== undefined ? subscription.totalAmount : (basePrice + gstAmount);
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Tax Invoice - ${invoiceNo}</title>
+  <style>
+    body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 24px; }
+    .invoice-card { max-width: 720px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 36px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #ea580c; padding-bottom: 20px; margin-bottom: 24px; }
+    .company-title { font-size: 24px; font-weight: 800; color: #ea580c; margin: 0; }
+    .company-sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .invoice-title { font-size: 22px; font-weight: 900; text-align: right; color: #0f172a; margin: 0; }
+    .invoice-num { font-size: 13px; font-weight: 600; color: #64748b; text-align: right; margin-top: 4px; }
+    .grid { display: flex; justify-content: space-between; margin-bottom: 28px; }
+    .col { width: 48%; }
+    .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .info-text { font-size: 14px; color: #334155; line-height: 1.5; margin: 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+    th { background: #f1f5f9; text-align: left; padding: 12px; font-size: 12px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1; }
+    td { padding: 14px 12px; font-size: 14px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+    .totals { width: 300px; margin-left: auto; border-top: 2px solid #e2e8f0; padding-top: 12px; }
+    .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+    .totals-row.grand { font-size: 18px; font-weight: 900; color: #ea580c; border-top: 2px solid #ea580c; margin-top: 8px; padding-top: 10px; }
+    .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="invoice-card">
+    <div class="header">
+      <div>
+        <h1 class="company-title">Nagpur Prime Property</h1>
+        <p class="company-sub">Premier Real Estate Marketplace & Subscription Services</p>
+      </div>
+      <div>
+        <h2 class="invoice-title">TAX INVOICE</h2>
+        <p class="invoice-num"># ${invoiceNo}</p>
+        <p class="invoice-num">Date: ${dateStr}</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="section-label">Billed To</div>
+        <p class="info-text"><strong>${user?.name || 'Valued Customer'}</strong></p>
+        <p class="info-text">Mobile: ${user?.mobile || 'N/A'}</p>
+        <p class="info-text">Email: ${user?.email || 'N/A'}</p>
+      </div>
+      <div class="col">
+        <div class="section-label">Payment Information</div>
+        <p class="info-text">Status: <strong>${subscription.status}</strong></p>
+        <p class="info-text">Payment ID: ${subscription.paymentDetails?.paymentId || 'N/A'}</p>
+        <p class="info-text">Method: ${subscription.paymentDetails?.method || (subscription.isFree ? 'Free' : 'Online')}</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Duration</th>
+          <th style="text-align: right;">Amount (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong>${subscription.planName} Plan</strong><br/>
+            <span style="font-size: 12px; color: #64748b;">Subscription for Property Listings & Leads Access</span>
+          </td>
+          <td>${subscription.isDurationUnlimited ? 'Unlimited' : `${subscription.duration} ${subscription.durationUnit}`}</td>
+          <td style="text-align: right;">₹${basePrice.toLocaleString('en-IN')}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-row">
+        <span>Base Price:</span>
+        <span>₹${basePrice.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="totals-row">
+        <span>GST (${gstRate}%):</span>
+        <span>₹${gstAmount.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="totals-row grand">
+        <span>Total Paid:</span>
+        <span>₹${totalAmount.toLocaleString('en-IN')}</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Thank you for subscribing to Nagpur Prime Property!</p>
+      <p>This is a computer-generated tax invoice. No signature required.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    return { html, filename: `Invoice-${invoiceNo}.html` };
   },
 };
 

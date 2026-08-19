@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import {
   ExternalLink,
   CheckCircle2,
   Clock,
+  Download,
+  FileText,
 } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useLocalSearchParams } from "expo-router";
@@ -26,6 +28,7 @@ import { useLocalSearchParams } from "expo-router";
 import ScreenHeader from "@/shared/components/ScreenHeader";
 import ScreenWrapper from "@/shared/components/ScreenWrapper";
 import { usePurchaseDetail } from "@/hooks/useSubscriptionHooks";
+import { getInvoiceDownloadUrl } from "@/services/subscriptionService";
 import colors from "@/theme/colors";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -224,10 +227,31 @@ export default function PurchaseDetailScreen() {
           {purchase.paymentDetails && (
             <Animated.View entering={FadeInDown.delay(160).duration(420)} style={ms.card}>
               <SectionLabel icon={CreditCard} text="Payment Details" />
-              <InfoRow label="Amount Paid" value={`₹${purchase.paymentDetails.amountPaid}`} />
+              <InfoRow label="Base Price"  value={purchase.isFree ? "Free" : `₹${purchase.price}`} />
+              {!purchase.isFree && (
+                <>
+                  <InfoRow label={`GST (${purchase.gstRate ?? 18}%)`} value={`₹${purchase.gstAmount ?? Math.round((purchase.price * (purchase.gstRate ?? 18)) / 100)}`} />
+                  <InfoRow label="Total Amount Paid" value={`₹${purchase.totalAmount ?? purchase.paymentDetails.amountPaid}`} />
+                </>
+              )}
               <InfoRow label="Method"      value={purchase.paymentDetails.method} />
               <InfoRow label="Payment ID"  value={purchase.paymentDetails.paymentId} mono />
-              <InfoRow label="Link ID"     value={purchase.paymentDetails.paymentLinkId} mono />
+              {purchase.paymentDetails.paymentLinkId && (
+                <InfoRow label="Link ID"     value={purchase.paymentDetails.paymentLinkId} mono />
+              )}
+
+              {/* Invoice Download Action */}
+              <TouchableOpacity
+                onPress={() => {
+                  const invoiceUrl = getInvoiceDownloadUrl(purchase._id);
+                  Linking.openURL(invoiceUrl).catch(() => {});
+                }}
+                activeOpacity={0.8}
+                style={ms.invoiceBtn}
+              >
+                <Download size={15} color={colors.white} strokeWidth={2.5} />
+                <Text style={ms.invoiceBtnText}>Download Tax Invoice</Text>
+              </TouchableOpacity>
 
               {purchase.paymentDetails.paymentLinkUrl && (
                 <TouchableOpacity
@@ -276,7 +300,9 @@ const ms = StyleSheet.create({
   heroPrice:   { fontSize: 32, fontWeight: "900", color: colors.warning, letterSpacing: -1 },
   // Cards
   card:        { backgroundColor: colors.surface, borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: colors.borderLight },
-  linkBtn:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryMuted },
-  linkText:    { fontSize: 12, fontWeight: "800", color: colors.primary },
-  usageGrid:   { flexDirection: "row", gap: 10 },
+  linkBtn:        { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryMuted },
+  linkText:       { fontSize: 12, fontWeight: "800", color: colors.primary },
+  invoiceBtn:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, paddingVertical: 12, borderRadius: 10, backgroundColor: colors.primary },
+  invoiceBtnText: { fontSize: 13, fontWeight: "900", color: colors.white },
+  usageGrid:      { flexDirection: "row", gap: 10 },
 });

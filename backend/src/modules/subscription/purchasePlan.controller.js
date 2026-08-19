@@ -142,3 +142,22 @@ export const activateIap = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/v1/subscriptions/purchase/:id/invoice
+ * Returns downloadable HTML tax invoice for a subscription purchase.
+ */
+export const downloadInvoice = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+
+    const { html, filename } = await purchasePlanService.getInvoice(userId, id);
+
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.status(200).send(html);
+  } catch (error) {
+    next(error);
+  }
+};

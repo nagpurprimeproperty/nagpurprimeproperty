@@ -19,6 +19,7 @@ export interface SubscriptionPlan {
   name: string;
   isFree: boolean;
   price: number;
+  gst?: number;
   duration: number;
   durationUnit: string;
   isDurationUnlimited: boolean;
@@ -56,6 +57,10 @@ export interface PurchaseOrder {
   keyId: string;
   subscriptionId: string;
   planName: string;
+  basePrice?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  totalAmount?: number;
 }
 
 export interface PurchaseOrderResponse {
@@ -89,6 +94,10 @@ export interface ActiveSubscription {
   paymentDetails?: PaymentDetails;
   isFree: boolean;
   price: number;
+  gstRate?: number;
+  gstAmount?: number;
+  totalAmount?: number;
+  invoiceNumber?: string;
   duration: number;
   durationUnit: string;
   isDurationUnlimited: boolean;
@@ -115,6 +124,10 @@ export interface HistoryItem {
   paymentDetails?: PaymentDetails;
   isFree: boolean;
   price: number;
+  gstRate?: number;
+  gstAmount?: number;
+  totalAmount?: number;
+  invoiceNumber?: string;
   duration: number;
   durationUnit: string;
   isDurationUnlimited: boolean;
@@ -189,4 +202,9 @@ export const activateIapPlan = async (
     config
   );
   return res.data;
+};
+
+export const getInvoiceDownloadUrl = (subscriptionId: string): string => {
+  const baseURL = apiClient.defaults.baseURL || "";
+  return `${baseURL}/subscriptions/purchase/${subscriptionId}/invoice`;
 };

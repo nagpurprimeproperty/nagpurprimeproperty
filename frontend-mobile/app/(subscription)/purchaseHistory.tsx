@@ -5,9 +5,10 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RefreshCw, XCircle, Clock, Receipt } from "lucide-react-native";
+import { RefreshCw, XCircle, Clock, Receipt, Download } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,7 +19,7 @@ import { usePurchaseHistory } from "@/hooks/useSubscriptionHooks";
 import { useAuthStore } from "@/features/auth";
 import { useModal } from "@/context/ModalContext";
 import colors from "@/theme/colors";
-import type { HistoryItem } from "@/services/subscriptionService";
+import { getInvoiceDownloadUrl, type HistoryItem } from "@/services/subscriptionService";
 import { usePagination } from "@/shared/hooks/usePagination";
 import LoadMoreButton from "@/shared/components/LoadMoreButton";
 import PurchaseHistorySkeleton from "@/components/skeleton/PurchaseHistorySkeleton";
@@ -77,14 +78,28 @@ const HistoryCard = React.memo(({ item, index }: { item: HistoryItem; index: num
         )}
       </View>
 
-      <TouchableOpacity
-        onPress={() => router.push({ pathname: "/(subscription)/purchaseDetail", params: { id: item._id } })}
-        activeOpacity={0.8}
-        style={hc.receiptBtn}
-      >
-        <Receipt size={13} color={colors.primary} strokeWidth={2.5} />
-        <Text style={hc.receiptText}>View Receipt</Text>
-      </TouchableOpacity>
+      <View style={hc.btnRow}>
+        <TouchableOpacity
+          onPress={() => router.push({ pathname: "/(subscription)/purchaseDetail", params: { id: item._id } })}
+          activeOpacity={0.8}
+          style={hc.receiptBtn}
+        >
+          <Receipt size={13} color={colors.primary} strokeWidth={2.5} />
+          <Text style={hc.receiptText}>View Receipt</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            const invoiceUrl = getInvoiceDownloadUrl(item._id);
+            Linking.openURL(invoiceUrl).catch(() => {});
+          }}
+          activeOpacity={0.8}
+          style={hc.invoiceBtn}
+        >
+          <Download size={13} color={colors.white} strokeWidth={2.5} />
+          <Text style={hc.invoiceText}>Invoice</Text>
+        </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 });
@@ -103,8 +118,11 @@ const hc = StyleSheet.create({
   dateRow:    { flexDirection: "row", alignItems: "center", gap: 6 },
   date:       { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
   method:     { fontSize: 11, fontWeight: "700", color: colors.textLight, textTransform: "capitalize" },
-  receiptBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryMuted },
+  btnRow:     { flexDirection: "row", gap: 8 },
+  receiptBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryMuted },
   receiptText:{ fontSize: 12, fontWeight: "800", color: colors.primary },
+  invoiceBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primary },
+  invoiceText:{ fontSize: 12, fontWeight: "800", color: colors.white },
 });
 
 // ─── Main Screen ───────────────────────────────────────────────────────────────

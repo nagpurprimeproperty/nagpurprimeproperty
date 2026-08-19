@@ -127,12 +127,15 @@ import { activateIapPlan } from "@/services/subscriptionService";
 
 // ─── Confirm Modal ─────────────────────────────────────────────────────────────
 
-function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }: {
-  visible: boolean; planName: string; price: number;
+function ConfirmModal({ visible, planName, price, gstRate = 18, isFree = false, onCancel, onConfirm, loading }: {
+  visible: boolean; planName: string; price: number; gstRate?: number; isFree?: boolean;
   onCancel: () => void; onConfirm: () => void; loading: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const isIos = Platform.OS === "ios";
+
+  const gstAmount = isFree ? 0 : Math.round(((price * gstRate) / 100) * 100) / 100;
+  const totalAmount = isFree ? 0 : Math.round((price + gstAmount) * 100) / 100;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
@@ -140,11 +143,32 @@ function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }
       <View style={[cm.sheet, { paddingBottom: insets.bottom + 24 }]}>
         <View style={cm.handle} />
         <Text style={cm.title}>Confirm Purchase</Text>
-        <Text style={cm.sub}>You are about to purchase</Text>
+        <Text style={cm.sub}>Review your plan breakdown & payment total</Text>
 
         <View style={cm.planCard}>
-          <Text style={cm.planName}>{planName}</Text>
-          <Text style={cm.planPrice}>₹{price}</Text>
+          <View style={cm.breakdownHeader}>
+            <Text style={cm.planName}>{planName}</Text>
+          </View>
+
+          {!isFree ? (
+            <View style={cm.breakdownList}>
+              <View style={cm.breakdownRow}>
+                <Text style={cm.breakdownLabel}>Base Plan Price</Text>
+                <Text style={cm.breakdownVal}>₹{price.toLocaleString("en-IN")}</Text>
+              </View>
+              <View style={cm.breakdownRow}>
+                <Text style={cm.breakdownLabel}>GST ({gstRate}%)</Text>
+                <Text style={cm.breakdownVal}>+ ₹{gstAmount.toLocaleString("en-IN")}</Text>
+              </View>
+              <View style={cm.divider} />
+              <View style={cm.breakdownRow}>
+                <Text style={cm.totalLabel}>Total Payable</Text>
+                <Text style={cm.planPrice}>₹{totalAmount.toLocaleString("en-IN")}</Text>
+              </View>
+            </View>
+          ) : (
+            <Text style={cm.planPrice}>Free</Text>
+          )}
         </View>
 
         <Text style={cm.note}>
@@ -163,7 +187,13 @@ function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }
             ) : (
               <>
                 <ExternalLink size={15} color={colors.white} strokeWidth={2.5} />
-                <Text style={cm.payText}>{isIos ? `Subscribe · ₹${price}` : `Pay ₹${price}`}</Text>
+                <Text style={cm.payText}>
+                  {isFree
+                    ? "Activate Free Plan"
+                    : isIos
+                    ? `Subscribe · ₹${totalAmount.toLocaleString("en-IN")}`
+                    : `Pay ₹${totalAmount.toLocaleString("en-IN")}`}
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -174,20 +204,27 @@ function ConfirmModal({ visible, planName, price, onCancel, onConfirm, loading }
 }
 
 const cm = StyleSheet.create({
-  backdrop:  { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
-  sheet:     { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 14 },
-  handle:    { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: "center", marginBottom: 20 },
-  title:     { fontSize: 20, fontWeight: "900", color: colors.text, marginBottom: 4 },
-  sub:       { fontSize: 13, color: colors.textMuted, marginBottom: 16 },
-  planCard:  { backgroundColor: colors.primaryLight, borderRadius: 14, padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14, borderWidth: 1, borderColor: colors.primaryMuted },
-  planName:  { fontSize: 16, fontWeight: "900", color: colors.primaryDark },
-  planPrice: { fontSize: 22, fontWeight: "900", color: colors.primary },
-  note:      { fontSize: 12, color: colors.textLight, textAlign: "center", lineHeight: 18, marginBottom: 24 },
-  actions:   { flexDirection: "row", gap: 12 },
-  cancelBtn: { flex: 1, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
-  cancelText:{ fontSize: 14, fontWeight: "800", color: colors.textSecondary },
-  payBtn:    { flex: 2, paddingVertical: 15, borderRadius: 14, backgroundColor: colors.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  payText:   { fontSize: 14, fontWeight: "900", color: colors.white },
+  backdrop:        { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
+  sheet:           { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 14 },
+  handle:          { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: "center", marginBottom: 20 },
+  title:           { fontSize: 20, fontWeight: "900", color: colors.text, marginBottom: 4 },
+  sub:             { fontSize: 13, color: colors.textMuted, marginBottom: 16 },
+  planCard:        { backgroundColor: colors.primaryLight, borderRadius: 14, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: colors.primaryMuted },
+  breakdownHeader: { marginBottom: 4 },
+  planName:        { fontSize: 16, fontWeight: "900", color: colors.primaryDark },
+  breakdownList:   { gap: 6, marginTop: 6 },
+  breakdownRow:    { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  breakdownLabel:  { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
+  breakdownVal:    { fontSize: 13, fontWeight: "800", color: colors.text },
+  divider:         { height: 1, backgroundColor: colors.primaryMuted, marginVertical: 4 },
+  totalLabel:      { fontSize: 14, fontWeight: "900", color: colors.text },
+  planPrice:       { fontSize: 20, fontWeight: "900", color: colors.primary },
+  note:            { fontSize: 12, color: colors.textLight, textAlign: "center", lineHeight: 18, marginBottom: 24 },
+  actions:         { flexDirection: "row", gap: 12 },
+  cancelBtn:       { flex: 1, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  cancelText:      { fontSize: 14, fontWeight: "800", color: colors.textSecondary },
+  payBtn:          { flex: 2, paddingVertical: 15, borderRadius: 14, backgroundColor: colors.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  payText:         { fontSize: 14, fontWeight: "900", color: colors.white },
 });
 
 // ─── Main Screen ───────────────────────────────────────────────────────────────
@@ -420,6 +457,8 @@ export default function SubscriptionDetailScreen() {
             visible={confirmVisible}
             planName={plan.name}
             price={plan.price}
+            gstRate={plan.gst}
+            isFree={plan.isFree}
             onCancel={() => setConfirmVisible(false)}
             onConfirm={handlePurchase}
             loading={purchaseMutation.isPending || isIapLoading}

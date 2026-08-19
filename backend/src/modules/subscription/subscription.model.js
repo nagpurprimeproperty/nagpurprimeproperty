@@ -4,6 +4,7 @@ const planSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true }, // e.g., 'Premium Gold'
   isFree: { type: Boolean, default: false },
   price: { type: Number, required: true }, // e.g., 2999
+  gst: { type: Number, default: 18 }, // GST rate percentage e.g., 18%
   duration: { type: Number}, // e.g., 30, 90, 365
   durationUnit: { 
     type: String, 
