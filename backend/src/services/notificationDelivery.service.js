@@ -64,6 +64,50 @@ const sendNotification = async ({ userId, title, message, type, metadata = {} })
  * Clears invalid tokens automatically.
  */
 const sendFCMWithRetry = async (token, { title, message, type, userId }, retries = 3) => {
+  const isExpoToken =
+    typeof token === 'string' &&
+    (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken['));
+
+  if (isExpoToken) {
+    try {
+      const res = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([
+          {
+            to: token,
+            sound: 'default',
+            title,
+            body: message,
+            data: { type: String(type), userId: String(userId) },
+            priority: 'high',
+            _displayInForeground: true,
+          },
+        ]),
+      });
+      const data = await res.json();
+      if (data?.data?.[0]?.status === 'error') {
+        const errDetails = data.data[0];
+        if (errDetails.details?.error === 'DeviceNotRegistered') {
+          console.warn(`[ExpoPush] DeviceNotRegistered for user ${userId} — clearing token.`);
+          await User.findByIdAndUpdate(userId, { fcmToken: null });
+        } else {
+          console.error('[ExpoPush] Error:', errDetails.message || errDetails.details?.error);
+        }
+      } else {
+        console.log(`[ExpoPush] Push sent successfully to user ${userId}`);
+      }
+      return;
+    } catch (expoErr) {
+      console.error('[ExpoPush] Push delivery failed:', expoErr.message);
+      return;
+    }
+  }
+
   const UNRECOVERABLE = [
     'messaging/registration-token-not-registered',
     'messaging/invalid-registration-token',
