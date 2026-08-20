@@ -15,11 +15,16 @@ const leadService = {
    * and send in-app + FCM push notification to the broker.
    */
   processLeadQuotaAndWhatsApp: async (leadPayload, propertyName) => {
-    const brokerId = leadPayload.brokerId;
+    const rawBrokerId = leadPayload.brokerId;
+    const brokerId = rawBrokerId?._id ? rawBrokerId._id : rawBrokerId;
+
     if (!brokerId) {
       leadPayload.isOpened = false;
       return leadPayload;
     }
+
+    // Ensure leadPayload.brokerId is assigned pure ObjectId string/instance
+    leadPayload.brokerId = brokerId;
 
     try {
       const broker = await userService.getUser(brokerId).catch(() => null);
@@ -30,6 +35,8 @@ const leadService = {
       const leadAccessCount = subscription?.limits?.leadAccessCount || 0;
 
       const hasQuotaLeft = !!subscription && (isUnlimited || leadAccessCount > leadsUnlocked);
+
+      console.log(`[Lead Processing] BrokerId: ${brokerId} | HasBroker: ${!!broker} | Mobile: ${broker?.mobile} | HasSub: ${!!subscription} | QuotaLeft: ${hasQuotaLeft} | WA Enabled: ${env.WHATSAPP_ENABLED}`);
 
       const customerName = leadPayload.customerName || 'Customer';
       const phone = leadPayload.phone || 'N/A';
@@ -44,6 +51,8 @@ const leadService = {
         // Send WhatsApp Notification to Broker if enabled & phone number exists
         if (env.WHATSAPP_ENABLED && broker?.mobile) {
           const templateId = env.WHATSAPP_LEAD_TEMPLATE_NAME || 'new_lead_notification';
+
+          console.log(`[WhatsApp Lead Alert] Triggering WhatsApp message to broker mobile: ${broker.mobile}`);
 
           communicationService.sendWhatsApp({
             to: broker.mobile,
@@ -61,10 +70,15 @@ const leadService = {
                 },
               ],
             },
+          }).then((res) => {
+            console.log(`[WhatsApp Lead Alert Success] Message sent to ${broker.mobile}, logId: ${res?.logId}`);
           }).catch((err) => console.error('[WhatsApp Lead Notification Error]:', err.message));
+        } else {
+          console.log(`[WhatsApp Lead Alert Skipped] WHATSAPP_ENABLED: ${env.WHATSAPP_ENABLED}, brokerMobile: ${broker?.mobile}`);
         }
       } else {
         leadPayload.isOpened = false;
+        console.log(`[Lead Processing] No quota or active sub for broker ${brokerId}. Lead set to isOpened=false.`);
       }
 
       // Always create In-App Notification & send FCM Push Notification to Broker
