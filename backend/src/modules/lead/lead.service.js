@@ -63,9 +63,9 @@ const leadService = {
                 {
                   type: 'body',
                   parameters: [
-                    { type: 'text', parameter_name: 'customer_name', text: customerName },
-                    { type: 'text', parameter_name: 'phone_number', text: phone },
-                    { type: 'text', parameter_name: 'property_name', text: propTitle },
+                    { type: 'text', text: customerName },
+                    { type: 'text', text: phone },
+                    { type: 'text', text: propTitle },
                   ],
                 },
               ],
