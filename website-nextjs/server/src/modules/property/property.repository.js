@@ -471,7 +471,7 @@ const propertyRepository = {
                 localField: 'brokerId',
                 foreignField: '_id',
                 pipeline: [
-                  { $project: { name: 1, email: 1, mobile: 1, profileImage: 1 } },
+                  { $project: { name: 1, email: 1, mobile: 1, avatar: 1, profileImage: 1 } },
                 ],
                 as: 'broker',
               },
@@ -660,11 +660,11 @@ const propertyRepository = {
     } else {
       // Try slug first (fast indexed exact match)
       const bySlug = await Property.findOne({ slug: id, status: 'Active' }, null, { session })
-        .populate('brokerId', 'name mobile email city area avatar')
+        .populate('brokerId', 'name mobile email city area avatar profileImage')
         .lean();
 
       if (bySlug) {
-        // Resolve isSaved, hasLead and return
+        // Resolve isSaved and return
         if (userId && mongoose.Types.ObjectId.isValid(userId)) {
           const isSaved = await SavedProperty.exists({
             userId: new mongoose.Types.ObjectId(userId),
@@ -673,14 +673,6 @@ const propertyRepository = {
           bySlug.isSaved = !!isSaved;
         } else {
           bySlug.isSaved = false;
-        }
-        const broker = bySlug.brokerId;
-        const hasLeadWithBroker = Boolean(
-          userId && broker && (broker._id || broker) &&
-          (await Lead.exists({ brokerId: broker._id || broker, userId }))
-        );
-        if (broker && !hasLeadWithBroker) {
-          bySlug.brokerId = { _id: broker._id, name: broker.name ?? '' };
         }
         return formatPropertyDetail(bySlug);
       }
@@ -692,7 +684,7 @@ const propertyRepository = {
     }
 
     const property = await Property.findOne(query, null, { session })
-      .populate('brokerId', 'name mobile email city area avatar')
+      .populate('brokerId', 'name mobile email city area avatar profileImage')
       .lean();
 
     if (!property) return null;
@@ -705,24 +697,6 @@ const propertyRepository = {
       property.isSaved = !!isSaved;
     } else {
       property.isSaved = false;
-    }
-
-    const broker = property.brokerId;
-    const hasLeadWithBroker = Boolean(
-      userId &&
-      broker &&
-      (broker._id || broker) &&
-      (await Lead.exists({
-        brokerId: broker._id || broker,
-        userId,
-      }))
-    );
-
-    if (broker && !hasLeadWithBroker) {
-      property.brokerId = {
-        _id: broker._id,
-        name: broker.name ?? '',
-      };
     }
 
     return formatPropertyDetail(property);

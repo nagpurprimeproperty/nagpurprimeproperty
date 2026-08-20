@@ -59,6 +59,7 @@ const leadService = {
             body: `New Lead Alert!\n\nBuyer Name: ${customerName}\nContact Number: ${phone}\nInterested Property: ${propTitle}\n\nCheck your app for full details.`,
             templateId,
             metadata: {
+              languageCode: env.WHATSAPP_LEAD_TEMPLATE_LANGUAGE || 'en_US',
               components: [
                 {
                   type: 'body',
