@@ -76,6 +76,7 @@ const leadRepository = {
         notes: 1,
         photos: '$property.photos',
         status: 1,
+        isOpened: 1,
       }
     },
   ]).exec().then(results => {

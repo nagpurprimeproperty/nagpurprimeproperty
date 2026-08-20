@@ -99,7 +99,7 @@ const purchasePlanRepository = {
     PurchasedSubscription.findOne({ userId, status: 'Active' }).populate('planId').lean(),
 
   markAsLeadOpened: async (id) =>
-    PurchasedSubscription.findByIdAndUpdate(id, { $set: { 'usage.leadsUnlocked': 1 } }, { new: true }),
+    PurchasedSubscription.findByIdAndUpdate(id, { $inc: { 'usage.leadsUnlocked': 1 } }, { new: true }),
 };
 
 export default purchasePlanRepository;
