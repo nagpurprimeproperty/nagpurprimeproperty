@@ -1,8 +1,11 @@
 import { apiClient } from "@/api/apiClient";
 import type { AxiosRequestConfig } from "axios";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
+
+// NOTE: expo-print and expo-sharing are intentionally NOT imported here at the
+// top level. They require native modules (ExpoPrint) that crash the JS module
+// graph during Expo Router route discovery if required statically.
+// They are dynamically imported inside downloadInvoicePdf() — only when called.
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -231,6 +234,14 @@ export const downloadInvoicePdf = async (subscriptionId: string): Promise<void> 
   if (!html) {
     throw new Error("Invoice content is empty");
   }
+
+  // Dynamic imports — loaded only when this function is called, NOT at module
+  // load time. This prevents "Cannot find native module 'ExpoPrint'" crashing
+  // the app on startup before the native module is available.
+  const [Print, Sharing] = await Promise.all([
+    import("expo-print"),
+    import("expo-sharing"),
+  ]);
 
   if (Platform.OS === "web") {
     await Print.printAsync({ html });
