@@ -1,15 +1,18 @@
+import mongoose from 'mongoose';
 import leadRepository from './lead.repository.js';
 import propertyRepository from '../property/property.repository.js';
 import purchasePlanRepository from '../subscription/purchasePlan.repository.js';
 import userService from '../user/user.service.js';
 import communicationService from '../communication/communication.service.js';
+import Notification from '../notification/notification.model.js';
 import env from '../../config/env.js';
 
 const leadService = {
 
   /**
    * Helper to check broker subscription quota, deduct 1 lead access if available,
-   * set isOpened boolean, and trigger WhatsApp notification if quota available.
+   * set isOpened boolean, trigger WhatsApp notification if quota available,
+   * and send in-app + FCM push notification to the broker.
    */
   processLeadQuotaAndWhatsApp: async (leadPayload, propertyName) => {
     const brokerId = leadPayload.brokerId;
@@ -28,6 +31,10 @@ const leadService = {
 
       const hasQuotaLeft = !!subscription && (isUnlimited || leadAccessCount > leadsUnlocked);
 
+      const customerName = leadPayload.customerName || 'Customer';
+      const phone = leadPayload.phone || 'N/A';
+      const propTitle = propertyName || 'Property';
+
       if (hasQuotaLeft) {
         leadPayload.isOpened = true;
 
@@ -37,9 +44,6 @@ const leadService = {
         // Send WhatsApp Notification to Broker if enabled & phone number exists
         if (env.WHATSAPP_ENABLED && broker?.mobile) {
           const templateId = env.WHATSAPP_LEAD_TEMPLATE_NAME || 'new_lead_notification';
-          const customerName = leadPayload.customerName || 'Customer';
-          const phone = leadPayload.phone || 'N/A';
-          const propTitle = propertyName || 'Property';
 
           communicationService.sendWhatsApp({
             to: broker.mobile,
@@ -62,8 +66,42 @@ const leadService = {
       } else {
         leadPayload.isOpened = false;
       }
+
+      // Always create In-App Notification & send FCM Push Notification to Broker
+      const notifTitle = 'New Lead Received 🚀';
+      const notifBody = hasQuotaLeft
+        ? `New enquiry from ${customerName} for "${propTitle}". Details unlocked!`
+        : `New enquiry from ${customerName} for "${propTitle}". Upgrade plan to view contact details.`;
+
+      Notification.create({
+        userId: brokerId,
+        title: notifTitle,
+        message: notifBody,
+        targetRole: 'user',
+        targetIds: [brokerId],
+        userVisible: true,
+        sendPush: true,
+        type: 'info',
+        data: {
+          type: 'LEAD',
+          propertyId: leadPayload.propertyId?.toString() || '',
+        },
+      }).catch((err) => console.error('[In-App Notification Error]:', err.message));
+
+      if (broker?.fcmToken) {
+        communicationService.sendPush({
+          fcmToken: broker.fcmToken,
+          title: notifTitle,
+          body: notifBody,
+          data: {
+            type: 'LEAD',
+            propertyId: leadPayload.propertyId?.toString() || '',
+          },
+        }).catch((err) => console.error('[FCM Push Notification Error]:', err.message));
+      }
+
     } catch (err) {
-      console.error('[Process Lead Quota Error]:', err.message);
+      console.error('[Process Lead Quota & Notification Error]:', err.message);
       leadPayload.isOpened = false;
     }
 
@@ -109,7 +147,10 @@ const leadService = {
    * Get lead by property and user (to check if already exists)
    */
   getLeadByPropertyAndUser: async (propertyId, userId) => {
-    return leadRepository.findOne({ propertyId, userId });
+    if (!propertyId || !userId) return null;
+    const pId = mongoose.Types.ObjectId.isValid(propertyId) ? new mongoose.Types.ObjectId(propertyId) : propertyId;
+    const uId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
+    return leadRepository.findOne({ propertyId: pId, userId: uId });
   },
 
   createLead: async (payload, session) => {
