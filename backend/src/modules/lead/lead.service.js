@@ -30,13 +30,13 @@ const leadService = {
       const broker = await userService.getUser(brokerId).catch(() => null);
       const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId);
 
-      const isUnlimited = !!subscription?.limits?.isLeadAccessUnlimited;
-      const leadsUnlocked = subscription?.usage?.leadsUnlocked || 0;
-      const leadAccessCount = subscription?.limits?.leadAccessCount || 0;
+      const isUnlimited = !!(subscription?.limits?.isLeadAccessUnlimited ?? subscription?.planId?.limits?.isLeadAccessUnlimited);
+      const leadAccessCount = Number(subscription?.limits?.leadAccessCount ?? subscription?.planId?.limits?.leadAccessCount ?? 0);
+      const leadsUnlocked = Number(subscription?.usage?.leadsUnlocked || 0);
 
       const hasQuotaLeft = !!subscription && (isUnlimited || leadAccessCount > leadsUnlocked);
 
-      console.log(`[Lead Processing] BrokerId: ${brokerId} | HasBroker: ${!!broker} | Mobile: ${broker?.mobile} | HasSub: ${!!subscription} | QuotaLeft: ${hasQuotaLeft} | WA Enabled: ${env.WHATSAPP_ENABLED}`);
+      console.log(`[Lead Processing] BrokerId: ${brokerId} | HasBroker: ${!!broker} | Mobile: ${broker?.mobile} | HasSub: ${!!subscription} | isUnlimited: ${isUnlimited} | Limit: ${leadAccessCount} | Unlocked: ${leadsUnlocked} | QuotaLeft: ${hasQuotaLeft} | WA Enabled: ${env.WHATSAPP_ENABLED}`);
 
       const customerName = leadPayload.customerName || 'Customer';
       const phone = leadPayload.phone || 'N/A';
@@ -78,7 +78,7 @@ const leadService = {
         }
       } else {
         leadPayload.isOpened = false;
-        console.log(`[Lead Processing] No quota or active sub for broker ${brokerId}. Lead set to isOpened=false.`);
+        console.log(`[Lead Processing] No quota or active sub for broker ${brokerId}. Lead set to isOpened=false (Limit: ${leadAccessCount}, Unlocked: ${leadsUnlocked}).`);
       }
 
       // Always create In-App Notification & send FCM Push Notification to Broker
@@ -143,9 +143,9 @@ const leadService = {
         throw { status: 403, message: 'Upgrade to a premium plan to view lead details' };
       }
 
-      const isUnlimited = !!subscription?.limits?.isLeadAccessUnlimited;
-      const leadsUnlocked = subscription?.usage?.leadsUnlocked || 0;
-      const leadAccessCount = subscription?.limits?.leadAccessCount || 0;
+      const isUnlimited = !!(subscription?.limits?.isLeadAccessUnlimited ?? subscription?.planId?.limits?.isLeadAccessUnlimited);
+      const leadAccessCount = Number(subscription?.limits?.leadAccessCount ?? subscription?.planId?.limits?.leadAccessCount ?? 0);
+      const leadsUnlocked = Number(subscription?.usage?.leadsUnlocked || 0);
 
       if (!isUnlimited && leadAccessCount <= leadsUnlocked) {
         throw { status: 403, message: 'Your lead access limit has been reached' };
