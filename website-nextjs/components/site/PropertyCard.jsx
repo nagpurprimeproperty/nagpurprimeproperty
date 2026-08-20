@@ -194,7 +194,11 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
     const brokerId = p.broker?._id || p.brokerId;
     if (!brokerId) return;
 
-    const rawMobile = p.broker?.mobile || p.broker?.phone || '9876543210';
+    const rawMobile = p.broker?.mobile || p.broker?.phone || '';
+    if (!rawMobile) {
+      toast.error('Broker contact number not available');
+      return;
+    }
     const cleanMobile = rawMobile.replace(/\D/g, '');
     const formatted = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
 
