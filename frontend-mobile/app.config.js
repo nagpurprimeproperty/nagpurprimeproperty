@@ -155,8 +155,6 @@ module.exports = ({ config }) => {
       },
     ],
     "@react-native-community/datetimepicker",
-    // expo-print — required for invoice PDF generation (ExpoPrint native module)
-    "expo-print",
   ],
   experiments: {
     typedRoutes: true,
