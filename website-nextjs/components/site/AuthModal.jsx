@@ -8,6 +8,8 @@
  */
 import { useState, useRef, useEffect } from 'react'
 import { Loader2, Phone, ShieldCheck, X, ChevronLeft } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import Link from 'next/link'
 import { useAuth } from '@/lib/stores'
 import { useSendOTP, useVerifyOTP } from '@/lib/hooks/useAuthMutations'
 import { toast } from 'sonner'
@@ -20,6 +22,7 @@ export function AuthModal() {
   const [step, setStep] = useState('mobile') // 'mobile' | 'otp'
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState(['', '', '', ''])
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [resendIn, setResendIn] = useState(0)
   const otpRefs = useRef([])
 
@@ -34,6 +37,7 @@ export function AuthModal() {
       setMobile('')
       setOtp(['', '', '', ''])
       setResendIn(0)
+      setAcceptedTerms(false)
     }
   }, [showAuthModal])
 
@@ -59,6 +63,10 @@ export function AuthModal() {
   }
 
   const sendOtp = async () => {
+    if (!acceptedTerms) {
+      toast.error('Please accept the Terms & Conditions and Privacy Policy to continue')
+      return
+    }
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       toast.error('Enter a valid 10-digit mobile number')
       return
@@ -180,6 +188,37 @@ export function AuthModal() {
                   autoFocus
                 />
               </div>
+              <div className="flex items-start space-x-2.5 py-1">
+                <Checkbox
+                  id="auth-modal-terms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(!!checked)}
+                  className="mt-0.5"
+                />
+                <label
+                  htmlFor="auth-modal-terms"
+                  className="text-xs leading-tight font-normal text-muted-foreground cursor-pointer select-none"
+                >
+                  I accept the{' '}
+                  <Link
+                    href="/privacy-policy"
+                    target="_blank"
+                    className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Privacy Policy
+                  </Link>{' '}
+                  and{' '}
+                  <Link
+                    href="/terms-and-conditions"
+                    target="_blank"
+                    className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Terms &amp; Conditions
+                  </Link>
+                </label>
+              </div>
               <button
                 type="button"
                 onClick={sendOtp}
@@ -188,9 +227,6 @@ export function AuthModal() {
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send OTP'}
               </button>
-              <p className="text-center text-[11px] text-muted-foreground">
-                By continuing you agree to our Terms &amp; Privacy Policy
-              </p>
             </div>
           ) : (
             <div className="space-y-4">

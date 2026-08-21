@@ -14,6 +14,9 @@ const nav = [
   { to: '/properties', label: 'Properties' },
   { to: '/areas', label: 'Areas' },
   { to: '/blogs', label: 'Blogs' },
+  { to: '/about-us', label: 'About Us' },
+  { to: '/privacy-policy', label: 'Privacy' },
+  { to: '/terms-and-conditions', label: 'Terms' },
 ]
 
 export function Header() {
@@ -54,14 +57,14 @@ export function Header() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-0.5 xl:gap-1 md:flex">
           {nav.map((n) => {
             const active = n.to === '/' ? pathname === '/' : pathname.startsWith(n.to)
             return (
               <Link
                 key={n.to}
                 href={n.to}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                className={`rounded-lg px-2 py-1.5 lg:px-2.5 lg:py-2 text-xs xl:text-sm font-medium whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? 'bg-accent text-primary' : 'text-foreground/70'
                 }`}
               >

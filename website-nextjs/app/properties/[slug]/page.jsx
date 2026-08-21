@@ -68,14 +68,16 @@ export default async function PropertyPage({ params }) {
     similar = []
   }
 
+  const brokerName = property.brokerId?.name || 'Broker Partner'
+  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(brokerName)}&background=0D9488&color=fff`
+
   const broker = property.brokerId ? {
     id: property.brokerId._id || property.brokerId,
-    name: property.brokerId.name || 'Broker Partner',
-    phone: property.brokerId.mobile || '9876543210',
-    whatsapp: property.brokerId.mobile || '9876543210',
-    image: property.brokerId.avatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150',
-    agency: property.brokerId.agency || 'Nagpur Prime Partner',
-    experience: property.brokerId.experience || 5,
+    name: brokerName,
+    phone: property.brokerId.mobile || '',
+    whatsapp: property.brokerId.mobile || '',
+    image: property.brokerId.avatar || property.brokerId.profileImage || defaultAvatar,
+    agency: property.brokerId.agency || property.brokerId.city || 'Nagpur Prime Partner',
     verified: true
   } : null
 

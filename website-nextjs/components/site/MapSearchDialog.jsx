@@ -466,17 +466,14 @@ export function MapSearchDialog({
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         
         {/* Dialog Content Container */}
-        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-5xl h-[85vh] translate-x-[-50%] translate-y-[-50%] border border-border bg-background shadow-glow duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-2xl overflow-hidden flex flex-col md:flex-row focus:outline-none">
+        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-[96vw] max-w-5xl h-[92vh] md:h-[85vh] translate-x-[-50%] translate-y-[-50%] border border-border bg-background shadow-glow duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-2xl overflow-hidden flex flex-col md:flex-row focus:outline-none">
           
-          {/* Left Sidebar Control Panel */}
-          <aside className="w-full md:w-80 flex-shrink-0 bg-background border-b md:border-b-0 md:border-r border-border p-5 flex flex-col gap-5 overflow-y-auto z-10">
+          {/* Desktop Left Sidebar Control Panel (Hidden on Mobile) */}
+          <aside className="hidden md:flex w-80 flex-shrink-0 bg-background border-r border-border p-5 flex-col gap-5 overflow-y-auto z-10">
             <div className="flex items-center justify-between">
               <DialogPrimitive.Title className="text-base font-bold flex items-center gap-2 text-foreground">
                 <MapPin className="h-5 w-5 text-primary" /> Map Location Search
               </DialogPrimitive.Title>
-              <DialogPrimitive.Close className="md:hidden rounded-full p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground">
-                <X className="h-4 w-4" />
-              </DialogPrimitive.Close>
             </div>
 
             {/* Suggestions Autocomplete Search Input */}
@@ -622,15 +619,97 @@ export function MapSearchDialog({
             )}
           </aside>
 
-          {/* Map Canvas Wrapper */}
-          <div className="flex-1 h-full relative bg-muted flex flex-col">
+          {/* Full Height Map Canvas Wrapper */}
+          <div className="flex-1 h-full w-full relative bg-muted flex flex-col min-h-0">
+            
+            {/* Mobile Top Overlay: Search Bar, Close Button & Popular Localities Pills */}
+            <div className="md:hidden absolute top-3 left-3 right-3 z-30 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        handleGeocodeAddress(searchQuery);
+                      }
+                    }}
+                    placeholder="Search locality or landmark…"
+                    className="w-full pl-9 pr-8 py-2.5 text-xs rounded-xl border border-border bg-background/95 backdrop-blur-md shadow-soft focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => { setSearchQuery(''); setSelectedLocality(''); }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  {/* Mobile Autocomplete Suggestions Dropdown */}
+                  {suggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-52 overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-elegant">
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setSearchQuery(s.label);
+                            handleGeocodeAddress(s.label);
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-accent border-b border-border/40 last:border-0"
+                        >
+                          <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                          <span className="min-w-0">
+                            <div className="truncate font-semibold text-foreground">{s.label}</div>
+                            <div className="truncate text-[9px] text-muted-foreground">{s.sublabel}</div>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <DialogPrimitive.Close className="grid h-9 w-9 place-items-center rounded-xl bg-background/95 border border-border text-foreground shadow-soft hover:bg-muted active:scale-95 flex-shrink-0 cursor-pointer">
+                  <X className="h-4 w-4" />
+                </DialogPrimitive.Close>
+              </div>
+
+              {/* Horizontal Scrollable Popular Localities */}
+              {areas.length > 0 && (
+                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  {areas.slice(0, 8).map((a) => {
+                    const isActive = selectedLocality.toLowerCase() === a.name.toLowerCase();
+                    return (
+                      <button
+                        key={a.slug}
+                        type="button"
+                        onClick={() => selectPopularArea(a.name)}
+                        className={cn(
+                          "px-2.5 py-1 text-[11px] font-semibold rounded-full border transition-all flex items-center gap-1 flex-shrink-0 shadow-soft backdrop-blur-md cursor-pointer",
+                          isActive
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "bg-background/90 border-border text-foreground hover:border-primary/50"
+                        )}
+                      >
+                        {isActive && <Check className="h-3 w-3" />}
+                        {a.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {!loaded ? (
               <div className="flex-1 flex flex-col items-center justify-center text-sm text-muted-foreground gap-2">
                 <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                 Loading Map Canvas…
               </div>
             ) : (
-              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '350px', height: '100%', width: '100%' }} />
+              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '100%', height: '100%', width: '100%' }} />
             )}
 
             {/* Desktop Close Button floating on Map */}
@@ -639,10 +718,65 @@ export function MapSearchDialog({
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
 
-            {/* Floating Instructions Banner */}
-            <div className="absolute top-4 left-4 right-16 md:right-auto md:w-80 pointer-events-none z-10 bg-background/90 backdrop-blur-sm px-3.5 py-2.5 rounded-xl border border-border text-xs text-muted-foreground shadow-soft">
+            {/* Desktop Floating Instructions Banner */}
+            <div className="hidden md:block absolute top-4 left-4 right-16 md:right-auto md:w-80 pointer-events-none z-10 bg-background/90 backdrop-blur-sm px-3.5 py-2.5 rounded-xl border border-border text-xs text-muted-foreground shadow-soft">
               <span className="font-semibold text-foreground">Tip:</span> Click/drag the blue pin or search an address. Click red property markers to view card details.
             </div>
+
+            {/* Mobile Bottom Overlay: Property Preview + Apply Location Filter */}
+            <div className="md:hidden absolute bottom-3 left-3 right-3 z-30 flex flex-col gap-2">
+              {selectedProperty && (
+                <div className="flex gap-3 items-center p-2 rounded-xl border border-border bg-background/95 backdrop-blur-md shadow-glow relative overflow-hidden animate-in slide-in-from-bottom duration-200">
+                  <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+                    <Image
+                      src={selectedProperty.photos?.[0] || selectedProperty.images?.[0] || 'https://placehold.co/100x100/png?text=Property'}
+                      alt={selectedProperty.title || 'Property'}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-bold truncate text-foreground">{selectedProperty.title}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                      {selectedProperty.locality || selectedProperty.area || 'Nagpur'}
+                    </p>
+                    <p className="text-xs font-bold text-primary mt-0.5">
+                      {selectedProperty.totalPrice || 'Price on request'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href={`/properties/${selectedProperty.slug || selectedProperty._id}`}
+                      className="text-primary-foreground bg-primary hover:opacity-90 flex-shrink-0 px-2.5 py-1.5 rounded-xl font-bold text-xs shadow-soft flex items-center gap-1"
+                    >
+                      View <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProperty(null)}
+                      className="p-1.5 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 p-2 rounded-2xl bg-background/95 backdrop-blur-md border border-border shadow-glow">
+                <div className="min-w-0 flex-1 pl-2">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Selected Area</div>
+                  <div className="text-xs font-bold truncate text-foreground flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                    {selectedLocalityDisplay}
+                  </div>
+                </div>
+                <Button onClick={handleApplyFilter} className="py-2.5 px-4 rounded-xl text-xs font-bold shadow-soft flex-shrink-0">
+                  Apply Location Filter
+                </Button>
+              </div>
+            </div>
+
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

@@ -278,13 +278,25 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       {/* Mobile CTA Footer */}
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden shadow-lg">
         <div className="grid grid-cols-3 gap-2 p-2">
-          <a href="tel:+919876543210" className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform">
-            <Phone className="h-4 w-4 text-primary" /> Call
-          </a>
-          <a href={`https://wa.me/919876543210?text=${encodeURIComponent('Interested in ' + p.title)}`} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform">
-            <MessageCircle className="h-4 w-4" /> WhatsApp
-          </a>
+          {broker?.phone ? (
+            <a href={`tel:${broker.phone}`} className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform">
+              <Phone className="h-4 w-4 text-primary" /> Call
+            </a>
+          ) : (
+            <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform cursor-pointer">
+              <Phone className="h-4 w-4 text-primary" /> Call
+            </button>
+          )}
+          {broker?.whatsapp ? (
+            <a href={`https://wa.me/${(broker.whatsapp || '').replace(/\D/g, "")}?text=${encodeURIComponent('Interested in ' + p.title)}`} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform">
+              <MessageCircle className="h-4 w-4" /> WhatsApp
+            </a>
+          ) : (
+            <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
+              <MessageCircle className="h-4 w-4" /> WhatsApp
+            </button>
+          )}
           <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg bg-gradient-primary py-2.5 text-xs font-bold text-primary-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
             Visit
           </button>

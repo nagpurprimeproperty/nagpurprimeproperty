@@ -319,6 +319,14 @@ function PropertiesContent({ initialProperties, initialAreas }) {
                 </button>
               ))}
             </div>
+            {/* Dedicated Mobile Option for Full Screen Map */}
+            <button
+              type="button"
+              onClick={() => setIsMapOpen(true)}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-primary px-4 py-3 text-xs font-bold text-primary-foreground shadow-soft hover:opacity-95 active:scale-[0.99] transition-all md:hidden cursor-pointer"
+            >
+              <MapPin className="h-4 w-4" /> Open Full Screen Map
+            </button>
           </div>
           <MapPreview
             properties={properties}
@@ -333,6 +341,7 @@ function PropertiesContent({ initialProperties, initialAreas }) {
             }}
             onExpandMap={() => setIsMapOpen(true)}
             height="aspect-[16/10] md:aspect-auto md:h-full"
+            className="hidden md:block"
             caption="Filter properties by map"
           />
         </div>

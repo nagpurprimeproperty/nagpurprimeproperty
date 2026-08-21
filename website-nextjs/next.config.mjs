@@ -8,6 +8,8 @@ const nextConfig = {
     remotePatterns: [
       // Unsplash (hero, budget cards, blog covers)
       { protocol: 'https', hostname: 'images.unsplash.com' },
+      // UI Avatars (fallback avatar initials)
+      { protocol: 'https', hostname: 'ui-avatars.com' },
       // ACE S3 storage (property images uploaded via admin panel)
       { protocol: 'https', hostname: 's3-noi.aces3.ai' },
       // Firebase Storage (if used for images)

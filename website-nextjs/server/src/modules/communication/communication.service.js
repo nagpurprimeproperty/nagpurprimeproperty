@@ -54,7 +54,7 @@ const communicationService = {
   },
 
   /**
-   * Send WhatsApp message (placeholder — integrate with WhatsApp Business API).
+   * Send WhatsApp message (via Meta Cloud API).
    */
   sendWhatsApp: async ({ to, body, templateId, metadata = {} }) => {
     if (!env.WHATSAPP_ENABLED) {
@@ -151,8 +151,43 @@ const communicationService = {
       const responseData = await response.json();
 
       if (!response.ok) {
-        const errMsg = responseData?.error?.message || `WhatsApp API responded with status ${response.status}`;
-        throw new Error(errMsg);
+        const errorDetails = responseData?.error?.error_data?.details || responseData?.error?.message || `WhatsApp API responded with status ${response.status}`;
+        console.error('[WhatsApp Cloud API Error Response]:', JSON.stringify(responseData, null, 2));
+
+        // If error 100 occurred and namedParameters are supplied, attempt auto-retry with named parameter_name attributes
+        if (responseData?.error?.code === 100 && payload.type === 'template' && Array.isArray(metadata?.namedParameters)) {
+          console.log('[WhatsApp Cloud API] Error #100 detected. Retrying with named parameter_name attributes...');
+          payload.template.components = [
+            {
+              type: 'body',
+              parameters: metadata.namedParameters,
+            },
+          ];
+
+          const retryResp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          const retryData = await retryResp.json();
+          if (retryResp.ok) {
+            const messageId = retryData?.messages?.[0]?.id;
+            log.status = 'sent';
+            log.sentAt = new Date();
+            log.metadata = { ...log.metadata, messageId, apiResponse: retryData };
+            await log.save();
+            return { success: true, logId: log._id, messageId };
+          } else {
+            console.error('[WhatsApp Cloud API Retry Error Response]:', JSON.stringify(retryData, null, 2));
+            const retryErrMsg = retryData?.error?.error_data?.details || retryData?.error?.message || errorDetails;
+            throw new Error(retryErrMsg);
+          }
+        }
+
+        throw new Error(errorDetails);
       }
 
       const messageId = responseData?.messages?.[0]?.id;
@@ -173,67 +208,6 @@ const communicationService = {
       err.cause = error;
       throw err;
     }
-  },
-
-  /**
-   * Send push notification via Firebase (placeholder).
-   */
-  sendPush: async ({ fcmToken, title, body, data = {}, metadata = {} }) => {
-    const log = await CommunicationLog.create({
-      type: 'push',
-      recipient: fcmToken,
-      subject: title,
-      body,
-      status: 'pending',
-      metadata: { ...metadata, data },
-    });
-
-    // TODO: Integrate with firebase-admin messaging
-    log.status = 'failed';
-    log.failedAt = new Date();
-    log.errorMessage = 'Push notification integration not configured';
-    await log.save();
-    const err = new Error('Push notification integration not configured');
-    err.status = 503;
-    throw err;
-  },
-
-  /**
-   * List communication logs with pagination.
-   */
-  listLogs: async ({ type, status, page = 1, limit = 20 } = {}) => {
-    const filter = {};
-    if (type) filter.type = type;
-    if (status) filter.status = status;
-
-    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
-    const safePage = Math.max(Number(page) || 1, 1);
-    const skip = (safePage - 1) * safeLimit;
-
-    const [data, total] = await Promise.all([
-      CommunicationLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean(),
-      CommunicationLog.countDocuments(filter),
-    ]);
-
-    return { data, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) || 1 };
-  },
-
-  /**
-   * Get a single log by ID.
-   */
-  getLogById: async (id) => {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      const err = new Error('Invalid log id');
-      err.status = 400;
-      throw err;
-    }
-    const log = await CommunicationLog.findById(id).lean();
-    if (!log) {
-      const err = new Error('Log not found');
-      err.status = 404;
-      throw err;
-    }
-    return log;
   },
 };
 
