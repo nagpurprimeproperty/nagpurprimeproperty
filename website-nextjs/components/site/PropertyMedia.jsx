@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,10 @@ export function PropertyMedia({
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(false);
 
+  // Touch Swipe Refs
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
   // Reset to first slide when images change (e.g. different card data loaded)
   useEffect(() => { setI(0); setPlaying(false); }, [slides]);
 
@@ -30,8 +34,41 @@ export function PropertyMedia({
   }, [slides.length]);
   const cur = slides[i];
 
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length === 1) {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartX.current || !e.changedTouches || e.changedTouches.length === 0) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const deltaX = touchEndX - touchStartX.current;
+    const deltaY = touchEndY - touchStartY.current;
+
+    // Trigger swipe if horizontal displacement is greater than vertical displacement
+    // and horizontal displacement exceeds threshold of 35 pixels
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
+      if (deltaX < 0) {
+        go(i + 1);
+      } else {
+        go(i - 1);
+      }
+    }
+
+    touchStartX.current = 0;
+    touchStartY.current = 0;
+  };
+
   return (
-    <div className={cn("group relative overflow-hidden bg-muted", aspectClassName, rounded)}>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className={cn("group relative overflow-hidden bg-muted select-none touch-pan-y", aspectClassName, rounded)}
+    >
       {cur.type === "image" ? (
         <Image src={cur.src} alt={alt || 'Property image'} fill className="object-cover transition-transform duration-500 group-hover:scale-[1.02]" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
       ) : playing ? (
