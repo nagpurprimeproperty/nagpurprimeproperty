@@ -3,6 +3,7 @@ import { useModal } from "@/context/ModalContext";
 import { useSendOtpMutation, useVerifyOtpMutation } from "@/features/auth/hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   Animated,
   Dimensions,
@@ -27,6 +28,7 @@ const { height: SCREEN_H } = Dimensions.get("window");
 export default function AuthModal() {
   const { authModalVisible, closeAuth } = useModal();
   const setPhone = useAuthStore((state) => state.setPhone);
+  const router = useRouter();
 
   const sendOtpMutation = useSendOtpMutation();
   const verifyOtpMutation = useVerifyOtpMutation();
@@ -239,6 +241,10 @@ export default function AuthModal() {
                 onSend={handleSendOTP}
                 loading={sendOtpMutation.isPending}
                 errorMessage={sendError}
+                onNavigate={(route) => {
+                  handleClose();
+                  router.push(route as any);
+                }}
               />
             ) : (
               <OTPVerification

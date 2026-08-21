@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "@/theme/colors";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -31,9 +31,11 @@ interface Props {
   onSend: (phone: string, name: string) => void;
   loading: boolean;
   errorMessage?: string | null;
+  onNavigate?: (route: string) => void;
 }
 
-export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
+export default function PhoneInput({ onSend, loading, errorMessage, onNavigate }: Props) {
+  const [agreed, setAgreed] = useState(false);
   // Delayed focus: wait for the modal slide-up animation to finish on iOS
   // before opening the keyboard. autoFocus fires too early and causes the
   // KeyboardAvoidingView / Animated sheet to jank/crash.
@@ -116,11 +118,48 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
         )}
       />
 
+      {/* ── Terms & Privacy Checkbox ── */}
+      <View style={styles.checkboxRow}>
+        {/* Checkbox box — tap to toggle agreed */}
+        <TouchableOpacity
+          onPress={() => setAgreed((v) => !v)}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={styles.checkboxHit}
+        >
+          <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
+            {agreed && (
+              <Ionicons name="checkmark" size={13} color="#fff" strokeWidth={3} />
+            )}
+          </View>
+        </TouchableOpacity>
+
+        {/* Text with inline clickable links — separate from checkbox toggle */}
+        <Text style={styles.checkboxLabel}>
+          {"I agree to the "}
+          <Text
+            style={styles.checkboxLink}
+            suppressHighlighting
+            onPress={() => onNavigate?.("/(accountAndSupport)/termsAndConditions")}
+          >
+            Terms & Conditions
+          </Text>
+          {" and "}
+          <Text
+            style={styles.checkboxLink}
+            suppressHighlighting
+            onPress={() => onNavigate?.("/(accountAndSupport)/privacy")}
+          >
+            Privacy Policy
+          </Text>
+        </Text>
+      </View>
+
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={handleSubmit(onSubmit)}
-        disabled={!isValid || loading}
-        style={[styles.button, (!isValid || loading) && { opacity: 0.5 }]}
+        disabled={!isValid || loading || !agreed}
+        style={[styles.button, (!isValid || loading || !agreed) && styles.buttonDisabled]}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
@@ -133,14 +172,6 @@ export default function PhoneInput({ onSend, loading, errorMessage }: Props) {
       </TouchableOpacity>
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-      <View style={styles.termsRow}>
-        <Text style={styles.termsText}>
-          By continuing, you agree to our{" "}
-          <Text style={styles.termsBold}>Terms</Text> and{" "}
-          <Text style={styles.termsBold}>Privacy Policy</Text>
-        </Text>
-      </View>
     </View>
   );
 }
@@ -233,24 +264,52 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
+  buttonDisabled: {
+    opacity: 0.45,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   buttonText: {
     color: "#fff",
     fontSize: 15,
     fontWeight: "800",
     letterSpacing: 0.5,
   },
-  termsRow: {
+  // ── Checkbox row ──────────────────────────────────────────────────────────
+  checkboxRow: {
     marginTop: 20,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingHorizontal: 2,
+  },
+  checkboxHit: {
+    marginTop: 1, // align with first line of text
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: "#fff",
     alignItems: "center",
+    justifyContent: "center",
   },
-  termsText: {
-    fontSize: 11,
-    color: colors.textLight,
-    textAlign: "center",
-    lineHeight: 18,
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  termsBold: {
-    fontWeight: "700",
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 12,
     color: colors.textSecondary,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  checkboxLink: {
+    color: colors.primary,
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
 });
