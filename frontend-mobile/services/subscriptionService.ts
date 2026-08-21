@@ -1,11 +1,16 @@
 import { apiClient } from "@/api/apiClient";
 import type { AxiosRequestConfig } from "axios";
 import { Platform } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
 
 // NOTE: expo-print and expo-sharing are intentionally NOT imported here at the
 // top level. They require native modules (ExpoPrint) that crash the JS module
 // graph during Expo Router route discovery if required statically.
 // They are dynamically imported inside downloadInvoicePdf() — only when called.
+//
+// expo-file-system is a core Expo module (always available) so it IS safe to
+// import statically. Dynamic import caused StorageAccessFramework === undefined
+// due to Metro's CJS interop not always exposing named exports on the namespace.
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -238,23 +243,84 @@ export const downloadInvoicePdf = async (subscriptionId: string): Promise<void> 
   // Dynamic imports — loaded only when this function is called, NOT at module
   // load time. This prevents "Cannot find native module 'ExpoPrint'" crashing
   // the app on startup before the native module is available.
-  const [Print, Sharing] = await Promise.all([
-    import("expo-print"),
-    import("expo-sharing"),
-  ]);
+  const Print = await import("expo-print");
 
   if (Platform.OS === "web") {
     await Print.printAsync({ html });
-  } else {
-    const { uri } = await Print.printToFileAsync({ html });
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri, {
-        UTI: ".pdf",
-        mimeType: "application/pdf",
-        dialogTitle: "Download Tax Invoice",
+    return;
+  }
+
+  // Generate PDF to a temporary file first
+  const { uri: tempUri } = await Print.printToFileAsync({ html });
+  const fileName = `invoice_${subscriptionId}.pdf`;
+
+  try {
+    if (Platform.OS === "android") {
+      // ── Android ──────────────────────────────────────────────────────────────
+      // Use StorageAccessFramework to show the system "Save to folder" picker.
+      // This is NOT a share sheet — it is the native Android file-save dialog.
+      // We pre-seed it with the Downloads directory so the user only needs to
+      // tap "Use this folder" to confirm saving there.
+      //
+      // FileSystem is imported statically at the top of this file — dynamic
+      // import caused StorageAccessFramework === undefined due to Metro CJS interop.
+
+      // Pre-open the picker at the device's primary Downloads directory.
+      // The URI is the standard Android content URI for the Downloads tree;
+      // requestDirectoryPermissionsAsync will silently ignore it on older APIs
+      // and just show the root of the file manager instead.
+      const DOWNLOADS_URI =
+        "content://com.android.externalstorage.documents/tree/primary%3ADownload";
+
+      const { granted, directoryUri } =
+        await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(
+          DOWNLOADS_URI
+        );
+
+      if (!granted) {
+        // User cancelled the folder picker — treat as silent cancel (no error).
+        return;
+      }
+
+      // Create the PDF file inside the chosen directory
+      const destUri =
+        await FileSystem.StorageAccessFramework.createFileAsync(
+          directoryUri,
+          fileName,
+          "application/pdf"
+        );
+
+      // Read the temp PDF as base64 and write it to the destination
+      const base64 = await FileSystem.readAsStringAsync(tempUri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
+      await FileSystem.writeAsStringAsync(destUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      // ↑ File is now in the folder the user chose (typically Downloads) ✅
     } else {
-      await Print.printAsync({ html });
+      // ── iOS ──────────────────────────────────────────────────────────────────
+      // iOS has no public "Downloads" folder accessible from JS.
+      // The standard iOS approach is the share sheet with "Save to Files" —
+      // this saves the PDF to the Files app (iCloud Drive / On My iPhone).
+      const Sharing = await import("expo-sharing");
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(tempUri, {
+          UTI: "com.adobe.pdf",
+          mimeType: "application/pdf",
+          dialogTitle: "Save Invoice",
+        });
+      } else {
+        // Fallback: open the system print dialog so the user can still save
+        await Print.printAsync({ html });
+      }
+    }
+  } finally {
+    // Always clean up the temp PDF regardless of success or failure
+    try {
+      await FileSystem.deleteAsync(tempUri, { idempotent: true });
+    } catch {
+      // Ignore cleanup errors — temp files are eventually evicted anyway
     }
   }
 };
