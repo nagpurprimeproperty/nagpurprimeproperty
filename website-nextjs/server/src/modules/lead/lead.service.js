@@ -7,6 +7,12 @@ import communicationService from '../communication/communication.service.js';
 import Notification from '../notification/notification.model.js';
 import env from '../../config/env.js';
 
+const cleanText = (val, fallback = 'N/A') => {
+  if (!val) return fallback;
+  const str = String(val).replace(/[\r\n\t]+/g, ' ').trim();
+  return str.length > 0 ? str : fallback;
+};
+
 const leadService = {
 
   /**
@@ -38,9 +44,9 @@ const leadService = {
 
       console.log(`[Lead Processing] BrokerId: ${brokerId} | HasBroker: ${!!broker} | Mobile: ${broker?.mobile} | HasSub: ${!!subscription} | isUnlimited: ${isUnlimited} | Limit: ${leadAccessCount} | Unlocked: ${leadsUnlocked} | QuotaLeft: ${hasQuotaLeft} | WA Enabled: ${env.WHATSAPP_ENABLED}`);
 
-      const customerName = leadPayload.customerName || 'Customer';
-      const phone = leadPayload.phone || 'N/A';
-      const propTitle = propertyName || 'Property';
+      const customerName = cleanText(leadPayload.customerName, 'Verified User');
+      const phone = cleanText(leadPayload.phone, 'N/A');
+      const propTitle = cleanText(propertyName || leadPayload.propertyName, 'Property');
 
       if (hasQuotaLeft) {
         leadPayload.isOpened = true;
@@ -69,6 +75,11 @@ const leadService = {
                     { type: 'text', text: propTitle },
                   ],
                 },
+              ],
+              namedParameters: [
+                { type: 'text', parameter_name: 'customer_name', text: customerName },
+                { type: 'text', parameter_name: 'phone_number', text: phone },
+                { type: 'text', parameter_name: 'property_name', text: propTitle },
               ],
             },
           }).then((res) => {
