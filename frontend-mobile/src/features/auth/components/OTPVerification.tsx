@@ -29,17 +29,19 @@ type OTPFormData = z.infer<typeof otpSchema>;
 interface Props {
   phone: string;
   onVerify: (otp: string) => Promise<void>;
+  onResend?: () => Promise<void>;
   onBack: () => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export default function OTPVerification({ phone, onVerify, onBack }: Props) {
+export default function OTPVerification({ phone, onVerify, onResend, onBack }: Props) {
   // Digits are managed locally so each box stays independently focusable.
   // The assembled string is synced into RHF via setValue for validation.
   const [digits, setDigits] = useState(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(30);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [timer, setTimer] = useState(60);
   const inputs = useRef<(TextInput | null)[]>([]);
 
   const {
@@ -119,13 +121,24 @@ export default function OTPVerification({ phone, onVerify, onBack }: Props) {
   };
 
   // ── resend ──
-  const handleResend = () => {
-    setTimer(30);
-    const cleared = ["", "", "", ""];
-    setDigits(cleared);
-    setValue("otp", "", { shouldValidate: false });
-    clearErrors("otp");
-    inputs.current[0]?.focus();
+  const handleResend = async () => {
+    if (resendLoading) return;
+    setResendLoading(true);
+    try {
+      if (onResend) {
+        await onResend();
+      }
+      setTimer(60);
+      const cleared = ["", "", "", ""];
+      setDigits(cleared);
+      setValue("otp", "", { shouldValidate: false });
+      clearErrors("otp");
+      inputs.current[0]?.focus();
+    } catch {
+      // Error is caught and toasted by parent component
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   return (
@@ -188,8 +201,12 @@ export default function OTPVerification({ phone, onVerify, onBack }: Props) {
         {timer > 0 ? (
           <Text style={styles.resendText}>Resend in {timer}s</Text>
         ) : (
-          <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
-            <Text style={styles.resendActive}>Resend OTP</Text>
+          <TouchableOpacity onPress={handleResend} activeOpacity={0.7} disabled={resendLoading}>
+            {resendLoading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={styles.resendActive}>Resend OTP</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>

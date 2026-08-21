@@ -46,6 +46,25 @@ export const login = async (payload: LoginPayload) => {
   return response.data as LoginResponse;
 };
 
+export interface ResendOtpPayload {
+  mobile: string;
+}
+
+export interface ResendOtpResponse {
+  success: boolean;
+  message: string;
+  data?: string;
+}
+
+export const resendOTP = async (payload: ResendOtpPayload) => {
+  const response = await apiClient.post<AuthApiResponse<string>>(
+    "/auth/resend-otp",
+    payload,
+  );
+
+  return response.data as ResendOtpResponse;
+};
+
 export const verifyOTP = async (payload: VerifyOtpPayload) => {
   const response = await apiClient.post<AuthApiResponse<AuthUser> & { token: string }>(
     "/auth/verify-otp",

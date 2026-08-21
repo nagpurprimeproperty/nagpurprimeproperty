@@ -11,7 +11,7 @@ import { Loader2, Phone, ShieldCheck, X, ChevronLeft } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import Link from 'next/link'
 import { useAuth } from '@/lib/stores'
-import { useSendOTP, useVerifyOTP } from '@/lib/hooks/useAuthMutations'
+import { useSendOTP, useVerifyOTP, useResendOTP } from '@/lib/hooks/useAuthMutations'
 import { toast } from 'sonner'
 
 export function AuthModal() {
@@ -20,6 +20,7 @@ export function AuthModal() {
   const login = useAuth((s) => s.login)
 
   const [step, setStep] = useState('mobile') // 'mobile' | 'otp'
+  const [name, setName] = useState('')
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState(['', '', '', ''])
   const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -28,12 +29,14 @@ export function AuthModal() {
 
   const sendOTPMutation = useSendOTP()
   const verifyOTPMutation = useVerifyOTP()
-  const loading = sendOTPMutation.isPending || verifyOTPMutation.isPending
+  const resendOTPMutation = useResendOTP()
+  const loading = sendOTPMutation.isPending || verifyOTPMutation.isPending || resendOTPMutation.isPending
 
   // Reset state when modal opens
   useEffect(() => {
     if (showAuthModal) {
       setStep('mobile')
+      setName('')
       setMobile('')
       setOtp(['', '', '', ''])
       setResendIn(0)
@@ -63,6 +66,10 @@ export function AuthModal() {
   }
 
   const sendOtp = async () => {
+    if (!name.trim() || name.trim().length < 2) {
+      toast.error('Please enter your full name (at least 2 characters)')
+      return
+    }
     if (!acceptedTerms) {
       toast.error('Please accept the Terms & Conditions and Privacy Policy to continue')
       return
@@ -72,9 +79,9 @@ export function AuthModal() {
       return
     }
     try {
-      const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: 'User' })
+      const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: name.trim() })
       setStep('otp')
-      setResendIn(30)
+      setResendIn(60)
       if (typeof otpVal === 'string') {
         toast.success(`OTP sent to your mobile number. OTP: ${otpVal}`)
       } else {
@@ -83,6 +90,22 @@ export function AuthModal() {
       setTimeout(() => otpRefs.current[0]?.focus(), 80)
     } catch (err) {
       toast.error(err.message || 'Failed to send OTP. Please try again.')
+    }
+  }
+
+  const resendOtp = async () => {
+    try {
+      const otpVal = await resendOTPMutation.mutateAsync({ mobile })
+      setResendIn(60)
+      setOtp(['', '', '', ''])
+      if (typeof otpVal === 'string') {
+        toast.success(`OTP resent to your mobile number. OTP: ${otpVal}`)
+      } else {
+        toast.success('OTP resent to your mobile number')
+      }
+      setTimeout(() => otpRefs.current[0]?.focus(), 80)
+    } catch (err) {
+      toast.error(err.message || 'Failed to resend OTP. Please try again.')
     }
   }
 
@@ -150,7 +173,7 @@ export function AuthModal() {
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   {step === 'mobile'
-                    ? "We'll send a one-time password to your phone"
+                    ? "Enter your name & phone number to continue"
                     : `Code sent to +91 ${mobile}`}
                 </p>
               </div>
@@ -174,6 +197,17 @@ export function AuthModal() {
           {step === 'mobile' ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 transition-all">
+                <input
+                  id="auth-modal-name"
+                  type="text"
+                  placeholder="Full Name (e.g. John Doe)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground/50"
+                  autoFocus
+                />
+              </div>
+              <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 transition-all">
                 <span className="text-sm font-semibold text-muted-foreground select-none">+91</span>
                 <input
                   id="auth-modal-mobile"
@@ -185,7 +219,6 @@ export function AuthModal() {
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   onKeyDown={(e) => e.key === 'Enter' && sendOtp()}
                   className="flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground/50"
-                  autoFocus
                 />
               </div>
               <div className="flex items-start space-x-2.5 py-1">
@@ -225,7 +258,7 @@ export function AuthModal() {
                 disabled={loading}
                 className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send OTP'}
+                {sendOTPMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send OTP'}
               </button>
             </div>
           ) : (
@@ -260,14 +293,19 @@ export function AuthModal() {
                 disabled={loading}
                 className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & Continue'}
+                {verifyOTPMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & Continue'}
               </button>
               <div className="text-center text-xs text-muted-foreground">
                 {resendIn > 0 ? (
                   <>Resend OTP in {resendIn}s</>
                 ) : (
-                  <button type="button" onClick={sendOtp} className="font-semibold text-primary hover:underline">
-                    Resend OTP
+                  <button
+                    type="button"
+                    onClick={resendOtp}
+                    disabled={resendOTPMutation.isPending}
+                    className="font-semibold text-primary hover:underline disabled:opacity-50"
+                  >
+                    {resendOTPMutation.isPending ? 'Resending...' : 'Resend OTP'}
                   </button>
                 )}
               </div>

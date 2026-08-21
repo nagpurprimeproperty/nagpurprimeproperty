@@ -3,10 +3,13 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   login,
   logout,
+  resendOTP,
   verifyOTP,
   type LoginPayload,
   type LoginResponse,
   type LogoutResponse,
+  type ResendOtpPayload,
+  type ResendOtpResponse,
   type VerifyOtpPayload,
   type VerifyOtpResponse,
 } from "@/features/auth/services/authService";
@@ -17,6 +20,12 @@ import { initSocket, disconnectSocket } from "@/config/socket";
 export const useSendOtpMutation = () => {
   return useMutation<LoginResponse, Error, LoginPayload>({
     mutationFn: login,
+  });
+};
+
+export const useResendOtpMutation = () => {
+  return useMutation<ResendOtpResponse, Error, ResendOtpPayload>({
+    mutationFn: resendOTP,
   });
 };
 

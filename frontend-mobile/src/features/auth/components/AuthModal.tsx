@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useModal } from "@/context/ModalContext";
-import { useSendOtpMutation, useVerifyOtpMutation } from "@/features/auth/hooks/useAuth";
+import { useSendOtpMutation, useVerifyOtpMutation, useResendOtpMutation } from "@/features/auth/hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
@@ -32,6 +32,7 @@ export default function AuthModal() {
 
   const sendOtpMutation = useSendOtpMutation();
   const verifyOtpMutation = useVerifyOtpMutation();
+  const resendOtpMutation = useResendOtpMutation();
 
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phone, setLocalPhone] = useState("");
@@ -136,6 +137,29 @@ export default function AuthModal() {
     closeAuth();
     setStep("phone");
     setLocalPhone("");
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await resendOtpMutation.mutateAsync({
+        mobile: phone,
+      });
+
+      const otpCode = response.data?.trim();
+      const toastMessage =
+        otpCode && /^\d{4,8}$/.test(otpCode)
+          ? `OTP resent: ${otpCode}`
+          : response.message || `OTP resent to ${phone}`;
+
+      hotToast.success(toastMessage, { duration: 7000 });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to resend OTP. Please try again.";
+      hotToast.error(message, { duration: 7000 });
+      throw error;
+    }
   };
 
   const handleClose = () => {
@@ -250,6 +274,7 @@ export default function AuthModal() {
               <OTPVerification
                 phone={phone}
                 onVerify={handleVerifyOTP}
+                onResend={handleResendOTP}
                 onBack={() => setStep("phone")}
               />
             )}

@@ -20,6 +20,24 @@ export const  loginUser = async (req, res, next) => {
   }
 };
 
+export const resendOTP = async (req, res, next) => {
+  try {
+    const { mobile } = req.body;
+    const otp = await UserService.resendOTP(mobile);
+    
+    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
+
+    res.json({ 
+      success: true,
+      message: 'OTP resent successfully', 
+      data: showOTP ? otp : undefined 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const verifyOTP = async (req, res, next) => {
   try {
     const { mobile, otp, fcmToken } = req.body;

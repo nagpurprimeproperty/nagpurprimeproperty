@@ -50,8 +50,17 @@ const userService = {
     let user = await userRepository.findByMobile(mobile);
     if (!user) {
       user = await userService.createUser({ mobile, name });
+    } else if (name && name.trim() && (!user.name || user.name === 'User' || user.name === 'Customer' || user.name !== name.trim())) {
+      user = await userRepository.updateById(user._id, { name: name.trim() });
     }
     return user;
+  },
+
+  resendOTP: async (mobile) => {
+    const user = await userRepository.findByMobile(mobile);
+    if (!user) throw { status: 404, message: 'User not found' };
+    const otp = await userService.generateOTP(user);
+    return otp;
   },
 
   generateToken: (user) => {

@@ -11,6 +11,16 @@ export const  loginUser = async (req, res, next) => {
   }
 };
 
+export const resendOTP = async (req, res, next) => {
+  try {
+    const { mobile } = req.body;
+    const otp = await UserService.resendOTP(mobile);
+    res.json({ success: true, message: 'OTP resent successfully', data: otp });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const verifyOTP = async (req, res, next) => {
   try {
     const { mobile, otp, fcmToken } = req.body;

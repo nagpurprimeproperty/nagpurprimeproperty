@@ -16,6 +16,13 @@ export function useVerifyOTP() {
   });
 }
 
+export function useResendOTP() {
+  return useMutation({
+    mutationFn: ({ mobile }) =>
+      clientFetch('/api/auth/resend-otp', { method: 'POST', body: { mobile } }),
+  });
+}
+
 export function useLogout() {
   return useMutation({
     mutationFn: ({ token }) =>

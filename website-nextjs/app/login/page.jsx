@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/stores";
-import { useSendOTP, useVerifyOTP } from "@/lib/hooks/useAuthMutations";
+import { useSendOTP, useVerifyOTP, useResendOTP } from "@/lib/hooks/useAuthMutations";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,6 +20,7 @@ function LoginContent() {
   const redirect = searchParams.get("redirect") || "/profile";
 
   const [step, setStep] = useState("mobile");
+  const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -28,6 +29,7 @@ function LoginContent() {
 
   const sendOTPMutation = useSendOTP();
   const verifyOTPMutation = useVerifyOTP();
+  const resendOTPMutation = useResendOTP();
 
   useEffect(() => {
     if (user) router.replace(redirect);
@@ -40,6 +42,10 @@ function LoginContent() {
   }, [resendIn]);
 
   const sendOtp = async () => {
+    if (!name.trim() || name.trim().length < 2) {
+      toast.error("Please enter your full name (at least 2 characters)");
+      return;
+    }
     if (!acceptedTerms) {
       toast.error("Please accept the Terms & Conditions and Privacy Policy to continue");
       return;
@@ -49,9 +55,9 @@ function LoginContent() {
       return;
     }
     try {
-      const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: "User" });
+      const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: name.trim() });
       setStep("otp");
-      setResendIn(30);
+      setResendIn(60);
       if (typeof otpVal === 'string') {
         toast.success(`OTP sent to your mobile number. OTP: ${otpVal}`);
       } else {
@@ -60,6 +66,22 @@ function LoginContent() {
       setTimeout(() => otpRefs.current[0]?.focus(), 60);
     } catch (err) {
       toast.error(err.message || "Failed to send OTP. Please try again.");
+    }
+  };
+
+  const resendOtp = async () => {
+    try {
+      const otpVal = await resendOTPMutation.mutateAsync({ mobile });
+      setResendIn(60);
+      setOtp(["", "", "", ""]);
+      if (typeof otpVal === 'string') {
+        toast.success(`OTP resent to your mobile number. OTP: ${otpVal}`);
+      } else {
+        toast.success("OTP resent to your mobile number");
+      }
+      setTimeout(() => otpRefs.current[0]?.focus(), 60);
+    } catch (err) {
+      toast.error(err.message || "Failed to resend OTP. Please try again.");
     }
   };
 
@@ -91,7 +113,7 @@ function LoginContent() {
     if (digit && i < 3) otpRefs.current[i + 1]?.focus();
   };
 
-  const loading = sendOTPMutation.isPending || verifyOTPMutation.isPending;
+  const loading = sendOTPMutation.isPending || verifyOTPMutation.isPending || resendOTPMutation.isPending;
 
   return (
     <div className="flex min-h-[80vh] w-full bg-background">
@@ -108,7 +130,7 @@ function LoginContent() {
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {step === "mobile"
-                ? "We'll send a one-time password to your phone"
+                ? "Enter your name & phone number to get started"
                 : `Enter the 4-digit code sent to +91 ${mobile}`}
             </p>
           </div>
@@ -116,6 +138,17 @@ function LoginContent() {
           <div className="w-full rounded-3xl border border-border bg-card p-7 shadow-elegant">
             {step === "mobile" ? (
               <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name" className="text-xs font-semibold text-muted-foreground">Full name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="rounded-xl transition-all"
+                  />
+                </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="mobile" className="text-xs font-semibold text-muted-foreground">Mobile number</Label>
                   <div className="flex items-center gap-2 rounded-xl border border-input bg-background pl-3 py-0.5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
@@ -169,7 +202,7 @@ function LoginContent() {
                   onClick={sendOtp}
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send OTP"}
+                  {sendOTPMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send OTP"}
                 </Button>
               </div>
             ) : (
@@ -205,14 +238,19 @@ function LoginContent() {
                   onClick={verifyOtp}
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify & Continue"}
+                  {verifyOTPMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify & Continue"}
                 </Button>
                 <div className="text-center text-xs text-muted-foreground">
                   {resendIn > 0 ? (
                     <>Resend OTP in {resendIn}s</>
                   ) : (
-                    <button type="button" onClick={sendOtp} className="font-semibold text-primary hover:underline">
-                      Resend OTP
+                    <button
+                      type="button"
+                      onClick={resendOtp}
+                      disabled={resendOTPMutation.isPending}
+                      className="font-semibold text-primary hover:underline disabled:opacity-50"
+                    >
+                      {resendOTPMutation.isPending ? "Resending..." : "Resend OTP"}
                     </button>
                   )}
                 </div>

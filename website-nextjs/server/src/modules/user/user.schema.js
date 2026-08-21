@@ -74,5 +74,11 @@ export const verifyOTPSchema = z.object({
   fcmToken: z.string().nullable().optional(),
 });
 
+export const resendOTPSchema = z.object({
+  mobile: z
+    .string({ required_error: 'Mobile number is required' })
+    .regex(MOBILE_REGEX, MOBILE_REGEX_MESSAGE),
+});
+
 export const updateUserSchema = userBaseSchema
   .partial()
