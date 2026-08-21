@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/stores";
 import { useSendOTP, useVerifyOTP } from "@/lib/hooks/useAuthMutations";
 import { toast } from "sonner";
 import Image from "next/image";
+import Link from "next/link";
 
 function LoginContent() {
   const { login, user } = useAuth();
@@ -20,6 +22,7 @@ function LoginContent() {
   const [step, setStep] = useState("mobile");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [resendIn, setResendIn] = useState(0);
   const otpRefs = useRef([]);
 
@@ -37,6 +40,10 @@ function LoginContent() {
   }, [resendIn]);
 
   const sendOtp = async () => {
+    if (!acceptedTerms) {
+      toast.error("Please accept the Terms & Conditions and Privacy Policy to continue");
+      return;
+    }
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       toast.error("Enter a valid 10-digit mobile number");
       return;
@@ -125,6 +132,35 @@ function LoginContent() {
                     />
                   </div>
                 </div>
+                <div className="flex items-start space-x-2.5 pt-1">
+                  <Checkbox
+                    id="login-terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => setAcceptedTerms(!!checked)}
+                    className="mt-0.5"
+                  />
+                  <Label
+                    htmlFor="login-terms"
+                    className="text-xs leading-tight font-normal text-muted-foreground cursor-pointer select-none"
+                  >
+                    I accept the{" "}
+                    <Link
+                      href="/privacy-policy"
+                      target="_blank"
+                      className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                    >
+                      Privacy Policy
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/terms-and-conditions"
+                      target="_blank"
+                      className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                    >
+                      Terms &amp; Conditions
+                    </Link>
+                  </Label>
+                </div>
                 <Button
                   type="button"
                   variant="hero"
@@ -135,9 +171,6 @@ function LoginContent() {
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send OTP"}
                 </Button>
-                <p className="text-center text-[11px] text-muted-foreground">
-                  By continuing you agree to our Terms &amp; Privacy Policy
-                </p>
               </div>
             ) : (
               <div className="space-y-4">
