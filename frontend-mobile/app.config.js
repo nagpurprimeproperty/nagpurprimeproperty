@@ -86,17 +86,28 @@ module.exports = ({ config }) => {
         foregroundImage: "./assets/images/applogo.png",
         monochromeImage: "./assets/images/applogo.png",
       },
-    config: {
-      googleMaps: {
-        // GOOGLE_MAPS_API_KEY is injected by EAS Build secrets at build time.
-        // It is never bundled into JS — only written into AndroidManifest.xml.
-        apiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyBKmIhSr8KalV8bv_XMWhAhp-le0LRLx6Y",
+      // Android-specific splash: must provide an image so expo-splash-screen
+      // can copy drawable/splashscreen_logo into the build. Without it the
+      // plugin still generates a values.xml reference → hard build failure.
+      // splash-transparent.png is a 1×1 pixel with color #FFF4EC at alpha=0
+      // (fully transparent) — completely invisible against the cream background.
+      // Net result: user sees only the cream background (#FFF4EC), zero logo.
+      splash: {
+        backgroundColor: "#FFF4EC",
+        image: "./assets/images/splash-transparent.png",
+        resizeMode: "contain",
       },
+      config: {
+        googleMaps: {
+          // GOOGLE_MAPS_API_KEY is injected by EAS Build secrets at build time.
+          // It is never bundled into JS — only written into AndroidManifest.xml.
+          apiKey: process.env.GOOGLE_MAPS_API_KEY || "AIzaSyBKmIhSr8KalV8bv_XMWhAhp-le0LRLx6Y",
+        },
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      package: "com.nagpurprimeproperty.app",
     },
-    edgeToEdgeEnabled: true,
-    predictiveBackGestureEnabled: false,
-    package: "com.nagpurprimeproperty.app",
-  },
   web: {
     bundler: "metro",
     output: "static",
