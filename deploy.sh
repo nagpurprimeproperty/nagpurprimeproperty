@@ -8,12 +8,13 @@ echo "   Nagpur Prime Property - VPS Deploy & Clean   "
 echo "================================================="
 echo ""
 
-# 1. Load environment variables if .env.production exists
+# 1. Safely extract Docker Hub credentials from .env.production if present
 if [ -f .env.production ]; then
-  export $(cat .env.production | grep -v '^#' | xargs)
+  DOCKERHUB_USER=$(grep -E '^DOCKERHUB_USERNAME=' .env.production | cut -d '=' -f2- | tr -d '"' | tr -d "'" || true)
+  DOCKERHUB_TOKEN=$(grep -E '^DOCKERHUB_TOKEN=' .env.production | cut -d '=' -f2- | tr -d '"' | tr -d "'" || true)
 fi
 
-DOCKERHUB_USER=${DOCKERHUB_USERNAME:-nagpurprime}
+DOCKERHUB_USER=${DOCKERHUB_USER:-nagpurprimeproperty}
 
 echo "--- Step 1: Pulling latest git changes ---"
 git pull origin main
@@ -26,11 +27,11 @@ fi
 
 echo ""
 echo "--- Step 3: Pulling updated Docker images from Docker Hub ---"
-DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose -f docker-compose.prod.yml pull
+DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose --env-file .env.production -f docker-compose.prod.yml pull
 
 echo ""
 echo "--- Step 4: Starting updated containers ---"
-DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose -f docker-compose.prod.yml up -d --remove-orphans
+DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans
 
 echo ""
 echo "--- Step 5: Cleaning up old Docker images, build caches & host build files ---"
@@ -45,4 +46,4 @@ echo ""
 echo "================================================="
 echo "   ✅ Deployment & Cleanup Finished! Status:    "
 echo "================================================="
-docker compose -f docker-compose.prod.yml ps
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
