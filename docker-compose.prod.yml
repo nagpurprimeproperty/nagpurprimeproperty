@@ -38,6 +38,7 @@ services:
 
   # 3. Express API Backend
   backend:
+    image: ${DOCKERHUB_USERNAME:-nagpurprime}/npp-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -65,6 +66,7 @@ services:
 
   # 4. Next.js Public Website
   website:
+    image: ${DOCKERHUB_USERNAME:-nagpurprime}/npp-website:latest
     build:
       context: ./website-nextjs
       dockerfile: Dockerfile
@@ -97,6 +99,7 @@ services:
 
   # 5. Next.js Admin Panel
   admin-panel:
+    image: ${DOCKERHUB_USERNAME:-nagpurprime}/npp-admin:latest
     build:
       context: ./admin-panel-ui
       dockerfile: dockerfile
