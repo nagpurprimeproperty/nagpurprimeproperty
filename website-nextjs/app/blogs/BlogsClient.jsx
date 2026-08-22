@@ -202,12 +202,7 @@ export default function BlogsClient({ blogs: initialBlogs = [] }) {
               <span className="absolute left-4 top-4 rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary backdrop-blur">Featured</span>
             </div>
             <div className="flex flex-col justify-center p-6 sm:p-10">
-              <div className="flex flex-wrap gap-1.5">
-                {featured.tags?.map((t) => (
-                  <span key={t} className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">{t}</span>
-                ))}
-              </div>
-              <h2 className="mt-4 font-display text-2xl font-extrabold leading-tight group-hover:text-primary sm:text-4xl">{featured.title}</h2>
+              <h2 className="font-display text-2xl font-extrabold leading-tight group-hover:text-primary sm:text-4xl">{featured.title}</h2>
               <p className="mt-3 line-clamp-3 text-sm text-muted-foreground sm:text-base">{featured.excerpt}</p>
               <div className="mt-5 flex items-center gap-3 text-xs text-muted-foreground">
                 {featured.authorImage && (
@@ -252,7 +247,6 @@ export default function BlogsClient({ blogs: initialBlogs = [] }) {
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 )}
-                <span className="absolute left-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary backdrop-blur">{b.tags?.[0]}</span>
               </div>
               <div className="flex flex-1 flex-col p-5">
                 <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug group-hover:text-primary">{b.title}</h2>

@@ -57,16 +57,44 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function AreaPage({ params }) {
-  const { areas: slug } = await params
+  const { areas: rawSlug } = await params
+  const slug = (rawSlug || '').replace(/-nagpur$/, '')
 
-  // Load the area — 404 if not found or unpublished
-  let area
+  // Load the area — try clean slug first, then raw slug, then virtual fallback so it never 404s
+  let area = null
   try {
     area = await getCachedArea(slug)
-  } catch {
-    notFound()
+  } catch {}
+
+  if (!area && rawSlug !== slug) {
+    try {
+      area = await getCachedArea(rawSlug)
+    } catch {}
   }
-  if (!area) notFound()
+
+  // Fallback virtual area object if not explicitly saved in DB collection yet
+  if (!area) {
+    const formattedName = slug
+      .replace(/-/g, ' ')
+      .split(' ')
+      .map((w) => (w.toLowerCase() === 'mihan' ? 'MIHAN' : w.charAt(0).toUpperCase() + w.slice(1)))
+      .join(' ')
+
+    area = {
+      name: formattedName,
+      slug: slug,
+      city: 'Nagpur',
+      startingPrice: '₹25 Lacs',
+      metaTitle: `${formattedName} — Properties, Prices & Locality Guide | Nagpur Prime Property`,
+      metaDescription: `Explore verified properties in ${formattedName}, Nagpur. Compare prices, browse flats, plots, and villas with direct broker contact.`,
+      faqs: [
+        { q: `Is ${formattedName} a good locality in Nagpur?`, a: `${formattedName} is a popular residential and commercial hub in Nagpur with great connectivity and upcoming infra developments.` },
+        { q: `What properties are available in ${formattedName}?`, a: `You can explore 2BHK/3BHK flats, residential plots, villas, and commercial properties in ${formattedName}.` },
+      ],
+      schools: ['Reputed CBSE & State Schools Nearby'],
+      hospitals: ['Multi-specialty Hospitals & Clinics Nearby'],
+    }
+  }
 
   // Properties in this area (filtered by areaSlug → resolved directly to locality name)
   let areaProps = []

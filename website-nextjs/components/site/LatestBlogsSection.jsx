@@ -13,11 +13,6 @@ function LatestBlogsSkeleton() {
           {/* Cover image placeholder */}
           <Skeleton className="aspect-[16/10] w-full rounded-none" />
           <div className="space-y-2 p-4">
-            {/* Tags */}
-            <div className="flex gap-1.5">
-              <Skeleton className="h-4 w-14 rounded-full" />
-              <Skeleton className="h-4 w-10 rounded-full" />
-            </div>
             {/* Title */}
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
@@ -89,12 +84,7 @@ const LatestBlogsSection = memo(function LatestBlogsSection({ initial = [] }) {
             )}
           </div>
           <div className="p-4">
-            <div className="flex flex-wrap gap-1.5">
-              {b.tags?.slice(0, 2).map((t) => (
-                <span key={t} className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-accent-foreground">{t}</span>
-              ))}
-            </div>
-            <h3 className="mt-2 line-clamp-2 font-display text-base font-bold group-hover:text-primary">{b.title}</h3>
+            <h3 className="line-clamp-2 font-display text-base font-bold group-hover:text-primary">{b.title}</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               {b.date ? new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''} • {b.readMins} min read
             </p>

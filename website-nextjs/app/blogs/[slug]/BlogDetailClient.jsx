@@ -58,18 +58,6 @@ export default function BlogDetailClient({ blog: b, related }) {
           >
             <ChevronLeft className="h-3.5 w-3.5" /> All articles
           </Link>
-          {tags.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-1.5">
-              {tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          )}
           <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.15] tracking-tight sm:text-5xl">
             {b.title}
           </h1>
@@ -123,6 +111,27 @@ export default function BlogDetailClient({ blog: b, related }) {
 
           {/* Article body */}
           <article className="min-w-0">
+            {/* Table of contents on mobile — comes ON TOP before article content */}
+            {content.some((s) => s.heading) && (
+              <div className="mb-8 rounded-2xl border border-border bg-card p-5 shadow-soft lg:hidden">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                  In this article
+                </div>
+                <ol className="mt-3 space-y-2 text-sm">
+                  {content.map((s, i) =>
+                    s.heading ? (
+                      <li key={i} className="flex gap-2">
+                        <span className="text-xs font-bold text-muted-foreground">{i + 1}.</span>
+                        <a href={`#h${i}`} className="text-foreground/80 hover:text-primary">
+                          {s.heading}
+                        </a>
+                      </li>
+                    ) : null
+                  )}
+                </ol>
+              </div>
+            )}
+
             {content.length > 0 ? (
               content.map((s, i) => (
                 <section key={i} id={`h${i}`} className="mb-12 scroll-mt-24">
@@ -138,7 +147,7 @@ export default function BlogDetailClient({ blog: b, related }) {
                     </h2>
                   )}
 
-                  {/* Section body → rendered as HTML (supports bold, links, lists etc.) */}
+                  {/* Section body → rendered as HTML */}
                   <div
                     className={`rich-text${i === 0 ? ' rich-text-dropcap' : ''}`}
                     dangerouslySetInnerHTML={{ __html: ensureHeadingHierarchy(s.body) }}
@@ -149,8 +158,27 @@ export default function BlogDetailClient({ blog: b, related }) {
               <p className="text-muted-foreground">No content available for this article.</p>
             )}
 
+            {/* Keywords / Tags — placed at bottom of article */}
+            {tags.length > 0 && (
+              <div className="mt-10 border-t border-border pt-6">
+                <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                  Keywords & Topics
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((t) => (
+                    <span
+                      key={t}
+                      className="rounded-xl border border-border bg-secondary/40 px-3 py-1.5 text-xs font-semibold text-foreground"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Share */}
-            <div className="mt-12 flex items-center gap-3 border-t border-border pt-6">
+            <div className="mt-8 flex items-center gap-3 border-t border-border pt-6">
               <div className="text-xs font-semibold text-muted-foreground">Share this article</div>
               <button
                 onClick={handleShareNative}
@@ -178,9 +206,9 @@ export default function BlogDetailClient({ blog: b, related }) {
 
           {/* Sidebar */}
           <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start">
-            {/* Table of contents — from section headings */}
+            {/* Desktop Table of contents */}
             {content.some((s) => s.heading) && (
-              <div className="rounded-2xl border border-border bg-card p-5">
+              <div className="hidden rounded-2xl border border-border bg-card p-5 lg:block">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
                   In this article
                 </div>
@@ -236,12 +264,7 @@ export default function BlogDetailClient({ blog: b, related }) {
                     </div>
                   )}
                   <div className="p-4">
-                    {(r.tags || [])[0] && (
-                      <div className="text-[10px] font-semibold uppercase tracking-widest text-primary">
-                        {r.tags[0]}
-                      </div>
-                    )}
-                    <h4 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
+                    <h4 className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
                       {r.title}
                     </h4>
                   </div>

@@ -85,12 +85,17 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
             {/* Connectivity */}
             {a.connectivity && (
               <Block kicker="Getting around" title="Connectivity">
-                <div className="flex items-start gap-4 rounded-2xl border border-border bg-card p-6">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                    <RouteIcon className="h-5 w-5" />
-                  </span>
+                <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-soft">
+                  <div className="flex items-center gap-3 mb-4 border-b border-border/60 pb-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                      <RouteIcon className="h-5 w-5" />
+                    </span>
+                    <h3 className="font-display text-base font-bold text-foreground">
+                      Connectivity Overview
+                    </h3>
+                  </div>
                   <div
-                    className="rich-text text-sm"
+                    className="rich-text text-sm w-full min-w-0"
                     dangerouslySetInnerHTML={{ __html: a.connectivity }}
                   />
                 </div>
@@ -114,12 +119,17 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
             {/* Investment */}
             {a.investment && (
               <Block kicker="The numbers" title="Investment potential">
-                <div className="flex items-start gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-6">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
-                    <TrendingUp className="h-5 w-5" />
-                  </span>
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6 shadow-soft">
+                  <div className="flex items-center gap-3 mb-4 border-b border-primary/15 pb-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+                      <TrendingUp className="h-5 w-5" />
+                    </span>
+                    <h3 className="font-display text-base font-bold text-foreground">
+                      Investment Outlook
+                    </h3>
+                  </div>
                   <div
-                    className="rich-text text-sm"
+                    className="rich-text text-sm w-full min-w-0"
                     dangerouslySetInnerHTML={{ __html: a.investment }}
                   />
                 </div>
@@ -188,12 +198,7 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
                         </div>
                       )}
                       <div className="p-4">
-                        {(b.tags || [])[0] && (
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                            {b.tags[0]}
-                          </div>
-                        )}
-                        <div className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
+                        <div className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
                           {b.title}
                         </div>
                       </div>

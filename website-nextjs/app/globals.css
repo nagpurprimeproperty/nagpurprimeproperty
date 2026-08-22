@@ -281,26 +281,14 @@
   display: block;
 }
 
-/* Blog article first-letter drop cap */
-.rich-text > p:first-of-type::first-letter {
-  float: left;
-  font-family: var(--font-display);
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 0.85;
-  margin-right: 0.1em;
-  margin-top: 0.05em;
-  color: var(--color-primary);
-}
-
-/* Drop-cap only on first section */
+/* Blog article first-letter drop cap (only applied when .rich-text-dropcap class is present) */
 .rich-text-dropcap > p:first-of-type::first-letter {
   float: left;
   font-family: var(--font-display);
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
   line-height: 0.85;
-  margin-right: 0.1em;
+  margin-right: 0.12em;
   margin-top: 0.05em;
   color: var(--color-primary);
 }
