@@ -8,6 +8,7 @@ import {
   Linking,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RefreshCw, XCircle, Clock, Receipt, Download } from "lucide-react-native";
@@ -164,6 +165,10 @@ export default function PurchaseHistoryScreen() {
     try {
       setDownloadingId(subscriptionId);
       await downloadInvoicePdf(subscriptionId);
+      // Android: file saved to chosen folder. iOS: share sheet handled by system.
+      if (Platform.OS === "android") {
+        Alert.alert("Downloaded", "Invoice saved to your selected folder.");
+      }
     } catch (err: any) {
       Alert.alert("Download Failed", err?.message || "Could not download tax invoice.");
     } finally {

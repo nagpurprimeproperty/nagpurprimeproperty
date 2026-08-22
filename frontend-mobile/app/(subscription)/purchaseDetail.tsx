@@ -8,6 +8,7 @@ import {
   Linking,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -184,6 +185,9 @@ export default function PurchaseDetailScreen() {
     try {
       setIsDownloadingInvoice(true);
       await downloadInvoicePdf(purchase._id);
+      if (Platform.OS === "android") {
+        Alert.alert("Downloaded", "Invoice saved to your selected folder.");
+      }
     } catch (err: any) {
       Alert.alert("Download Failed", err?.message || "Could not download tax invoice.");
     } finally {

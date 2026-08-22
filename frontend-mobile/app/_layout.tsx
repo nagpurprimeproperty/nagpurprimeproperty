@@ -20,7 +20,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Platform, Text, TextInput } from "react-native";
+import { Platform, Text, TextInput, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
 
@@ -80,8 +80,13 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
+  // Fonts still loading — return a cream View that matches:
+  //   1. The native splash background (#FFF4EC, set in app.config.js)
+  //   2. The custom splash.tsx container background (#FFF4EC)
+  // This eliminates the blank white flash between native splash hide
+  // and fonts being ready. User sees: cream → cream → custom splash ✅
   if (!fontsLoaded && !fontError) {
-    return null;
+    return <View style={{ flex: 1, backgroundColor: "#FFF4EC" }} />;
   }
 
   return (
