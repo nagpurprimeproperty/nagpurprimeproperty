@@ -17,7 +17,8 @@ fi
 DOCKERHUB_USER=${DOCKERHUB_USER:-nagpurprimeproperty}
 
 echo "--- Step 1: Pulling latest git changes ---"
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
 echo ""
 echo "--- Step 2: Logging in to Docker Hub ---"
