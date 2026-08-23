@@ -13,7 +13,7 @@ import {
   type VerifyOtpPayload,
   type VerifyOtpResponse,
 } from "@/features/auth/services/authService";
-import { getDevicePushToken } from "@/lib/pushNotifications";
+import { getPlatformPushTokens } from "@/lib/pushNotifications";
 import { initSocket, disconnectSocket } from "@/config/socket";
 
 
@@ -32,25 +32,29 @@ export const useResendOtpMutation = () => {
 export const useVerifyOtpMutation = () => {
   const setSession = useAuthStore((state) => state.setSession);
 
-  return useMutation<VerifyOtpResponse, Error, Omit<VerifyOtpPayload, "fcmToken">>({
-    mutationFn: async (variables) => {
-      // Attempt to get FCM token (non-blocking — null if denied or unavailable)
-      const fcmToken = await getDevicePushToken();
-      return verifyOTP({ ...variables, fcmToken });
-    },
-    onSuccess: (response, variables) => {
-      setSession({
-        token: response.token,
-        phone: variables.mobile,
-        user: response.data,
-      });
+  return useMutation<VerifyOtpResponse, Error, Omit<VerifyOtpPayload, "fcmToken" | "appleToken">>(
+    {
+      mutationFn: async (variables) => {
+        // Get the correct native push token for this platform (non-blocking).
+        // Android → { fcmToken: "<FCM>",   appleToken: null }
+        // iOS     → { fcmToken: null,       appleToken: "<APNS>" }
+        const { fcmToken, appleToken } = await getPlatformPushTokens();
+        return verifyOTP({ ...variables, fcmToken, appleToken });
+      },
+      onSuccess: (response, variables) => {
+        setSession({
+          token: response.token,
+          phone: variables.mobile,
+          user: response.data,
+        });
 
-      // Connect socket with the newly issued JWT
-      if (response.token) {
-        initSocket(response.token);
-      }
-    },
-  });
+        // Connect socket with the newly issued JWT
+        if (response.token) {
+          initSocket(response.token);
+        }
+      },
+    }
+  );
 };
 
 export const useLogoutMutation = () => {
