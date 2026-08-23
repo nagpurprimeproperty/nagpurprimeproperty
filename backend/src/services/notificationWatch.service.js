@@ -92,7 +92,9 @@ const deliverNotification = async (notification) => {
   const io = getIO();
   const { _id, userId, targetIds, targetRole, title, message, type, sendPush } = notification;
 
-  console.log(`[Watcher] Delivering: "${title}" (ID: ${_id}) | targetRole=${targetRole} | sendPush=${!!sendPush}`);
+  console.log(`[Watcher] ──────────────────────────────────────────────────`);
+  console.log(`[Watcher] Delivering: "${title}" (ID: ${_id})`);
+  console.log(`[Watcher]   targetRole=${targetRole} | sendPush=${!!sendPush} | userId=${userId || '(none)'} | targetIds=${targetIds?.length || 0}`);
 
   // ── Scenario 1: Targeted single user ─────────────────────────────────────
   if (userId) {
@@ -107,13 +109,17 @@ const deliverNotification = async (notification) => {
     // FCM push (only if sendPush is true)
     if (sendPush) {
       const user = await User.findById(userId).select('fcmToken');
+      console.log(`[Watcher] 🔍 User ${userId} fcmToken: ${user?.fcmToken ? `"${user.fcmToken.slice(0, 30)}..."` : '❌ NULL/MISSING'}`);
       if (user?.fcmToken) {
         await sendFCM(user.fcmToken, { title, message, type, userId });
+      } else {
+        console.warn(`[Watcher] ⚠️ Skipping push for user ${userId} — no fcmToken in DB`);
       }
     }
   }
   // ── Scenario 2: Multiple targeted users ──────────────────────────────────
   else if (targetIds && targetIds.length > 0) {
+    console.log(`[Watcher] 📋 Sending to ${targetIds.length} targeted user(s)`);
     for (const targetId of targetIds) {
       const userRoom = targetId.toString();
 
@@ -124,8 +130,11 @@ const deliverNotification = async (notification) => {
 
       if (sendPush) {
         const user = await User.findById(targetId).select('fcmToken');
+        console.log(`[Watcher] 🔍 User ${targetId} fcmToken: ${user?.fcmToken ? `"${user.fcmToken.slice(0, 30)}..."` : '❌ NULL/MISSING'}`);
         if (user?.fcmToken) {
           await sendFCM(user.fcmToken, { title, message, type, userId: targetId });
+        } else {
+          console.warn(`[Watcher] ⚠️ Skipping push for user ${targetId} — no fcmToken in DB`);
         }
       }
     }
@@ -143,7 +152,14 @@ const deliverNotification = async (notification) => {
         isDeleted: { $ne: true },
       }).select('_id fcmToken');
 
-      console.log(`[Watcher] Broadcasting FCM to ${users.length} device(s).`);
+      console.log(`[Watcher] 📢 Broadcasting push to ${users.length} device(s)`);
+      if (users.length === 0) {
+        console.warn(`[Watcher] ⚠️ NO users have fcmToken in DB — push will not be sent to anyone!`);
+      } else {
+        users.forEach((u, i) => {
+          console.log(`[Watcher]   ${i + 1}. User ${u._id} → token: "${u.fcmToken.slice(0, 35)}..."`);
+        });
+      }
 
       // Send in parallel batches of 10 to avoid overwhelming FCM
       const BATCH_SIZE = 10;
@@ -155,6 +171,8 @@ const deliverNotification = async (notification) => {
           )
         );
       }
+    } else {
+      console.log(`[Watcher] ℹ️ sendPush is false — skipping FCM push`);
     }
   }
 
@@ -165,13 +183,68 @@ const deliverNotification = async (notification) => {
   });
 
   console.log(`[Watcher] ✅ Delivered: "${title}" (ID: ${_id})`);
+  console.log(`[Watcher] ──────────────────────────────────────────────────`);
 };
 
 /**
- * Send an individual Firebase Cloud Messaging push notification.
+ * Send an individual push notification.
+ * Supports both Expo Push Tokens and native FCM tokens.
  * Automatically clears invalid/expired device tokens.
  */
 const sendFCM = async (token, { title, message, type, userId }) => {
+  // ── Detect token type ──────────────────────────────────────────────────────
+  const isExpoToken =
+    typeof token === 'string' &&
+    (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken['));
+
+  console.log(`[Watcher:Push] 🔑 Token type: ${isExpoToken ? 'EXPO PUSH TOKEN' : 'NATIVE FCM TOKEN'} | User: ${userId}`);
+  console.log(`[Watcher:Push]   Token value: "${token.slice(0, 40)}..."`);
+
+  // ── Route 1: Expo Push Token → send via Expo Push API ──────────────────────
+  if (isExpoToken) {
+    console.log(`[Watcher:Push] 📤 Sending via Expo Push API (exp.host)...`);
+    try {
+      const res = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([
+          {
+            to: token,
+            sound: 'default',
+            title,
+            body: message,
+            data: { type: String(type || 'info'), userId: String(userId) },
+            priority: 'high',
+            _displayInForeground: true,
+          },
+        ]),
+      });
+      const data = await res.json();
+      console.log(`[Watcher:Push] 📬 Expo API response:`, JSON.stringify(data));
+
+      if (data?.data?.[0]?.status === 'error') {
+        const errDetails = data.data[0];
+        if (errDetails.details?.error === 'DeviceNotRegistered') {
+          console.warn(`[Watcher:Push] ❌ DeviceNotRegistered for user ${userId} — clearing token from DB.`);
+          await User.findByIdAndUpdate(userId, { fcmToken: null });
+        } else {
+          console.error(`[Watcher:Push] ❌ Expo error: ${errDetails.message || errDetails.details?.error}`);
+        }
+      } else {
+        console.log(`[Watcher:Push] ✅ Expo push sent successfully to user ${userId}`);
+      }
+    } catch (expoErr) {
+      console.error(`[Watcher:Push] ❌ Expo Push API request failed:`, expoErr.message);
+    }
+    return;
+  }
+
+  // ── Route 2: Native FCM Token → send via Firebase Admin SDK ────────────────
+  console.log(`[Watcher:Push] 📤 Sending via Firebase Admin SDK (FCM)...`);
   try {
     const messaging = getMessaging();
     await messaging.send({
@@ -187,16 +260,18 @@ const sendFCM = async (token, { title, message, type, userId }) => {
       },
       apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
     });
+    console.log(`[Watcher:Push] ✅ FCM push sent successfully to user ${userId}`);
   } catch (err) {
     const code = err?.code || err?.errorInfo?.code || '';
+    console.error(`[Watcher:Push] ❌ FCM send FAILED for user ${userId}`);
+    console.error(`[Watcher:Push]   Error code: ${code}`);
+    console.error(`[Watcher:Push]   Error message: ${err.message}`);
     if (
       code.includes('registration-token-not-registered') ||
       code.includes('invalid-registration-token')
     ) {
-      console.warn(`[Watcher] Invalid FCM token for user ${userId} — clearing.`);
+      console.warn(`[Watcher:Push] 🗑️ Token is invalid/expired — clearing from DB for user ${userId}`);
       await User.findByIdAndUpdate(userId, { fcmToken: null });
-    } else {
-      console.error(`[Watcher] FCM send failed for user ${userId}:`, err.message);
     }
   }
 };
