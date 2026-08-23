@@ -225,55 +225,55 @@ export default async function AboutUsPage() {
         </section>
 
         {/* ── CONTACT INFO ── */}
-        {(contactInfo.address || contactInfo.phone || contactInfo.email) && (
+        {(contactInfo.address || contactInfo.phone || contactInfo.email || contactInfo.website) && (
           <section className="bg-secondary/30 border-t border-border">
             <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
               <div className="text-xs font-semibold uppercase tracking-widest text-primary mb-3 text-center">Get In Touch</div>
               <h2 className="font-display text-2xl font-bold sm:text-3xl text-center text-foreground mb-10">
                 We'd love to hear from you
               </h2>
-              <div className="flex flex-wrap justify-center gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
                 {contactInfo.address && (
-                  <div className="flex items-start gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-soft w-full sm:w-auto sm:min-w-[240px] sm:max-w-[320px] flex-1">
+                  <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5 shadow-soft hover:border-primary/40 transition-colors">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
                       <MapPin className="h-5 w-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Address</div>
-                      <div className="text-sm text-foreground break-words">{contactInfo.address}</div>
+                      <div className="text-sm font-medium text-foreground break-words">{contactInfo.address}</div>
                     </div>
                   </div>
                 )}
                 {contactInfo.phone && (
-                  <a href={`tel:${contactInfo.phone}`} className="flex items-start gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-soft w-full sm:w-auto sm:min-w-[240px] sm:max-w-[320px] flex-1 hover:border-primary transition-colors group">
+                  <a href={`tel:${contactInfo.phone}`} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5 shadow-soft hover:border-primary transition-colors group">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-colors">
                       <Phone className="h-5 w-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Phone</div>
-                      <div className="text-sm font-semibold text-foreground break-all">{contactInfo.phone}</div>
+                      <div className="text-sm font-semibold text-foreground [overflow-wrap:anywhere] break-words">{contactInfo.phone}</div>
                     </div>
                   </a>
                 )}
                 {contactInfo.email && (
-                  <a href={`mailto:${contactInfo.email}`} className="flex items-start gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-soft w-full sm:w-auto sm:min-w-[240px] sm:max-w-[320px] flex-1 hover:border-primary transition-colors group">
+                  <a href={`mailto:${contactInfo.email}`} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5 shadow-soft hover:border-primary transition-colors group">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-colors">
                       <Mail className="h-5 w-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Email</div>
-                      <div className="text-sm font-semibold text-foreground break-all">{contactInfo.email}</div>
+                      <div className="text-sm font-semibold text-foreground [overflow-wrap:anywhere] break-words">{contactInfo.email}</div>
                     </div>
                   </a>
                 )}
                 {contactInfo.website && (
-                  <a href={contactInfo.website.startsWith('http') ? contactInfo.website : `https://${contactInfo.website}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-soft w-full sm:w-auto sm:min-w-[240px] sm:max-w-[320px] flex-1 hover:border-primary transition-colors group">
+                  <a href={contactInfo.website.startsWith('http') ? contactInfo.website : `https://${contactInfo.website}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5 shadow-soft hover:border-primary transition-colors group">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary shrink-0 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-colors">
                       <Globe className="h-5 w-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Website</div>
-                      <div className="text-sm font-semibold text-foreground break-all">{contactInfo.website}</div>
+                      <div className="text-sm font-semibold text-foreground [overflow-wrap:anywhere] break-words">{contactInfo.website}</div>
                     </div>
                   </a>
                 )}

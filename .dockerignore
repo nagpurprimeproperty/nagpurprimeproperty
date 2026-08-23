@@ -1,0 +1,30 @@
+# Ignore dependencies
+**/node_modules
+**/.pnpm-store
+
+# Ignore Next.js & build outputs
+**/.next
+**/out
+**/dist
+**/build
+
+# Ignore local environment files
+.env*.local
+.env.production.local
+
+# Ignore version control & logs
+.git
+.gitignore
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Ignore OS / IDE files
+.DS_Store
+*.swp
+.vscode
+.idea
+
+# TypeScript build info
+**/tsconfig.tsbuildinfo

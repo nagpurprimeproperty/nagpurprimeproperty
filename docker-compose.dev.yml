@@ -1,0 +1,145 @@
+services:
+  # 1. MongoDB Database (Dev)
+  mongo-dev:
+    image: mongo:8
+    container_name: npp-mongo-dev
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin_dev}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-dev_secure_db_password_123}
+    ports:
+      - "127.0.0.1:27018:27017"
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/data/db/mongodb.key"]
+    volumes:
+      - mongo-dev-data:/data/db
+    networks:
+      - npp-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 2. Redis Caching & Queue Service (Dev)
+  redis-dev:
+    image: redis:7-alpine
+    container_name: npp-redis-dev
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-dev_secure_redis_password_123}
+    volumes:
+      - redis-dev-data:/data
+    networks:
+      - npp-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 3. Express API Backend (Dev)
+  backend-dev:
+    image: ${DOCKERHUB_USERNAME:-nagpurprimeproperty}/npp-backend:dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: npp-backend-dev
+    restart: always
+    ports:
+      - "4001:4000"
+    env_file:
+      - .env.development
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin_dev}:${MONGO_INITDB_ROOT_PASSWORD:-dev_secure_db_password_123}@mongo-dev:27017/nagpur-property-dev?authSource=admin&replicaSet=rs0
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-dev_secure_redis_password_123}@redis-dev:6379
+    depends_on:
+      - mongo-dev
+      - redis-dev
+    networks:
+      - npp-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 4. Next.js Public Website (Dev)
+  website-dev:
+    image: ${DOCKERHUB_USERNAME:-nagpurprimeproperty}/npp-website:dev
+    build:
+      context: ./website-nextjs
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://apidevelopment.nagpurprimeproperty.com}
+        - NEXT_PUBLIC_GOOGLE_MAPS_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://websitedevelopment.nagpurprimeproperty.com}
+    container_name: npp-website-dev
+    restart: always
+    ports:
+      - "3002:3000"
+    env_file:
+      - .env.development
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin_dev}:${MONGO_INITDB_ROOT_PASSWORD:-dev_secure_db_password_123}@mongo-dev:27017/nagpur-property-dev?authSource=admin&replicaSet=rs0
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-dev_secure_redis_password_123}@redis-dev:6379
+      - ADMIN_API_URL=http://npp-admin-dev:3000
+    depends_on:
+      - mongo-dev
+      - redis-dev
+    networks:
+      - npp-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 5. Next.js Admin Panel (Dev)
+  admin-panel-dev:
+    image: ${DOCKERHUB_USERNAME:-nagpurprimeproperty}/npp-admin:dev
+    build:
+      context: ./admin-panel-ui
+      dockerfile: dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=/api
+        - NEXT_PUBLIC_GOOGLE_MAPS_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+        - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL:-https://websitedevelopment.nagpurprimeproperty.com}
+        - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://admindevelopment.nagpurprimeproperty.com}
+        - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
+        - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+        - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+        - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+        - NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
+        - NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}
+    container_name: npp-admin-dev
+    restart: always
+    ports:
+      - "3003:3000"
+    env_file:
+      - .env.development
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin_dev}:${MONGO_INITDB_ROOT_PASSWORD:-dev_secure_db_password_123}@mongo-dev:27017/nagpur-property-dev?authSource=admin&replicaSet=rs0
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-dev_secure_redis_password_123}@redis-dev:6379
+    depends_on:
+      - mongo-dev
+      - redis-dev
+    networks:
+      - npp-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongo-dev-data:
+  redis-dev-data:
+
+networks:
+  npp-dev-network:
+    driver: bridge

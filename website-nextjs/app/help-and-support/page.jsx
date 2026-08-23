@@ -153,12 +153,12 @@ export default async function HelpSupportPage() {
                   key={i}
                   className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-elegant"
                 >
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className={`grid h-12 w-12 place-items-center rounded-xl transition-all duration-300 ${channel.color.split(' ')[1]}`}>
                       <Icon className={`h-6 w-6 ${channel.color.split(' ')[0]}`} />
                     </div>
                     <h3 className="mt-5 font-display text-lg font-bold text-foreground">{channel.title}</h3>
-                    <p className="mt-1.5 text-sm font-semibold text-muted-foreground break-all">{channel.value}</p>
+                    <p className="mt-1.5 text-sm font-semibold text-muted-foreground [overflow-wrap:anywhere] break-words">{channel.value}</p>
                   </div>
                   <div className="mt-6">
                     <a

@@ -5,14 +5,18 @@ RUN apk add --no-cache libc6-compat git
 
 WORKDIR /app
 
-# Install pnpm
+# Install pnpm & set network resilience options
 RUN corepack enable && corepack prepare pnpm@latest --activate
+ENV PNPM_FETCH_TIMEOUT=300000
+ENV PNPM_FETCH_RETRIES=5
 
 # Copy configs and lockfiles
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 
 # Install all dependencies (including devDependencies for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set fetch-timeout 300000 && \
+    pnpm config set fetch-retries 5 && \
+    pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -71,6 +75,8 @@ RUN addgroup --system --gid 1001 nodejs \
 
 # Install pnpm for prod dependencies installation
 RUN corepack enable && corepack prepare pnpm@latest --activate
+ENV PNPM_FETCH_TIMEOUT=300000
+ENV PNPM_FETCH_RETRIES=5
 
 # Set workdir ownership
 RUN chown nextjs:nodejs /app
@@ -79,7 +85,9 @@ RUN chown nextjs:nodejs /app
 COPY --chown=nextjs:nodejs package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 
 # Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm config set fetch-timeout 300000 && \
+    pnpm config set fetch-retries 5 && \
+    pnpm install --prod --frozen-lockfile
 
 # Copy build artifacts and server files with correct ownership
 COPY --chown=nextjs:nodejs --from=builder /app/.next ./.next

@@ -46,12 +46,12 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
   const aboutData = initialAboutData;
 
   const activeLocalities = initialAreasList.length > 0 
-    ? initialAreasList.slice(0, 4).map(a => ({ slug: a.slug, label: a.name }))
+    ? initialAreasList.slice(0, 4).map(a => ({ slug: (a.slug || '').replace(/-nagpur$/, ''), label: a.name }))
     : [
-        { slug: 'dighori-nagpur', label: 'Dighori' },
-        { slug: 'mihan-nagpur', label: 'MIHAN' },
-        { slug: 'wardha-road-nagpur', label: 'Wardha Road' },
-        { slug: 'manish-nagar-nagpur', label: 'Manish Nagar' },
+        { slug: 'dighori', label: 'Dighori' },
+        { slug: 'mihan', label: 'MIHAN' },
+        { slug: 'wardha-road', label: 'Wardha Road' },
+        { slug: 'manish-nagar', label: 'Manish Nagar' },
       ];
 
   const contactInfo = aboutData.contactInfo || {};
