@@ -9,7 +9,8 @@ export interface LoginPayload {
 export interface VerifyOtpPayload {
   mobile: string;
   otp: string;
-  fcmToken?: string | null;
+  fcmToken?: string | null;    // Android — native FCM registration token
+  appleToken?: string | null;  // iOS     — native APNs device token
 }
 
 export interface AuthApiResponse<T> {
