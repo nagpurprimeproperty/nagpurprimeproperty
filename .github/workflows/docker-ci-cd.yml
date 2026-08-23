@@ -100,7 +100,9 @@ jobs:
             cd ${{ secrets.VPS_TARGET_DIR }}
 
             echo "📥 Fetching latest docker-compose and configs..."
-            git pull origin main
+            git fetch origin main
+            git checkout main || git checkout -b main origin/main
+            git reset --hard origin/main
 
             echo "🔑 Logging in to Docker Hub on VPS..."
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
