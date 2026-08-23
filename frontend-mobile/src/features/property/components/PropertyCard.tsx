@@ -376,9 +376,16 @@ const HorizontalCard = React.memo(function HorizontalCard({
             </Text>
           </View>
         )}
+        {Boolean(item.listingCategory) && (
+          <View style={{ backgroundColor: "#DBEAFE", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+            <Text style={{ color: "#1D4ED8", fontSize: 8, fontWeight: "800" }}>
+              {item.listingCategory!.toUpperCase()}
+            </Text>
+          </View>
+        )}
       </View>
     );
-  }, [item.propertyType, item.type, item.bedrooms, item.details, item.area, colors]);
+  }, [item.propertyType, item.type, item.bedrooms, item.details, item.area, item.listingCategory, colors]);
 
   return (
     <View
@@ -543,9 +550,18 @@ const SearchListCard = React.memo(function SearchListCard({
       >
         {/* Row 1: Category & Heart */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: "#F97316", fontSize: 9, fontWeight: "900", textTransform: "uppercase" }}>
-            {item.type || "Property"}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text style={{ color: "#F97316", fontSize: 9, fontWeight: "900", textTransform: "uppercase" }}>
+              {item.type || "Property"}
+            </Text>
+            {Boolean(item.listingCategory) && (
+              <View style={{ backgroundColor: "#DBEAFE", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: "#1D4ED8", fontSize: 8, fontWeight: "800" }}>
+                  {item.listingCategory!.toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
           <TouchableOpacity onPress={onLike} style={{ padding: 4 }} activeOpacity={0.7}>
             <Ionicons
               name={liked ? "heart" : "heart-outline"}
@@ -792,9 +808,18 @@ const VerticalCard = React.memo(function VerticalCard({
         {/* Row 1 & 2 layout: Type, Title (Left) | Price, Negotiable (Right) */}
         <View className="flex-row justify-between items-start">
           <View className="flex-1 mr-3">
-            <Text className="text-orange-500 font-extrabold text-xs uppercase tracking-wider">
-              {item.type}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-orange-500 font-extrabold text-xs uppercase tracking-wider">
+                {item.type}
+              </Text>
+              {Boolean(item.listingCategory) && (
+                <View style={{ backgroundColor: "#DBEAFE", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                  <Text style={{ color: "#1D4ED8", fontSize: 9, fontWeight: "800" }}>
+                    {item.listingCategory!.toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text
               className="text-slate-900 font-black text-xl mt-1.5 leading-tight"
               numberOfLines={2}
