@@ -29,8 +29,8 @@ export function MapPreview({
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
 
-  // Check if API Key is configured and Maps SDK loaded successfully
-  const useRealMap = loaded && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+  // Check if Maps SDK loaded successfully
+  const useRealMap = loaded;
 
   // ─── Real Google Map Initialization ──────────────────────────────────────────
   useEffect(() => {

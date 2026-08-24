@@ -2,6 +2,36 @@
 import { useEffect, useState } from "react";
 
 const SCRIPT_ID = "google-maps-script";
+let cachedKey = null;
+let fetchPromise = null;
+
+async function getApiKey() {
+    if (process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
+        return process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+    }
+    if (cachedKey) {
+        return cachedKey;
+    }
+    if (fetchPromise) {
+        return fetchPromise;
+    }
+
+    fetchPromise = (async () => {
+        try {
+            const res = await fetch("/api/maps/key");
+            if (res.ok) {
+                const data = await res.json();
+                cachedKey = data.key || (data.data && data.data.key) || "";
+                return cachedKey;
+            }
+        } catch (err) {
+            console.error("Failed to fetch map key from server endpoint:", err);
+        }
+        return "";
+    })();
+
+    return fetchPromise;
+}
 
 export function useGoogleMaps() {
     const [loaded, setLoaded] = useState(() => typeof window !== "undefined" && !!window.google);
@@ -24,19 +54,41 @@ export function useGoogleMaps() {
             };
         }
 
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
-        if (!apiKey) {
-            console.warn("⚠️ NEXT_PUBLIC_GOOGLE_MAPS_KEY is not defined in environment variables");
-            return;
-        }
+        let isMounted = true;
 
-        const script = document.createElement("script");
-        script.id = SCRIPT_ID;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-        script.async = true;
-        script.onload = () => setLoaded(true);
-        document.head.appendChild(script);
+        getApiKey().then((apiKey) => {
+            if (!isMounted) return;
+
+            if (!apiKey) {
+                console.warn("⚠️ NEXT_PUBLIC_GOOGLE_MAPS_KEY is not defined in environment variables or runtime server config");
+                return;
+            }
+
+            if (window.google) {
+                setLoaded(true);
+                return;
+            }
+
+            if (document.getElementById(SCRIPT_ID)) return;
+
+            const script = document.createElement("script");
+            script.id = SCRIPT_ID;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+            script.async = true;
+            script.onload = () => {
+                if (isMounted) setLoaded(true);
+            };
+            script.onerror = (err) => {
+                console.error("Failed to load Google Maps SDK script:", err);
+            };
+            document.head.appendChild(script);
+        });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     return loaded;
 }
+
