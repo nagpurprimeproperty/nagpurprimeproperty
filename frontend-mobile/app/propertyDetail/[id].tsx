@@ -690,17 +690,19 @@ function TopBadge({
   variant,
 }: {
   label: string;
-  variant: "featured" | "type" | "verified";
+  variant: "featured" | "type" | "verified" | "listing";
 }) {
   const bg = {
     featured: "bg-orange-500",
     type: "bg-orange-100",
     verified: "bg-emerald-100",
+    listing: "bg-blue-100",
   };
   const text = {
     featured: "text-white",
     type: "text-orange-700",
     verified: "text-emerald-700",
+    listing: "text-blue-700",
   };
 
   return (
@@ -1205,6 +1207,9 @@ export default function PropertyDetailsScreen() {
             {property.verified && (
               <TopBadge label="Verified" variant="verified" />
             )}
+            {Boolean((property as any).listingCategory) && (
+              <TopBadge label={(property as any).listingCategory} variant="listing" />
+            )}
           </View>
 
           <Text className="text-[22px] font-black text-slate-900 leading-8 tracking-tight">
@@ -1633,9 +1638,11 @@ export default function PropertyDetailsScreen() {
                     <Text className="text-[17px] font-black text-slate-900">
                       {property.broker.name}
                     </Text>
-                    <Text className="text-[13px] font-medium text-slate-500 mt-0.5">
-                      {property.broker.experience}
-                    </Text>
+                    {Boolean((property as any).propertyListedBy) && (
+                      <Text className="text-[13px] font-medium text-slate-500 mt-0.5">
+                        {(property as any).propertyListedBy}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
