@@ -341,7 +341,7 @@ function PropertiesContent({ initialProperties, initialAreas }) {
             }}
             onExpandMap={() => setIsMapOpen(true)}
             height="aspect-[16/10] md:aspect-auto md:h-full"
-            className="hidden md:block"
+            className="block w-full"
             caption="Filter properties by map"
           />
         </div>
