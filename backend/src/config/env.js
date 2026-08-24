@@ -104,6 +104,13 @@ const env = {
   WHATSAPP_API_VERSION: process.env.WHATSAPP_API_VERSION || 'v25.0',
   WHATSAPP_OTP_TEMPLATE_LANGUAGE: process.env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en_US',
   WHATSAPP_OTP_TEMPLATE_HAS_BUTTON: process.env.WHATSAPP_OTP_TEMPLATE_HAS_BUTTON === 'true',
+
+  // Test Accounts
+  TEST_NUMBERS: (process.env.TEST_NUMBERS || '9999999999,1234567890')
+    .split(',')
+    .map((num) => num.trim())
+    .filter(Boolean),
+  TEST_OTP: process.env.TEST_OTP || '1234',
 };
 
 export default env;

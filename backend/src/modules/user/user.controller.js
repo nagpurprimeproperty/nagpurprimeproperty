@@ -7,7 +7,7 @@ export const  loginUser = async (req, res, next) => {
     const user = await UserService.findOrCreateByMobile(mobile, name);
     const otp = await UserService.generateOTP(user);
     
-    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
     const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
 
     res.json({ 
@@ -25,7 +25,7 @@ export const resendOTP = async (req, res, next) => {
     const { mobile } = req.body;
     const otp = await UserService.resendOTP(mobile);
     
-    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
     const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
 
     res.json({ 
@@ -115,7 +115,7 @@ export const requestAccountDeletion = async (req, res, next) => {
     const { mobile } = req.body;
     const otp = await UserService.requestDeletion(mobile);
     
-    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
     const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
 
     res.json({ 

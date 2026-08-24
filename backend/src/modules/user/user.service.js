@@ -164,9 +164,9 @@ const userService = {
     }
 
     // Static test numbers for App/Google Play reviewers
-    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
+    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
 
-    const otp = isStaticTestUser ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
+    const otp = isStaticTestUser ? env.TEST_OTP : Math.floor(1000 + Math.random() * 9000).toString();
 
     // Store in Redis
     await redis.set(`otp:${mobile}`, otp, 'EX', 300); // 5 minutes expiry
