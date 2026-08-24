@@ -269,86 +269,110 @@ export function MapSearchDialog({
     });
   }, []);
 
-  // Initialize Map directly on ref
+  // Reset mapInstance on dialog close
   useEffect(() => {
-    if (!isOpen || !loaded || !window.google || !mapContainerRef.current) return;
-
-    const container = mapContainerRef.current;
-    const map = new google.maps.Map(container, {
-      center: markerPos,
-      zoom: currentArea ? 14 : 12,
-      mapId: 'DEMO_MAP_ID', // Required for custom AdvancedMarkerElement DOM nodes
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
-    });
-    setMapInstance(map);
-
-    // Create user/selected location pin (draggable)
-    let userMarker;
-    if (window.google?.maps?.marker?.AdvancedMarkerElement) {
-      userMarker = new google.maps.marker.AdvancedMarkerElement({
-        position: markerPos,
-        map,
-        title: 'Search Center',
-        content: createUserMarkerElement(),
-        gmpDraggable: true,
-      });
-    } else {
-      userMarker = new google.maps.Marker({
-        position: markerPos,
-        map,
-        draggable: true,
-        title: 'Search Center',
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          fillColor: '#0284c7',
-          fillOpacity: 0.9,
-          strokeWeight: 2,
-          strokeColor: '#ffffff',
-          scale: 8,
-        },
-      });
-    }
-    locationMarkerRef.current = userMarker;
-
-    userMarker.addListener('dragend', () => {
-      const pos = userMarker.position || userMarker.getPosition();
-      if (pos) {
-        const latVal = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
-        const lngVal = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
-        const newPos = { lat: Number(latVal), lng: Number(lngVal) };
-        setMarkerPos(newPos);
-        handleReverseGeocode(newPos);
-      }
-    });
-
-    map.addListener('click', (e) => {
-      if (!e.latLng) return;
-      const newPos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-      setMarkerPos(newPos);
-      if (userMarker.setPosition) {
-        userMarker.setPosition(e.latLng);
-      } else {
-        userMarker.position = e.latLng;
-      }
-      handleReverseGeocode(newPos);
-    });
-
-    const timer = setTimeout(() => {
-      if (window.google && map) {
-        google.maps.event.trigger(map, 'resize');
-      }
-    }, 150);
-
-    return () => {
-      clearTimeout(timer);
+    if (!isOpen) {
       setMapInstance(null);
       if (locationMarkerRef.current) {
-        locationMarkerRef.current.setMap(null);
+        if (locationMarkerRef.current.setMap) {
+          locationMarkerRef.current.setMap(null);
+        }
         locationMarkerRef.current = null;
       }
+    }
+  }, [isOpen]);
+
+  // Initialize Map with retry loop to ensure Portal DOM container is mounted
+  useEffect(() => {
+    if (!isOpen || !loaded || !window.google) return;
+
+    let isMounted = true;
+    let pollTimer = null;
+
+    const checkAndInit = () => {
+      if (!isMounted) return;
+      const container = mapContainerRef.current || document.getElementById('dialog-map-canvas');
+      if (!container) {
+        pollTimer = setTimeout(checkAndInit, 50);
+        return;
+      }
+
+      if (mapInstance) return;
+
+      const map = new google.maps.Map(container, {
+        center: markerPos,
+        zoom: currentArea ? 14 : 12,
+        mapId: 'DEMO_MAP_ID', // Required for custom AdvancedMarkerElement DOM nodes
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
+      });
+      setMapInstance(map);
+
+      // Create user/selected location pin (draggable)
+      let userMarker;
+      if (window.google?.maps?.marker?.AdvancedMarkerElement) {
+        userMarker = new google.maps.marker.AdvancedMarkerElement({
+          position: markerPos,
+          map,
+          title: 'Search Center',
+          content: createUserMarkerElement(),
+          gmpDraggable: true,
+        });
+      } else {
+        userMarker = new google.maps.Marker({
+          position: markerPos,
+          map,
+          draggable: true,
+          title: 'Search Center',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: '#0284c7',
+            fillOpacity: 0.9,
+            strokeWeight: 2,
+            strokeColor: '#ffffff',
+            scale: 8,
+          },
+        });
+      }
+      locationMarkerRef.current = userMarker;
+
+      userMarker.addListener('dragend', () => {
+        const pos = userMarker.position || userMarker.getPosition();
+        if (pos) {
+          const latVal = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
+          const lngVal = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
+          const newPos = { lat: Number(latVal), lng: Number(lngVal) };
+          setMarkerPos(newPos);
+          handleReverseGeocode(newPos);
+        }
+      });
+
+      map.addListener('click', (e) => {
+        if (!e.latLng) return;
+        const newPos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+        setMarkerPos(newPos);
+        if (userMarker.setPosition) {
+          userMarker.setPosition(e.latLng);
+        } else {
+          userMarker.position = e.latLng;
+        }
+        handleReverseGeocode(newPos);
+      });
+
+      setTimeout(() => {
+        if (window.google && map) {
+          google.maps.event.trigger(map, 'resize');
+        }
+      }, 150);
+    };
+
+    checkAndInit();
+
+    return () => {
+      isMounted = false;
+      if (pollTimer) clearTimeout(pollTimer);
     };
   }, [isOpen, loaded]);
 
@@ -707,8 +731,8 @@ export function MapSearchDialog({
             </div>
 
             <div className="relative flex-1 w-full h-full min-h-[280px]">
-              <div ref={mapContainerRef} className="w-full h-full min-h-[280px]" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
-              {!loaded && (
+              <div id="dialog-map-canvas" ref={mapContainerRef} className="w-full h-full min-h-[280px]" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
+              {(!loaded || !mapInstance) && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/90 text-sm text-muted-foreground gap-2">
                   <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                   Loading Map Canvas…
