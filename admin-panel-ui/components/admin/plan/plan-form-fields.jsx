@@ -42,6 +42,14 @@ export function PlanFormFields({ register, control, watch, errors, disabled }) {
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor="pf-sort-order">
+            Sort Order <span className="text-xs text-muted-foreground font-normal">(1 comes first, 2 comes second, etc.)</span>
+          </Label>
+          <Input id="pf-sort-order" type="number" min={1} placeholder="1" disabled={disabled} {...register("sortOrder", { valueAsNumber: true })}/>
+          {errors.sortOrder && (<p className="text-xs text-destructive">{errors.sortOrder.message}</p>)}
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="pf-features">
             Features{" "}
             <span className="text-xs text-muted-foreground font-normal">(comma-separated)</span>

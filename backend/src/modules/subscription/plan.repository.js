@@ -10,7 +10,7 @@ const planRepository = {
 
         const pipeline = [
             { $match: filter },
-            { $sort: { createdAt: -1 } },
+            { $sort: { sortOrder: 1, createdAt: -1 } },
             {
                 $facet: {
                     data: [
@@ -26,7 +26,11 @@ const planRepository = {
                              isFree: 1 ,
                             limits: 1,
                             description: 1,
-                            features: 1
+                            features: 1,
+                            sortOrder: 1,
+                            isActive: 1,
+                            createdAt: 1,
+                            updatedAt: 1
                             } 
                         }
                     ],

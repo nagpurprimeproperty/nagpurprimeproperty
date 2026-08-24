@@ -7,6 +7,7 @@ export const planFormSchema = z.object({
     duration: z.coerce.number().int().min(0, "Must be ≥ 0"),
     durationUnit: z.enum(["days", "months", "years"]).optional(),
     isDurationUnlimited: z.boolean().default(false),
+    sortOrder: z.coerce.number().int().min(0, "Must be ≥ 0").default(1),
     description: z.string().max(500).optional(),
     // comma-separated string in the form, split to array on submit
     featuresRaw: z.string().optional(),
@@ -30,6 +31,7 @@ export const DEFAULT_FORM_VALUES = {
     duration: 0,
     isDurationUnlimited: false,
     durationUnit: "months",
+    sortOrder: 1,
     description: "",
     featuresRaw: "",
     isActive: true,

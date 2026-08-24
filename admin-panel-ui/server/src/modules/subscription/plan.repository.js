@@ -13,7 +13,7 @@ const planRepository = {
 
         const pipeline = [
             { $match: filter },
-            { $sort: { createdAt: -1 } },
+            { $sort: { sortOrder: 1, createdAt: -1 } },
             {
                 $facet: {
                     data: [{ $skip: skip }, { $limit: safeLimit }],

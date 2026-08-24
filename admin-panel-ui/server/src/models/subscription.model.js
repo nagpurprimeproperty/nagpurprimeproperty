@@ -35,11 +35,12 @@ const planSchema = new mongoose.Schema({
     }
    ]
   },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  sortOrder: { type: Number, default: 1 }
 }, { timestamps: true });
 
 // Indexes
-planSchema.index({ isActive: 1, createdAt: -1 }); // fast filtered listing
+planSchema.index({ isActive: 1, sortOrder: 1, createdAt: -1 }); // fast filtered listing
 
 const Plan = mongoose.models.Plan || mongoose.model('Plan', planSchema);
 

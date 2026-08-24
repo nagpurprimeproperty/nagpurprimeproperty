@@ -70,6 +70,7 @@ export const planSchema = z.object({
     price: z.number().positive("Price must be positive"),
     duration: z.number().positive("Duration must be positive"),
     durationUnit: z.enum(["days", "months", "years"]),
+    sortOrder: z.number().min(0).optional().default(1),
     features: z.array(z.string()),
     maxProperties: z.number().positive(),
     maxLeads: z.number().positive(),
