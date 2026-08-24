@@ -25,8 +25,8 @@ import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
 
 // Hide native splash instantly at module level — the earliest possible point.
-// expo-router calls preventAutoHideAsync() before this, so hideAsync() here
-// fires as soon as the JS bundle is evaluated. Custom splash.tsx handles branding.
+// Now that native splash background is #FFF4EC (cream) and logo is transparent,
+// the cream fallback <View> below matches it perfectly → zero visible flash.
 SplashScreen.hideAsync();
 
 // Set static default font properties once at module initialization without patching internals
@@ -80,11 +80,9 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  // Fonts still loading — return a cream View that matches:
-  //   1. The native splash background (#FFF4EC, set in app.config.js)
-  //   2. The custom splash.tsx container background (#FFF4EC)
-  // This eliminates the blank white flash between native splash hide
-  // and fonts being ready. User sees: cream → cream → custom splash ✅
+  // Fonts still loading — show cream screen that matches native splash bg (#FFF4EC).
+  // Native splash is already hidden. User sees: cream → cream → custom splash ✅
+  // No native splash visible at all.
   if (!fontsLoaded && !fontError) {
     return <View style={{ flex: 1, backgroundColor: "#FFF4EC" }} />;
   }
