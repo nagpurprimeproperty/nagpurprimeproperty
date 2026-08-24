@@ -12,9 +12,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nagpurprimepropert
 
 const FALLBACK_CONTACT_DATA = {
   type: 'contact',
-  phone: '+91 98765 43210',
-  email: 'hello@nagpurprime.in',
-  whatsapp: '+91 98765 43210',
+  phone: '',
+  email: '',
+  whatsapp: '',
   supportHours: 'Monday - Saturday, 9:00 AM - 7:00 PM IST',
   faqs: [
     { id: '1', question: 'How do I search for properties?', answer: 'Use the search bar and apply filters like location, budget, and property type.' },
@@ -84,30 +84,30 @@ export default async function HelpSupportPage() {
   const { phone, email, whatsapp, supportHours, faqs } = supportData;
 
   const contactChannels = [
-    {
+    ...(phone ? [{
       icon: Phone,
       title: 'Call Support',
       value: phone,
-      href: `tel:${phone}`,
+      href: `tel:${phone.replace(/[^0-9+]/g, '')}`,
       label: 'Call Now',
       color: 'text-primary bg-primary/10 hover:border-primary/50',
-    },
-    {
+    }] : []),
+    ...(email ? [{
       icon: Mail,
       title: 'Email Support',
       value: email,
       href: `mailto:${email}`,
       label: 'Send Email',
       color: 'text-sky-500 bg-sky-500/10 hover:border-sky-500/50',
-    },
-    {
+    }] : []),
+    ...(whatsapp || phone ? [{
       icon: MessageCircle,
       title: 'WhatsApp Chat',
-      value: whatsapp,
-      href: `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`,
+      value: whatsapp || phone,
+      href: `https://wa.me/${(whatsapp || phone).replace(/[^0-9]/g, '')}`,
       label: 'Open WhatsApp',
       color: 'text-emerald-500 bg-emerald-500/10 hover:border-emerald-500/50',
-    },
+    }] : []),
   ];
 
   return (
@@ -236,12 +236,14 @@ export default async function HelpSupportPage() {
                 </div>
               </div>
 
-              <a
-                href={`tel:${phone}`}
-                className="mt-8 block w-full rounded-xl bg-primary py-3 text-center text-xs font-black uppercase tracking-widest text-white transition-all duration-300 hover:bg-primary-glow hover:shadow-glow"
-              >
-                Call Hotline Now
-              </a>
+              {phone && (
+                <a
+                  href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
+                  className="mt-8 block w-full rounded-xl bg-primary py-3 text-center text-xs font-black uppercase tracking-widest text-white transition-all duration-300 hover:bg-primary-glow hover:shadow-glow"
+                >
+                  Call Hotline Now
+                </a>
+              )}
             </div>
 
             <div className="mt-6 rounded-2xl border border-border bg-card p-6 text-center shadow-soft">

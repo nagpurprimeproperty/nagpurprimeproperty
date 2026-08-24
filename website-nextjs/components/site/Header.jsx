@@ -38,10 +38,14 @@ export function Header() {
     }
   }, [token, allSavedIds])
 
+  const handleNavClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" onClick={handleNavClick} className="flex items-center gap-2">
           <Image
             src="/logo.jpeg"
             alt="Nagpur Prime Property Logo"
@@ -64,6 +68,7 @@ export function Header() {
               <Link
                 key={n.to}
                 href={n.to}
+                onClick={handleNavClick}
                 className={`rounded-lg px-2 py-1.5 lg:px-2.5 lg:py-2 text-xs xl:text-sm font-medium whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground ${
                   active ? 'bg-accent text-primary' : 'text-foreground/70'
                 }`}
@@ -77,6 +82,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <Link
             href="/properties"
+            onClick={handleNavClick}
             className="hidden rounded-lg p-2 text-foreground/70 hover:bg-accent md:inline-flex"
             aria-label="Search"
           >
@@ -84,6 +90,7 @@ export function Header() {
           </Link>
           <Link
             href="/favorites"
+            onClick={handleNavClick}
             className="relative hidden rounded-lg p-2 text-foreground/70 hover:bg-accent md:inline-flex"
             aria-label="Favorites"
           >
@@ -104,13 +111,13 @@ export function Header() {
             </Button>
           </div>
           {user ? (
-            <Link href="/profile" className="hidden md:inline-flex">
+            <Link href="/profile" onClick={handleNavClick} className="hidden md:inline-flex">
               <Button variant="outline" size="sm" className="w-full">
                 <User className="mr-1.5 h-4 w-4" /> {user.name.split(' ')[0]}
               </Button>
             </Link>
           ) : (
-            <Link href="/login" className="hidden md:inline-flex">
+            <Link href="/login" onClick={handleNavClick} className="hidden md:inline-flex">
               <Button variant="hero" size="sm" className="w-full">Login</Button>
             </Link>
           )}
@@ -131,7 +138,7 @@ export function Header() {
               <Link
                 key={n.to}
                 href={n.to}
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); handleNavClick(); }}
                 className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
               >
                 {n.label}
@@ -139,7 +146,7 @@ export function Header() {
             ))}
             <Link
               href="/favorites"
-              onClick={() => setOpen(false)}
+              onClick={() => { setOpen(false); handleNavClick(); }}
               className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
             >
               Favorites ({favCount})
@@ -155,13 +162,13 @@ export function Header() {
             {user ? (
               <Link
                 href="/profile"
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); handleNavClick(); }}
                 className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
               >
                 My Profile
               </Link>
             ) : (
-              <Link href="/login" onClick={() => setOpen(false)} className="block pt-2">
+              <Link href="/login" onClick={() => { setOpen(false); handleNavClick(); }} className="block pt-2">
                 <Button variant="hero" className="w-full">Login with mobile</Button>
               </Link>
             )}

@@ -474,6 +474,9 @@ export function MapSearchDialog({
               <DialogPrimitive.Title className="text-base font-bold flex items-center gap-2 text-foreground">
                 <MapPin className="h-5 w-5 text-primary" /> Map Location Search
               </DialogPrimitive.Title>
+              <DialogPrimitive.Description className="sr-only">
+                Interactive map search for properties in Nagpur
+              </DialogPrimitive.Description>
             </div>
 
             {/* Suggestions Autocomplete Search Input */}
@@ -709,7 +712,7 @@ export function MapSearchDialog({
                 Loading Map Canvas…
               </div>
             ) : (
-              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '100%', height: '100%', width: '100%' }} />
+              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
             )}
 
             {/* Desktop Close Button floating on Map */}

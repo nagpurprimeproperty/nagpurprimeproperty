@@ -46,6 +46,13 @@ export function MapPreview({
     });
     mapInstance.current = map;
 
+    // Trigger map resize event to handle dynamic layout calculations
+    const timer = setTimeout(() => {
+      if (window.google && mapInstance.current) {
+        google.maps.event.trigger(mapInstance.current, "resize");
+      }
+    }, 150);
+
     // Handle map click to resolve locality and notify parent filter
     map.addListener("click", (e) => {
       if (!e.latLng) return;
@@ -70,6 +77,8 @@ export function MapPreview({
         }
       });
     });
+
+    return () => clearTimeout(timer);
   }, [useRealMap]);
 
   // Update markers and adjust map bounds whenever properties or highlight search changes
@@ -147,8 +156,8 @@ export function MapPreview({
 
   if (useRealMap) {
     return (
-      <div className={cn("relative overflow-hidden rounded-2xl border border-border bg-muted", height, className)}>
-        <div ref={mapRef} className="h-full w-full" />
+      <div className={cn("relative overflow-hidden rounded-2xl border border-border bg-muted min-h-[220px]", height, className)}>
+        <div ref={mapRef} className="h-full w-full min-h-[220px]" />
         {onExpandMap && (
           <button
             type="button"
@@ -164,6 +173,7 @@ export function MapPreview({
       </div>
     );
   }
+
 
   // ─── Fallback Faux Map (Clickable Pins) ──────────────────────────────────────
   return (

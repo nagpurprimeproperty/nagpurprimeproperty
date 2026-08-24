@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Heart, Home, MessageCircle, Search, User } from 'lucide-react'
 import { useClientAuth } from '@/lib/stores'
 
@@ -26,6 +27,7 @@ export function MobileBottomBar() {
             <Link
               key={it.label}
               href={it.to}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
                 active ? 'text-primary' : 'text-muted-foreground'
               }`}
@@ -42,13 +44,41 @@ export function MobileBottomBar() {
 
 export function FloatingWhatsApp() {
   const pathname = usePathname()
-  if (pathname === '/login') return null
+  const [waLink, setWaLink] = useState('')
+
+  useEffect(() => {
+    async function loadContact() {
+      try {
+        const res = await fetch('/api/pages/about-us')
+        const json = await res.json()
+        if (json.success && json.data?.content) {
+          const parsed = JSON.parse(json.data.content)
+          const contact = parsed.contactInfo || {}
+          const rawNum = contact.whatsapp || contact.phone
+          if (rawNum) {
+            let digits = rawNum.replace(/[^0-9]/g, '')
+            if (digits.length === 10) {
+              digits = '91' + digits
+            }
+            if (digits) {
+              setWaLink(`https://wa.me/${digits}?text=${encodeURIComponent('Hi, I am looking for property in Nagpur')}`)
+            }
+          }
+        }
+      } catch (err) {
+        // Number comes exclusively from CMS contact info
+      }
+    }
+    loadContact()
+  }, [])
+
+  if (pathname === '/login' || !waLink) return null
 
   const isPropertyDetail = /^\/properties\/[^/]+$/.test(pathname)
 
   return (
     <a
-      href="https://wa.me/919876543210?text=Hi%2C%20I%20am%20looking%20for%20property%20in%20Nagpur"
+      href={waLink}
       target="_blank"
       rel="noopener noreferrer"
       className={`fixed ${

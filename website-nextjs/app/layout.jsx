@@ -8,6 +8,8 @@ import { Toaster } from '@/components/ui/sonner'
 import QueryProvider from '@/providers/QueryProvider'
 import dynamic from 'next/dynamic'
 import HideOnComingSoon from '@/components/site/HideOnComingSoon'
+import { ScrollToTop } from '@/components/site/ScrollToTop'
+
 
 const AuthModal = dynamic(() => import('@/components/site/AuthModal').then((mod) => mod.AuthModal))
 
@@ -73,6 +75,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body>
         <QueryProvider>
+          <ScrollToTop />
           <div className="flex min-h-screen flex-col">
             <HideOnComingSoon>
               <Header />
