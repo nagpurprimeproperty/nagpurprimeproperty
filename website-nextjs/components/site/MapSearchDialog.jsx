@@ -138,6 +138,7 @@ export function MapSearchDialog({
   const loaded = useGoogleMaps();
   const markersRef = useRef([]);
   const locationMarkerRef = useRef(null);
+  const mapInitializedRef = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -268,24 +269,34 @@ export function MapSearchDialog({
     });
   }, []);
 
-  // Initialize Map with a small timeout to let dialog mounting animation complete
+  // Initialize Map - uses ref to prevent re-initialization on re-renders
   useEffect(() => {
     if (!isOpen || !loaded || !window.google) return;
+    if (mapInitializedRef.current) return;
 
-    const timer = setTimeout(() => {
+    let cancelled = false;
+    let retryTimer = null;
+
+    const initMap = () => {
+      if (cancelled) return;
       const container = document.getElementById('dialog-map-canvas');
-      if (!container) return;
+      if (!container) {
+        retryTimer = setTimeout(initMap, 50);
+        return;
+      }
+      if (mapInitializedRef.current) return;
       
       const map = new google.maps.Map(container, {
         center: markerPos,
         zoom: currentArea ? 14 : 12,
-        mapId: 'DEMO_MAP_ID', // Required for custom AdvancedMarkerElement DOM nodes
+        mapId: 'DEMO_MAP_ID',
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
         styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
       });
       setMapInstance(map);
+      mapInitializedRef.current = true;
 
       // Create user/selected location pin (draggable)
       let userMarker;
@@ -339,18 +350,32 @@ export function MapSearchDialog({
       });
 
       // Force maps resize layout calculations
-      google.maps.event.trigger(map, 'resize');
-    }, 200);
+      setTimeout(() => {
+        if (window.google && map) {
+          google.maps.event.trigger(map, 'resize');
+        }
+      }, 200);
+    };
+
+    initMap();
 
     return () => {
-      clearTimeout(timer);
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [isOpen, loaded]);
+
+  // Reset map state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      mapInitializedRef.current = false;
       setMapInstance(null);
       if (locationMarkerRef.current) {
-        locationMarkerRef.current.setMap(null);
+        if (locationMarkerRef.current.setMap) locationMarkerRef.current.setMap(null);
         locationMarkerRef.current = null;
       }
-    };
-  }, [isOpen, loaded, handleReverseGeocode]);
+    }
+  }, [isOpen]);
 
   // Sync user location marker position on markerPos change
   useEffect(() => {
