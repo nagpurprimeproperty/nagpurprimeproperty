@@ -271,7 +271,9 @@ export function MapSearchDialog({
 
   // Initialize Map - uses ref to prevent re-initialization on re-renders
   useEffect(() => {
-    if (!isOpen || !loaded || !window.google) return;
+    if (!isOpen) return;
+    // Proceed if Google Maps SDK is available (either from hook state or direct check)
+    if (!loaded && !(typeof window !== 'undefined' && window.google)) return;
     if (mapInitializedRef.current) return;
 
     let cancelled = false;
@@ -280,8 +282,8 @@ export function MapSearchDialog({
     const initMap = () => {
       if (cancelled) return;
       const container = document.getElementById('dialog-map-canvas');
-      if (!container) {
-        retryTimer = setTimeout(initMap, 50);
+      if (!container || !window.google) {
+        retryTimer = setTimeout(initMap, 100);
         return;
       }
       if (mapInitializedRef.current) return;
@@ -731,14 +733,15 @@ export function MapSearchDialog({
               )}
             </div>
 
-            {!loaded ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-sm text-muted-foreground gap-2">
-                <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                Loading Map Canvas…
-              </div>
-            ) : (
-              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
-            )}
+            <div className="relative flex-1 w-full h-full" style={{ minHeight: '280px' }}>
+              <div id="dialog-map-canvas" className="absolute inset-0 w-full h-full" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
+              {(!loaded || !mapInstance) && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/90 text-sm text-muted-foreground gap-2">
+                  <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                  Loading Map Canvas…
+                </div>
+              )}
+            </div>
 
             {/* Desktop Close Button floating on Map */}
             <DialogPrimitive.Close className="hidden md:flex absolute top-4 right-4 z-30 rounded-full bg-background/90 p-2 shadow-soft hover:bg-background transition-all border border-border focus:outline-none hover:scale-105 active:scale-95 cursor-pointer">
