@@ -1083,7 +1083,7 @@ export default function PropertyDetailsScreen() {
 
   const handleShare = () => {
     Share.share({
-      message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/propertyDetail/${id}`,
+      message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/properties/${id}`,
     }).catch((error) => {
       if (__DEV__) {
         console.log("Error sharing:", error);
