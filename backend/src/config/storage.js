@@ -9,13 +9,13 @@ const fileFilter = (req, file, cb) => {
   if (file.fieldname === 'file') {
     // Allow images: JPEG, PNG, WebP (max 10MB each)
     const imageTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    // Allow video: MP4 only (max 100MB)
-    const videoTypes = ['video/mp4'];
+    // Allow video: MP4, MOV, AVI, WebM (max 100MB) — all get re-encoded to MP4 by storage service
+    const videoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
     
     const allAllowed = [...imageTypes, ...videoTypes];
     
     if (!allAllowed.includes(file.mimetype)) {
-      return cb(new Error(`Invalid file type. Allowed: JPEG, PNG, WebP (images) or MP4 (video). Got: ${file.mimetype}`));
+      return cb(new Error(`Invalid file type. Allowed: JPEG, PNG, WebP (images) or MP4, MOV, AVI, WebM (video). Got: ${file.mimetype}`));
     }
     
     // Check file size: 10MB for images, 100MB for videos
@@ -44,9 +44,9 @@ const fileFilter = (req, file, cb) => {
   }
   // Legacy: Video field (kept for backward compatibility if needed)
   else if (file.fieldname === 'video') {
-    const allowedTypes = ['video/mp4'];
+    const allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
     if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error(`Video: Invalid type. Allowed: MP4. Got: ${file.mimetype}`));
+      return cb(new Error(`Video: Invalid type. Allowed: MP4, MOV, AVI, WebM. Got: ${file.mimetype}`));
     }
     if (file.size > 100 * 1024 * 1024) {
       return cb(new Error('Video: File too large. Max 100MB.'));
