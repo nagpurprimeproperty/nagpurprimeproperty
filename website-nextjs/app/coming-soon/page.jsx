@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import {
@@ -27,6 +27,25 @@ export default function ComingSoonPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [contactInfo, setContactInfo] = useState(null);
+
+  useEffect(() => {
+    async function loadContact() {
+      try {
+        const res = await fetch("/api/pages/about-us");
+        const data = await res.json();
+        if (data.success && data.data?.content) {
+          const parsed = JSON.parse(data.data.content);
+          if (parsed.contactInfo) {
+            setContactInfo(parsed.contactInfo);
+          }
+        }
+      } catch (err) {
+        // Only render if backend returns content
+      }
+    }
+    loadContact();
+  }, []);
 
   const onNotify = async (e) => {
     e.preventDefault();
@@ -294,9 +313,9 @@ export default function ComingSoonPage() {
           </div>
           <div className="mt-12 grid md:grid-cols-3 gap-6">
             {[
-              { icon: MapPin, label: "Location", value: "Nagpur, Maharashtra" },
-              { icon: Phone, label: "Phone", value: "+91 9011111504" },
-              { icon: Mail, label: "Email", value: "hello@nagpurprimeproperty.com" },
+              ...(contactInfo?.address ? [{ icon: MapPin, label: "Location", value: contactInfo.address }] : []),
+              ...(contactInfo?.phone ? [{ icon: Phone, label: "Phone", value: contactInfo.phone }] : []),
+              ...(contactInfo?.email ? [{ icon: Mail, label: "Email", value: contactInfo.email }] : []),
             ].map((c) => (
               <div key={c.label} className="rounded-3xl bg-[var(--card)] border border-[var(--border)] p-8 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-elegant)] hover:-translate-y-1 transition" style={{ contentVisibility: "auto" }}>
                 <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-soft)]">

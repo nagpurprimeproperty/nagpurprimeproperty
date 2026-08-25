@@ -44,6 +44,7 @@ export function PlanCard({ plan, canWrite, canDelete, onEdit, onDelete, onToggle
 
         {/* Status badges + menu */}
         <div className="flex items-center gap-1.5 shrink-0">
+          <Badge className="bg-white/20 text-white text-xs border-0 font-medium">Order #{plan.sortOrder ?? 1}</Badge>
           {!plan.isActive && (<Badge className="bg-black/30 text-white text-xs border-0">Inactive</Badge>)}
           {canWrite && (<DropdownMenu>
             <DropdownMenuTrigger asChild>

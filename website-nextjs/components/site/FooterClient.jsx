@@ -55,12 +55,12 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
       ];
 
   const contactInfo = aboutData.contactInfo || {};
-  const address = contactInfo.address || "Nagpur, Maharashtra, India";
-  const phone = contactInfo.phone || "+91 9011111504";
-  const email = contactInfo.email || "info@nagpurprimeproperty.com";
-  const facebook = contactInfo.facebook || "https://facebook.com";
-  const instagram = contactInfo.instagram || "https://instagram.com";
-  const youtube = contactInfo.youtube || "https://youtube.com";
+  const address = contactInfo.address || "";
+  const phone = contactInfo.phone || "";
+  const email = contactInfo.email || "";
+  const facebook = contactInfo.facebook || "";
+  const instagram = contactInfo.instagram || "";
+  const youtube = contactInfo.youtube || "";
 
   return (
     <footer className="relative mt-24 overflow-hidden bg-[oklch(0.16_0.02_50)] text-[oklch(0.97_0.005_80)]">
@@ -144,6 +144,7 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
                 <li key={l.to}>
                   <Link
                     href={l.to}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="inline-flex items-center gap-1 text-white/75 transition hover:text-white"
                   >
                     {l.label}
@@ -175,24 +176,30 @@ export function FooterClient({ initialAboutData = {}, initialAreasList = [] }) {
           <div className="md:col-span-3">
             <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Get in touch</h3>
             <ul className="mt-5 space-y-3.5 text-sm text-white/75">
-              <li className="flex items-start gap-2.5">
-                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">
-                  <MapPin className="h-3.5 w-3.5" />
-                </span>
-                {address}
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">
-                  <Phone className="h-3.5 w-3.5" />
-                </span>
-                <a href={`tel:${phone}`} className="hover:text-white">{phone}</a>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">
-                  <Mail className="h-3.5 w-3.5" />
-                </span>
-                <a href={`mailto:${email}`} className="hover:text-white">{email}</a>
-              </li>
+              {address && (
+                <li className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">
+                    <MapPin className="h-3.5 w-3.5" />
+                  </span>
+                  {address}
+                </li>
+              )}
+              {phone && (
+                <li className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">
+                    <Phone className="h-3.5 w-3.5" />
+                  </span>
+                  <a href={`tel:${phone}`} className="hover:text-white">{phone}</a>
+                </li>
+              )}
+              {email && (
+                <li className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary">
+                    <Mail className="h-3.5 w-3.5" />
+                  </span>
+                  <a href={`mailto:${email}`} className="hover:text-white">{email}</a>
+                </li>
+              )}
             </ul>
             <Link
               href="/properties"

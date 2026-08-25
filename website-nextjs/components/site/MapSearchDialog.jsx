@@ -138,6 +138,7 @@ export function MapSearchDialog({
   const loaded = useGoogleMaps();
   const markersRef = useRef([]);
   const locationMarkerRef = useRef(null);
+  const mapInitializedRef = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -268,24 +269,36 @@ export function MapSearchDialog({
     });
   }, []);
 
-  // Initialize Map with a small timeout to let dialog mounting animation complete
+  // Initialize Map - uses ref to prevent re-initialization on re-renders
   useEffect(() => {
-    if (!isOpen || !loaded || !window.google) return;
+    if (!isOpen) return;
+    // Proceed if Google Maps SDK is available (either from hook state or direct check)
+    if (!loaded && !(typeof window !== 'undefined' && window.google)) return;
+    if (mapInitializedRef.current) return;
 
-    const timer = setTimeout(() => {
+    let cancelled = false;
+    let retryTimer = null;
+
+    const initMap = () => {
+      if (cancelled) return;
       const container = document.getElementById('dialog-map-canvas');
-      if (!container) return;
+      if (!container || !window.google) {
+        retryTimer = setTimeout(initMap, 100);
+        return;
+      }
+      if (mapInitializedRef.current) return;
       
       const map = new google.maps.Map(container, {
         center: markerPos,
         zoom: currentArea ? 14 : 12,
-        mapId: 'DEMO_MAP_ID', // Required for custom AdvancedMarkerElement DOM nodes
+        mapId: 'DEMO_MAP_ID',
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
         styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
       });
       setMapInstance(map);
+      mapInitializedRef.current = true;
 
       // Create user/selected location pin (draggable)
       let userMarker;
@@ -339,18 +352,32 @@ export function MapSearchDialog({
       });
 
       // Force maps resize layout calculations
-      google.maps.event.trigger(map, 'resize');
-    }, 200);
+      setTimeout(() => {
+        if (window.google && map) {
+          google.maps.event.trigger(map, 'resize');
+        }
+      }, 200);
+    };
+
+    initMap();
 
     return () => {
-      clearTimeout(timer);
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [isOpen, loaded]);
+
+  // Reset map state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      mapInitializedRef.current = false;
       setMapInstance(null);
       if (locationMarkerRef.current) {
-        locationMarkerRef.current.setMap(null);
+        if (locationMarkerRef.current.setMap) locationMarkerRef.current.setMap(null);
         locationMarkerRef.current = null;
       }
-    };
-  }, [isOpen, loaded, handleReverseGeocode]);
+    }
+  }, [isOpen]);
 
   // Sync user location marker position on markerPos change
   useEffect(() => {
@@ -474,6 +501,9 @@ export function MapSearchDialog({
               <DialogPrimitive.Title className="text-base font-bold flex items-center gap-2 text-foreground">
                 <MapPin className="h-5 w-5 text-primary" /> Map Location Search
               </DialogPrimitive.Title>
+              <DialogPrimitive.Description className="sr-only">
+                Interactive map search for properties in Nagpur
+              </DialogPrimitive.Description>
             </div>
 
             {/* Suggestions Autocomplete Search Input */}
@@ -703,14 +733,15 @@ export function MapSearchDialog({
               )}
             </div>
 
-            {!loaded ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-sm text-muted-foreground gap-2">
-                <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                Loading Map Canvas…
-              </div>
-            ) : (
-              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '100%', height: '100%', width: '100%' }} />
-            )}
+            <div className="relative flex-1 w-full h-full" style={{ minHeight: '280px' }}>
+              <div id="dialog-map-canvas" className="absolute inset-0 w-full h-full" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
+              {(!loaded || !mapInstance) && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/90 text-sm text-muted-foreground gap-2">
+                  <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                  Loading Map Canvas…
+                </div>
+              )}
+            </div>
 
             {/* Desktop Close Button floating on Map */}
             <DialogPrimitive.Close className="hidden md:flex absolute top-4 right-4 z-30 rounded-full bg-background/90 p-2 shadow-soft hover:bg-background transition-all border border-border focus:outline-none hover:scale-105 active:scale-95 cursor-pointer">
