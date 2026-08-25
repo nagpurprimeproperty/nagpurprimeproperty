@@ -136,7 +136,6 @@ export function MapSearchDialog({
   onSelectLocality,
 }) {
   const loaded = useGoogleMaps();
-  const mapContainerRef = useRef(null);
   const markersRef = useRef([]);
   const locationMarkerRef = useRef(null);
 
@@ -269,36 +268,14 @@ export function MapSearchDialog({
     });
   }, []);
 
-  // Reset mapInstance on dialog close
-  useEffect(() => {
-    if (!isOpen) {
-      setMapInstance(null);
-      if (locationMarkerRef.current) {
-        if (locationMarkerRef.current.setMap) {
-          locationMarkerRef.current.setMap(null);
-        }
-        locationMarkerRef.current = null;
-      }
-    }
-  }, [isOpen]);
-
-  // Initialize Map with retry loop to ensure Portal DOM container is mounted
+  // Initialize Map with a small timeout to let dialog mounting animation complete
   useEffect(() => {
     if (!isOpen || !loaded || !window.google) return;
 
-    let isMounted = true;
-    let pollTimer = null;
-
-    const checkAndInit = () => {
-      if (!isMounted) return;
-      const container = mapContainerRef.current || document.getElementById('dialog-map-canvas');
-      if (!container) {
-        pollTimer = setTimeout(checkAndInit, 50);
-        return;
-      }
-
-      if (mapInstance) return;
-
+    const timer = setTimeout(() => {
+      const container = document.getElementById('dialog-map-canvas');
+      if (!container) return;
+      
       const map = new google.maps.Map(container, {
         center: markerPos,
         zoom: currentArea ? 14 : 12,
@@ -361,20 +338,19 @@ export function MapSearchDialog({
         handleReverseGeocode(newPos);
       });
 
-      setTimeout(() => {
-        if (window.google && map) {
-          google.maps.event.trigger(map, 'resize');
-        }
-      }, 150);
-    };
-
-    checkAndInit();
+      // Force maps resize layout calculations
+      google.maps.event.trigger(map, 'resize');
+    }, 200);
 
     return () => {
-      isMounted = false;
-      if (pollTimer) clearTimeout(pollTimer);
+      clearTimeout(timer);
+      setMapInstance(null);
+      if (locationMarkerRef.current) {
+        locationMarkerRef.current.setMap(null);
+        locationMarkerRef.current = null;
+      }
     };
-  }, [isOpen, loaded]);
+  }, [isOpen, loaded, handleReverseGeocode]);
 
   // Sync user location marker position on markerPos change
   useEffect(() => {
@@ -730,15 +706,14 @@ export function MapSearchDialog({
               )}
             </div>
 
-            <div className="relative flex-1 w-full h-full min-h-[280px]">
-              <div id="dialog-map-canvas" ref={mapContainerRef} className="w-full h-full min-h-[280px]" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
-              {(!loaded || !mapInstance) && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/90 text-sm text-muted-foreground gap-2">
-                  <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                  Loading Map Canvas…
-                </div>
-              )}
-            </div>
+            {!loaded ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-sm text-muted-foreground gap-2">
+                <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                Loading Map Canvas…
+              </div>
+            ) : (
+              <div id="dialog-map-canvas" className="flex-1 w-full h-full" style={{ minHeight: '280px', height: '100%', width: '100%' }} />
+            )}
 
             {/* Desktop Close Button floating on Map */}
             <DialogPrimitive.Close className="hidden md:flex absolute top-4 right-4 z-30 rounded-full bg-background/90 p-2 shadow-soft hover:bg-background transition-all border border-border focus:outline-none hover:scale-105 active:scale-95 cursor-pointer">
