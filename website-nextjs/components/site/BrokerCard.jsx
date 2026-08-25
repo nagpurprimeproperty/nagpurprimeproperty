@@ -3,16 +3,17 @@ import React from 'react';
 import { BadgeCheck, Lock, MessageCircle, Phone } from "lucide-react";
 import Image from "next/image";
 import { useUnlocked, useAuth, useLeads, getPersistedAuth, useHasHydrated } from "@/lib/stores";
-import { useSubmitEnquiry } from "@/lib/hooks/useEnquiry";
+import { useSubmitEnquiry, useSubmitCallEnquiry } from "@/lib/hooks/useEnquiry";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const BrokerCard = React.memo(function BrokerCard({ broker, propertyTitle }) {
+export const BrokerCard = React.memo(function BrokerCard({ broker, propertyTitle, propertyId }) {
   const hydrated = useHasHydrated();
   const unlockedStore = useUnlocked((s) => s.isUnlocked(broker?.id));
   // Gate with hydrated so SSR (false) matches client first render
   const isUnlocked = hydrated && unlockedStore;
   const submitEnquiry = useSubmitEnquiry();
+  const submitCallEnquiry = useSubmitCallEnquiry();
 
   if (!broker) return null;
 
@@ -30,24 +31,74 @@ export const BrokerCard = React.memo(function BrokerCard({ broker, propertyTitle
       mobile: user.mobile || '',
       message: `Requested contact for broker: ${broker.name} regarding property: ${propertyTitle || 'General Listing'}`,
       brokerId: broker.id,
+      propertyId,
     };
 
     useLeads.getState().add(leadDetails);
     useUnlocked.getState().unlock(broker.id);
 
-    submitEnquiry.mutate({
-      propertyId: undefined,
-      data: { name: leadDetails.name, mobile: leadDetails.mobile, message: leadDetails.message },
-      token
-    }, {
-      onError: (err) => {
-        console.warn("Broker unlock enquiry error:", err.message);
-      }
-    });
+    if (propertyId) {
+      submitCallEnquiry.mutate({
+        propertyId,
+        token
+      }, {
+        onError: (err) => {
+          console.warn("Broker unlock call enquiry error:", err.message);
+        }
+      });
+    } else {
+      submitEnquiry.mutate({
+        propertyId: undefined,
+        data: { name: leadDetails.name, mobile: leadDetails.mobile, message: leadDetails.message },
+        token
+      }, {
+        onError: (err) => {
+          console.warn("Broker unlock enquiry error:", err.message);
+        }
+      });
+    }
 
     toast.success('Contact unlocked!', {
       description: 'You can now view broker details and call directly.',
     });
+  };
+
+  const handleCall = (e) => {
+    e.preventDefault();
+    const { token, user } = getPersistedAuth();
+    if (!token || !user) { useAuth.getState().openAuth(); return; }
+
+    if (propertyId) {
+      submitCallEnquiry.mutate({ propertyId, token }, {
+        onError: (err) => console.warn("Broker call enquiry error:", err.message)
+      });
+    }
+
+    if (broker.phone) {
+      const clean = broker.phone.replace(/\D/g, '');
+      const formatted = clean.length === 10 ? `91${clean}` : clean;
+      window.location.href = `tel:+${formatted}`;
+    }
+  };
+
+  const handleWhatsApp = (e) => {
+    e.preventDefault();
+    const { token, user } = getPersistedAuth();
+    if (!token || !user) { useAuth.getState().openAuth(); return; }
+
+    if (propertyId) {
+      submitCallEnquiry.mutate({ propertyId, token }, {
+        onError: (err) => console.warn("Broker WhatsApp enquiry error:", err.message)
+      });
+    }
+
+    const raw = broker.whatsapp || broker.phone || '';
+    if (raw) {
+      const clean = raw.replace(/\D/g, '');
+      const formatted = clean.length === 10 ? `91${clean}` : clean;
+      const msg = encodeURIComponent(`Hi, I am interested in "${propertyTitle || "your listing"}" listed on Nagpur Prime Property.`);
+      window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -98,20 +149,18 @@ export const BrokerCard = React.memo(function BrokerCard({ broker, propertyTitle
 
         {isUnlocked ? (
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <a
-              href={`tel:${broker.phone}`}
+            <button
+              onClick={handleCall}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 cursor-pointer"
             >
               <Phone className="h-4 w-4" /> Call Now
-            </a>
-            <a
-              href={`https://wa.me/${(broker.whatsapp || '').replace(/\D/g, "")}?text=Hi%2C%20interested%20in%20${encodeURIComponent(propertyTitle || "your listing")}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            </button>
+            <button
+              onClick={handleWhatsApp}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-whatsapp py-2.5 text-sm font-semibold text-whatsapp-foreground hover:opacity-90 cursor-pointer"
             >
               <MessageCircle className="h-4 w-4" /> WhatsApp
-            </a>
+            </button>
           </div>
         ) : (
           <Button

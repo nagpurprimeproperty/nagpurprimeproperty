@@ -12,7 +12,7 @@ import { PropertyCard } from '@/components/site/PropertyCard'
 import { PropertyMedia } from '@/components/site/PropertyMedia'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { useSubmitEnquiry } from '@/lib/hooks/useEnquiry'
+import { useSubmitEnquiry, useSubmitCallEnquiry } from '@/lib/hooks/useEnquiry'
 import { useSaveToggle } from '@/lib/hooks/useProperties'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -30,8 +30,18 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
 
   const saveToggleMutation = useSaveToggle()
   const submitEnquiry = useSubmitEnquiry()
+  const submitCallEnquiry = useSubmitCallEnquiry()
 
-  useEffect(() => { pushViewed(pid) }, [pid, pushViewed])
+  useEffect(() => {
+    pushViewed(pid);
+    const { token, user } = getPersistedAuth();
+    if (token && user && pid) {
+      submitCallEnquiry.mutate(
+        { propertyId: pid, token },
+        { onError: (err) => console.warn('Property visit lead logging error:', err.message) }
+      );
+    }
+  }, [pid, pushViewed, submitCallEnquiry]);
 
   const handleSaveToggle = () => {
     // Read directly from localStorage — 100% reliable, no Zustand hydration involved
@@ -42,6 +52,57 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
     saveToggleMutation.mutate({ id: pid, token }, {
       onError: (err) => { console.warn('Save toggle backend error:', err.message); }
     });
+  };
+
+  const handleCall = () => {
+    const { token, user } = getPersistedAuth();
+    if (!token || !user) { useAuth.getState().openAuth(); return; }
+
+    const brokerId = p.brokerId || (broker && broker.id);
+
+    if (pid) {
+      submitCallEnquiry.mutate(
+        { propertyId: pid, token },
+        { onError: (err) => console.warn('Call enquiry error:', err.message) }
+      );
+    }
+
+    if (brokerId) useUnlocked.getState().unlock(brokerId);
+
+    const phoneStr = broker?.phone || p.brokerId?.phone || p.brokerId?.mobile || '';
+    if (phoneStr) {
+      const clean = phoneStr.replace(/\D/g, '');
+      const formatted = clean.length === 10 ? `91${clean}` : clean;
+      window.location.href = `tel:+${formatted}`;
+    } else {
+      toast.error('Broker phone number not available');
+    }
+  };
+
+  const handleWhatsApp = () => {
+    const { token, user } = getPersistedAuth();
+    if (!token || !user) { useAuth.getState().openAuth(); return; }
+
+    const brokerId = p.brokerId || (broker && broker.id);
+
+    if (pid) {
+      submitCallEnquiry.mutate(
+        { propertyId: pid, token },
+        { onError: (err) => console.warn('WhatsApp enquiry error:', err.message) }
+      );
+    }
+
+    if (brokerId) useUnlocked.getState().unlock(brokerId);
+
+    const phoneStr = broker?.whatsapp || broker?.phone || p.brokerId?.mobile || p.brokerId?.phone || '';
+    if (phoneStr) {
+      const clean = phoneStr.replace(/\D/g, '');
+      const formatted = clean.length === 10 ? `91${clean}` : clean;
+      const msg = encodeURIComponent(`Hi, I am interested in "${p.title}" listed on Nagpur Prime Property.`);
+      window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Broker WhatsApp number not available');
+    }
   };
 
   const handleScheduleVisit = () => {
@@ -256,7 +317,7 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
           {/* Sidebar */}
           <aside>
             <div className="sticky top-20 space-y-4">
-              {broker && <BrokerCard broker={broker} propertyTitle={p.title} />}
+              {broker && <BrokerCard broker={broker} propertyTitle={p.title} propertyId={pid} />}
               <Button variant="hero" size="lg" className="w-full text-base font-semibold" onClick={handleScheduleVisit}>
                 Schedule a Visit
               </Button>
@@ -278,25 +339,12 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       {/* Mobile CTA Footer */}
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden shadow-lg">
         <div className="grid grid-cols-3 gap-2 p-2">
-          {broker?.phone ? (
-            <a href={`tel:${broker.phone}`} className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform">
-              <Phone className="h-4 w-4 text-primary" /> Call
-            </a>
-          ) : (
-            <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform cursor-pointer">
-              <Phone className="h-4 w-4 text-primary" /> Call
-            </button>
-          )}
-          {broker?.whatsapp ? (
-            <a href={`https://wa.me/${(broker.whatsapp || '').replace(/\D/g, "")}?text=${encodeURIComponent('Interested in ' + p.title)}`} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform">
-              <MessageCircle className="h-4 w-4" /> WhatsApp
-            </a>
-          ) : (
-            <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
-              <MessageCircle className="h-4 w-4" /> WhatsApp
-            </button>
-          )}
+          <button onClick={handleCall} className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform cursor-pointer">
+            <Phone className="h-4 w-4 text-primary" /> Call
+          </button>
+          <button onClick={handleWhatsApp} className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </button>
           <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg bg-gradient-primary py-2.5 text-xs font-bold text-primary-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
             Visit
           </button>
