@@ -12,7 +12,13 @@ export const usePropertyDetail = (id?: string, enabled = true) => {
     `/properties/${id}`,
     undefined,
     Boolean(id) && enabled,
-    { staleTime: 1 * 60 * 1000, gcTime: 2 * 60 * 1000 },
+    {
+      // staleTime: 0 — always refetch when the query is invalidated (e.g. after
+      // the owner edits the property). The old 60 s staleTime caused the detail
+      // page to serve cached data for up to a minute after a successful update.
+      staleTime: 0,
+      gcTime: 5 * 60 * 1000,
+    },
   );
 
   const property = useMemo(() => {

@@ -82,7 +82,7 @@ module.exports = ({ config }) => {
     android: {
       ...(hasAndroidGoogleServices ? { googleServicesFile: androidGoogleServicesPath } : {}),
       adaptiveIcon: {
-        backgroundColor: "#000000",
+        backgroundColor: "#FFFFFF",
         foregroundImage: "./assets/images/applogo.png",
         monochromeImage: "./assets/images/applogo.png",
       },

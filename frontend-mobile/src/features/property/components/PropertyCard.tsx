@@ -1066,7 +1066,7 @@ const PropertyCard = ({
   const handleShare = useCallback(() => {
     const locStr = getLocationString(item.location);
     Share.share({
-      message: `Check out this property on Nagpur Prime Property: ${item.title} at ${locStr}. Price: ₹${item.price}. More details: https://nagpurprimeproperty.com/propertyDetail/${propertyId}`,
+      message: `Check out this property on Nagpur Prime Property: ${item.title} at ${locStr}. Price: ₹${item.price}. More details: https://nagpurprimeproperty.com/properties/${propertyId}`,
     }).catch((error) => {
       if (__DEV__) {
         console.log("Error sharing:", error);

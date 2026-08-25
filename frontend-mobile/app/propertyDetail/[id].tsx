@@ -16,7 +16,7 @@ import ConfirmationOverlay from "@/shared/components/ui/ConfirmationOverlay";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
 import {
   ArrowLeft,
@@ -29,6 +29,7 @@ import {
   Layers,
   Lock,
   MapPin,
+  Maximize2,
   MessageCircle,
   Pause,
   Phone,
@@ -490,7 +491,7 @@ function InnerVideoPlayer({
   );
 }
 
-function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolean }) {
+function VideoSlide({ videoUrl, isActive, fullscreenTrigger }: { videoUrl: string; isActive: boolean; fullscreenTrigger: number }) {
   const [isPlayerMounted, setIsPlayerMounted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -521,6 +522,13 @@ function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolea
     setIsPlayerMounted(false);
     setIsFullscreen(true);
   };
+
+  // External trigger: parent increments this to request fullscreen open
+  useEffect(() => {
+    if (fullscreenTrigger > 0) {
+      openFullscreen();
+    }
+  }, [fullscreenTrigger]);
 
   if (!safeUri) return null;
 
@@ -560,25 +568,6 @@ function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolea
               <Play size={28} color="white" fill="white" />
             )}
           </TouchableOpacity>
-          <View
-            style={{
-              position: "absolute",
-              bottom: 12,
-              left: 40,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 10,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Play size={10} color="white" fill="white" />
-            <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
-              Tap for Fullscreen
-            </Text>
-          </View>
         </View>
       </Pressable>
 
@@ -680,6 +669,119 @@ function FullscreenVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClos
         >
           <Ionicons name="close" size={24} color="#FFF" />
         </TouchableOpacity>
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Fullscreen Image Viewer ────────────────────────────────────────────────────
+function FullscreenImageViewer({
+  images,
+  initialIndex,
+  onClose,
+}: {
+  images: string[];
+  initialIndex: number;
+  onClose: () => void;
+}) {
+  const { width: W, height: H } = Dimensions.get('window');
+  const flatRef = React.useRef<FlatList>(null);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Scroll to initial index on mount (deferred to avoid layout race)
+  useEffect(() => {
+    if (initialIndex > 0) {
+      const timer = setTimeout(() => {
+        flatRef.current?.scrollToIndex({ index: initialIndex, animated: false });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const onScrollEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / W);
+    setCurrentIndex(idx);
+  }, [W]);
+
+  const renderImage = useCallback(({ item }: { item: string }) => (
+    <View style={{ width: W, height: H, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <Image
+        source={{ uri: item }}
+        style={{ width: W, height: H }}
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        transition={100}
+      />
+    </View>
+  ), [W, H]);
+
+  return (
+    <Modal
+      visible={true}
+      transparent={false}
+      animationType="fade"
+      onRequestClose={onClose}
+      supportedOrientations={['portrait', 'landscape']}
+      statusBarTranslucent
+    >
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        <StatusBar hidden />
+
+        <FlatList
+          ref={flatRef}
+          data={images}
+          keyExtractor={(_, i) => i.toString()}
+          horizontal
+          pagingEnabled
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onScrollEnd}
+          scrollEventThrottle={16}
+          initialScrollIndex={initialIndex}
+          getItemLayout={(_, index) => ({ length: W, offset: W * index, index })}
+          removeClippedSubviews={Platform.OS === 'android'}
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          renderItem={renderImage}
+        />
+
+        {/* Close button */}
+        <TouchableOpacity
+          onPress={onClose}
+          activeOpacity={0.8}
+          style={{
+            position: 'absolute',
+            top: Platform.OS === 'android' ? 36 : 52,
+            right: 16,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 20,
+          }}
+        >
+          <Ionicons name="close" size={22} color="#FFF" />
+        </TouchableOpacity>
+
+        {/* Counter — e.g. "3 / 7" */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: Platform.OS === 'android' ? 24 : 44,
+            alignSelf: 'center',
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            paddingHorizontal: 14,
+            paddingVertical: 5,
+            borderRadius: 20,
+          }}
+        >
+          <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>
+            {currentIndex + 1} / {images.length}
+          </Text>
+        </View>
       </View>
     </Modal>
   );
@@ -880,6 +982,8 @@ export default function PropertyDetailsScreen() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [unlockedPhone, setUnlockedPhone] = useState<string | null>(null);
   const [isPhoneUnlocked, setIsPhoneUnlocked] = useState(false);
+  // Fullscreen image viewer: null = closed, number = index of tapped image
+  const [fullscreenImageIndex, setFullscreenImageIndex] = useState<number | null>(null);
 
   const user = useAuthStore((s) => s.user);
 
@@ -887,6 +991,20 @@ export default function PropertyDetailsScreen() {
     id,
     isAuthHydrated,
   );
+
+  // Refetch the property detail every time this screen comes into focus.
+  // This is the defense-in-depth layer that ensures fresh data is always
+  // shown after the owner edits the property and navigates back — even in
+  // edge cases where the React Query cache invalidation fired while this
+  // screen had no active observer (e.g. it was hidden behind the edit wizard).
+  useFocusEffect(
+    useCallback(() => {
+      if (id && isAuthHydrated) {
+        refetch();
+      }
+    }, [id, isAuthHydrated, refetch])
+  );
+
   const { data: similarProperties = [] } = useSimilarProperties(
     id,
     { limit: 4 },
@@ -896,25 +1014,36 @@ export default function PropertyDetailsScreen() {
   const { mutateAsync: createEnquiry } = useCreatePropertyEnquiry(id);
   const { mutateAsync: createCallEnquiry } = useCreateCallEnquiry();
 
+  // Counter incremented to externally trigger VideoSlide fullscreen open
+  const [videoFullscreenTrigger, setVideoFullscreenTrigger] = useState(0);
+
   const renderHeroItem = useCallback(({ item, index }: { item: string; index: number }) => {
     if (item === VIDEO_SLIDE_KEY) {
       return (
         <VideoSlide
           videoUrl={property?.video || DUMMY_VIDEO_URI}
           isActive={activeSlide === index}
+          fullscreenTrigger={videoFullscreenTrigger}
         />
       );
     }
+    // Image slide — tap anywhere opens fullscreen viewer
     return (
-      <Image
-        source={{ uri: item }}
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onPress={() => setFullscreenImageIndex(index)}
         style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        transition={200}
-      />
+      >
+        <Image
+          source={{ uri: item }}
+          style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
+        />
+      </TouchableOpacity>
     );
-  }, [property?.video, activeSlide]);
+  }, [property?.video, activeSlide, videoFullscreenTrigger]);
 
   const heroKeyExtractor = useCallback((_: any, index: number) => index.toString(), []);
 
@@ -1083,7 +1212,7 @@ export default function PropertyDetailsScreen() {
 
   const handleShare = () => {
     Share.share({
-      message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/propertyDetail/${id}`,
+      message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/properties/${id}`,
     }).catch((error) => {
       if (__DEV__) {
         console.log("Error sharing:", error);
@@ -1111,6 +1240,15 @@ export default function PropertyDetailsScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <StatusBar barStyle="dark-content" />
+
+      {/* Fullscreen image viewer — rendered at root level so it overlays everything */}
+      {fullscreenImageIndex !== null && (
+        <FullscreenImageViewer
+          images={(property?.images ?? []) as string[]}
+          initialIndex={fullscreenImageIndex}
+          onClose={() => setFullscreenImageIndex(null)}
+        />
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -1196,6 +1334,32 @@ export default function PropertyDetailsScreen() {
               );
             })}
           </View>
+
+          {/* ── Fixed fullscreen button — stays bottom-right regardless of swipe ── */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              if (slides[activeSlide] === VIDEO_SLIDE_KEY) {
+                setVideoFullscreenTrigger((n) => n + 1);
+              } else {
+                setFullscreenImageIndex(activeSlide);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              bottom: 12,
+              right: 12,
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              backgroundColor: 'rgba(0,0,0,0.52)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+            }}
+          >
+            <Maximize2 size={16} color="#FFFFFF" strokeWidth={2.5} />
+          </TouchableOpacity>
         </View>
 
         <View className="px-5 pt-5">
