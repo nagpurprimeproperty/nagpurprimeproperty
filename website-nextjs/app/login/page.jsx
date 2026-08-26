@@ -12,12 +12,13 @@ import { useSendOTP, useVerifyOTP, useResendOTP } from "@/lib/hooks/useAuthMutat
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { getSafeRedirectUrl } from "@/lib/utils";
 
 function LoginContent() {
   const { login, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/profile";
+  const redirect = getSafeRedirectUrl(searchParams.get("redirect"), "/profile");
 
   const [step, setStep] = useState("mobile");
   const [name, setName] = useState("");
