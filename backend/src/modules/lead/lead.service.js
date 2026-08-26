@@ -42,12 +42,9 @@ const leadService = {
 
       const hasQuotaLeft = !!subscription && (isUnlimited || leadAccessCount > leadsUnlocked);
 
-      console.log(`[Lead Processing] BrokerId: ${brokerId} | HasBroker: ${!!broker} | Mobile: ${broker?.mobile} | HasSub: ${!!subscription} | isUnlimited: ${isUnlimited} | Limit: ${leadAccessCount} | Unlocked: ${leadsUnlocked} | QuotaLeft: ${hasQuotaLeft} | WA Enabled: ${env.WHATSAPP_ENABLED}`);
+      const maskPhone = (p) => (p && p.length >= 4 ? `***${p.slice(-4)}` : '***');
 
-      const customerName = cleanText(leadPayload.customerName, 'Verified User');
-      const phone = cleanText(leadPayload.phone, 'N/A');
-      const propTitle = cleanText(propertyName || leadPayload.propertyName, 'Property');
-
+      // Deduct quota and send WhatsApp notification if quota available
       if (hasQuotaLeft) {
         leadPayload.isOpened = true;
 
@@ -57,8 +54,6 @@ const leadService = {
         // Send WhatsApp Notification to Broker if enabled & phone number exists
         if (env.WHATSAPP_ENABLED && broker?.mobile) {
           const templateId = env.WHATSAPP_LEAD_TEMPLATE_NAME || 'new_lead_notification';
-
-          console.log(`[WhatsApp Lead Alert] Triggering WhatsApp message to broker mobile: ${broker.mobile}`);
 
           communicationService.sendWhatsApp({
             to: broker.mobile,
@@ -83,10 +78,8 @@ const leadService = {
               ],
             },
           }).then((res) => {
-            console.log(`[WhatsApp Lead Alert Success] Message sent to ${broker.mobile}, logId: ${res?.logId}`);
+            console.log(`[WhatsApp Lead Alert Success] Message sent to broker (${maskPhone(broker.mobile)}), logId: ${res?.logId}`);
           }).catch((err) => console.error('[WhatsApp Lead Notification Error]:', err.message));
-        } else {
-          console.log(`[WhatsApp Lead Alert Skipped] WHATSAPP_ENABLED: ${env.WHATSAPP_ENABLED}, brokerMobile: ${broker?.mobile}`);
         }
       } else {
         leadPayload.isOpened = false;

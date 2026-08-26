@@ -10,7 +10,7 @@ const nextConfig = {
   // Prevent Next.js from bundling native/server-only packages
   experimental: {
     serverActions: {
-      bodySizeLimit: '50mb',
+      bodySizeLimit: '10mb',
     },
   },
   // NOTE: api.bodyParser is not valid in App Router; use export const config in route files if needed.

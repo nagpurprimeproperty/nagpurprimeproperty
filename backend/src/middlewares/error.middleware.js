@@ -97,21 +97,19 @@ export default function errorMiddleware(err, req, res, _next) {
     return res.status(status).json({
       success: false,
       message: err.message || "Validation Error",
-      errors: err.errors, // ✅ KEEP AS IS
-      ...(isProd ? {} : { stack: err.stack }),
+      errors: err.errors,
     });
   }
 
   // ── Fallback ───────────────────────────────────────────
   return res.status(status).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: isProd ? (status >= 500 ? "Internal Server Error" : (err.message || "Something went wrong")) : (err.message || "Something went wrong"),
     errors: [
       {
         field: "",
-        message: err.message || "Something went wrong",
+        message: isProd ? (status >= 500 ? "Something went wrong on our end. Please try again later." : (err.message || "Request failed")) : (err.message || "Something went wrong"),
       },
     ],
-    ...(isProd ? {} : { stack: err.stack }),
   });
 }
