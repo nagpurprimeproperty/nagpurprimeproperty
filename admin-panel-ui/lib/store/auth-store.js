@@ -12,7 +12,7 @@ import { persist } from 'zustand/middleware';
 import { authApi } from '@/lib/api/auth.api';
 import { ApiError } from '@/lib/api/client';
 import { usePermissionStore } from '@/lib/store/permission-store';
-export const useAuthStore = create()(persist((set) => ({
+export const useAuthStore = create()((set) => ({
     token: null,
     isLoading: false,
     login: async (payload) => {
@@ -65,9 +65,6 @@ export const useAuthStore = create()(persist((set) => ({
             set({ isLoading: false });
         }
     },
-}), {
-    name: 'auth-store',
-    partialize: (state) => ({ token: state.token }),
 }));
 export const useToken = () => useAuthStore((s) => s.token);
 export const useIsAuthenticated = () => useAuthStore((s) => !!s.token);
