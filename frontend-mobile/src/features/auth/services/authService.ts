@@ -23,7 +23,7 @@ export interface AuthApiResponse<T> {
 export interface LoginResponse {
   success: boolean;
   message: string;
-  data: string;
+  data?: unknown;
 }
 
 export interface VerifyOtpResponse {
@@ -39,7 +39,7 @@ export interface LogoutResponse {
 }
 
 export const login = async (payload: LoginPayload) => {
-  const response = await apiClient.post<AuthApiResponse<string>>(
+  const response = await apiClient.post<AuthApiResponse<unknown>>(
     "/auth/login",
     payload,
   );
@@ -54,11 +54,11 @@ export interface ResendOtpPayload {
 export interface ResendOtpResponse {
   success: boolean;
   message: string;
-  data?: string;
+  data?: unknown;
 }
 
 export const resendOTP = async (payload: ResendOtpPayload) => {
-  const response = await apiClient.post<AuthApiResponse<string>>(
+  const response = await apiClient.post<AuthApiResponse<unknown>>(
     "/auth/resend-otp",
     payload,
   );
@@ -83,7 +83,7 @@ export const logout = async () => {
 export interface RequestDeletionResponse {
   success: boolean;
   message: string;
-  data?: { otp: string };
+  data?: unknown;
 }
 
 export interface ConfirmDeletionResponse {

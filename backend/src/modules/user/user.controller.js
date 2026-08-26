@@ -5,15 +5,11 @@ export const  loginUser = async (req, res, next) => {
   try {
     const { mobile, name } = req.body;
     const user = await UserService.findOrCreateByMobile(mobile, name);
-    const otp = await UserService.generateOTP(user);
+    await UserService.generateOTP(user);
     
-    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
-    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
-
     res.json({ 
       success: true,
-      message: 'OTP sent successfully', 
-      data: showOTP ? otp : undefined 
+      message: 'OTP sent successfully'
     });
   } catch (error) {
     next(error);
@@ -23,15 +19,11 @@ export const  loginUser = async (req, res, next) => {
 export const resendOTP = async (req, res, next) => {
   try {
     const { mobile } = req.body;
-    const otp = await UserService.resendOTP(mobile);
+    await UserService.resendOTP(mobile);
     
-    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
-    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
-
     res.json({ 
       success: true,
-      message: 'OTP resent successfully', 
-      data: showOTP ? otp : undefined 
+      message: 'OTP resent successfully'
     });
   } catch (error) {
     next(error);
@@ -113,15 +105,11 @@ export const deleteUserProfile = async (req, res, next) => {
 export const requestAccountDeletion = async (req, res, next) => {
   try {
     const { mobile } = req.body;
-    const otp = await UserService.requestDeletion(mobile);
-    
-    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
-    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
+    await UserService.requestDeletion(mobile);
 
     res.json({ 
       success: true, 
-      message: 'Account deletion OTP generated successfully', 
-      data: showOTP ? { otp } : undefined 
+      message: 'Account deletion OTP generated successfully'
     });
   } catch (error) {
     next(error);

@@ -7,10 +7,8 @@ export async function POST(req) {
   try {
     await connectDB();
     const { mobile } = await req.json();
-    const otp = await UserService.requestDeletion(mobile);
-    const isStaticTestUser = env.TEST_NUMBERS.includes(mobile);
-    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
-    return NextResponse.json({ success: true, message: 'OTP sent successfully', data: showOTP ? { otp } : undefined });
+    await UserService.requestDeletion(mobile);
+    return NextResponse.json({ success: true, message: 'OTP sent successfully' });
   } catch (err) {
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status: err.status || 500 });
   }
