@@ -6,8 +6,8 @@ export default function OnBoardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
-        contentStyle: { backgroundColor: "#FFFFFF" },
+        animation: "none",
+        contentStyle: { backgroundColor: "#FFF4EC" },
       }}
     >
       <Stack.Screen name="splash" options={{ animation: "none" }} />
