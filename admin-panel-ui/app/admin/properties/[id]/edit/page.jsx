@@ -266,7 +266,7 @@ function EditForm({ property, id, }) {
               - Same for video via form.videoUrl
               No file blobs reach the submit handler.
             */}
-                  <LazyPhotoUploader value={form.photos} videoUrl={form.videoUrl} onChange={(urls) => set("photos", urls)} onVideoChange={(url) => set("videoUrl", url)} disabled={isPending}/>
+                  <LazyPhotoUploader value={form.photos} videoUrl={form.videoUrl} brochureUrl={form.brochureUrl} onChange={(urls) => set("photos", urls)} onVideoChange={(url) => set("videoUrl", url)} onBrochureChange={(url) => set("brochureUrl", url)} disabled={isPending}/>
                   {errors.photos && (<p className="flex items-center gap-1.5 text-xs text-destructive mt-3">
                       <AlertCircle className="h-3.5 w-3.5 shrink-0"/>
                       {errors.photos}

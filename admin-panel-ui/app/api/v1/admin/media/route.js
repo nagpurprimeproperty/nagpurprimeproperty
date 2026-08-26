@@ -6,17 +6,20 @@ import { handleApiError } from '@/server/src/utils/route-helpers.js';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+const ALLOWED_BROCHURE_TYPES = ['application/pdf'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_BROCHURE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /**
  * POST /api/v1/admin/media
- * Upload one or more property media files (images + optional video).
+ * Upload one or more property media files (images + optional video + optional brochure).
  * Accepts multipart/form-data with fields:
- *   photos  — File[] (up to 15 images)
- *   video   — File   (optional, single video)
+ *   photos   — File[] (up to 15 images)
+ *   video    — File   (optional, single video)
+ *   brochure — File   (optional, single PDF)
  *
- * Returns: { photos: string[], video: string | null }
+ * Returns: { photos: string[], video: string | null, brochure: string | null }
  */
 export async function POST(req) {
   try {
@@ -25,13 +28,14 @@ export async function POST(req) {
 
     const formData = await req.formData();
 
-    const photoFiles = formData.getAll('photos').filter((f) => typeof f === 'object');
-    const videoFile  = formData.get('video');
+    const photoFiles   = formData.getAll('photos').filter((f) => typeof f === 'object');
+    const videoFile    = formData.get('video');
+    const brochureFile = formData.get('brochure');
 
     // ── Validate counts ────────────────────────────────────────────────────
-    if (photoFiles.length === 0 && !videoFile) {
+    if (photoFiles.length === 0 && !videoFile && !brochureFile) {
       return NextResponse.json(
-        { success: false, message: 'No files provided. Send at least one photo or a video.' },
+        { success: false, message: 'No files provided. Send at least one photo, video, or brochure.' },
         { status: 400 }
       );
     }
@@ -75,6 +79,22 @@ export async function POST(req) {
       }
     }
 
+    // ── Validate brochure ──────────────────────────────────────────────────
+    if (brochureFile && typeof brochureFile === 'object') {
+      if (!ALLOWED_BROCHURE_TYPES.includes(brochureFile.type)) {
+        return NextResponse.json(
+          { success: false, message: `Invalid brochure type "${brochureFile.type}". Allowed: PDF.` },
+          { status: 400 }
+        );
+      }
+      if (brochureFile.size > MAX_BROCHURE_SIZE) {
+        return NextResponse.json(
+          { success: false, message: 'Brochure PDF exceeds 50 MB limit.' },
+          { status: 400 }
+        );
+      }
+    }
+
     // ── Convert Web Files → buffer objects ────────────────────────────────
     const photoBuffers = await Promise.all(
       photoFiles.map(async (f) => ({
@@ -95,21 +115,35 @@ export async function POST(req) {
       };
     }
 
+    let brochureBuffer = null;
+    if (brochureFile && typeof brochureFile === 'object') {
+      brochureBuffer = {
+        buffer:       Buffer.from(await brochureFile.arrayBuffer()),
+        originalname: brochureFile.name,
+        mimetype:     brochureFile.type,
+        size:         brochureFile.size,
+      };
+    }
+
     // ── Upload to S3 in parallel ───────────────────────────────────────────
-    const [photoUploads, videoUpload] = await Promise.all([
+    const [photoUploads, videoUpload, brochureUpload] = await Promise.all([
       photoBuffers.length > 0
         ? Promise.all(photoBuffers.map((f) => storageService.upload(f, 'properties')))
         : Promise.resolve([]),
       videoBuffer
         ? storageService.upload(videoBuffer, 'properties/videos')
         : Promise.resolve(null),
+      brochureBuffer
+        ? storageService.upload(brochureBuffer, 'properties/brochures')
+        : Promise.resolve(null),
     ]);
 
     return NextResponse.json(
       successResponse(
         {
-          photos: photoUploads.map((u) => u.url),
-          video:  videoUpload ? videoUpload.url : null,
+          photos:   photoUploads.map((u) => u.url),
+          video:    videoUpload ? videoUpload.url : null,
+          brochure: brochureUpload ? brochureUpload.url : null,
         },
         'Media uploaded successfully'
       ),

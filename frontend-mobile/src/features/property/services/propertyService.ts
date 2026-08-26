@@ -27,6 +27,7 @@ export type PropertyApiItem = {
   photos?: string[];
   image?: string;
   video?: string;
+  brochure?: string;
   isSaved?: boolean;
   bhk?: number | string;
   recommendationScore?: number;
@@ -131,6 +132,23 @@ export type CallEnquiryResponse = {
 export const createCallEnquiry = async (id: string): Promise<CallEnquiryResponse> => {
   const response = await apiClient.post<CallEnquiryResponse>(
     `/properties/${id}/create-call-enquiry`,
+  );
+  return response.data;
+};
+
+export type BrochureEnquiryResponse = {
+  success: boolean;
+  message?: string;
+  brochureUrl?: string;
+  data?: {
+    brochureUrl?: string;
+    [key: string]: unknown;
+  };
+};
+
+export const createBrochureLead = async (id: string): Promise<BrochureEnquiryResponse> => {
+  const response = await apiClient.post<BrochureEnquiryResponse>(
+    `/properties/${id}/brochure-lead`,
   );
   return response.data;
 };
@@ -279,6 +297,7 @@ export const normalizePropertyDetail = (item: PropertyApiDetail) => {
       phoneFull: (item.brokerId?.phoneFull ?? item.brokerId?.phone ?? item.brokerId?.mobile ?? "") as string,
     },
     isSaved: Boolean(item.isSaved),
+    brochure: (item.brochure as string) || null,
   };
 };
 

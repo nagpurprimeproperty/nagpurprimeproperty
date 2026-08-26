@@ -19,6 +19,7 @@ export { useSimilarProperties } from './hooks/useSimilarProperties';
 export { useTogglePropertySave } from './hooks/useTogglePropertySave';
 export { useCreatePropertyEnquiry } from './hooks/useCreatePropertyEnquiry';
 export { useCreateCallEnquiry } from './hooks/useCreateCallEnquiry';
+export { useCreateBrochureLead } from './hooks/useCreateBrochureLead';
 export { useSearchSuggestions } from './hooks/useSearchSuggestions';
 export { useMyProperties } from './hooks/useMyProperties';
 export { useMyPropertyDetail } from './hooks/useMyPropertyDetail';

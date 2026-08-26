@@ -144,4 +144,5 @@ export const DEFAULT_STATE = {
   amenities: [],
   photos: [],
   videoUrl: null,
+  brochureUrl: null,
 };

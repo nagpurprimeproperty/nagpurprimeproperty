@@ -69,6 +69,7 @@ export interface PropertyCardItem {
   listingCategory?: string;
   videos?: string[];
   video?: string;
+  brochure?: string | null;
   broker?: PropertyBrokerInfo;
   description?: string;
   gatedSociety?: boolean;

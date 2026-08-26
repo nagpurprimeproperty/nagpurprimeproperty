@@ -298,6 +298,7 @@ export function usePropertyForm() {
             amenities: form.amenities,
             photos: form.photos,
             video: form.videoUrl,
+            brochure: form.brochureUrl,
         };
     }, [form]);
     /**
@@ -325,6 +326,7 @@ export function usePropertyForm() {
             amenities: record.amenities ?? [],
             photos: record.photos ?? [],
             videoUrl: record.video ?? null,
+            brochureUrl: record.brochure ?? null,
             // Seed detail fields
             bhk: String(d.bhk ?? ""),
             bathrooms: String(d.bathrooms ?? ""),
