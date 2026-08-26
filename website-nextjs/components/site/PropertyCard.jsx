@@ -24,7 +24,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import { useFavorites, useAuth, useUnlocked, useLeads, getPersistedAuth, useHasHydrated } from "@/lib/stores";
-import { useSubmitEnquiry } from "@/lib/hooks/useEnquiry";
+import { useSubmitEnquiry, useSubmitCallEnquiry } from "@/lib/hooks/useEnquiry";
 import { useSaveToggle } from "@/lib/hooks/useProperties";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -145,6 +145,7 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
 
   const saveToggleMutation = useSaveToggle();
   const submitEnquiry = useSubmitEnquiry();
+  const submitCallEnquiry = useSubmitCallEnquiry();
   const unlockedStore = useUnlocked((s) => s.isUnlocked(p.broker?._id || p.brokerId));
   // Gate with hydrated so SSR (false) matches client first render
   const isUnlocked = hydrated && unlockedStore;
@@ -202,6 +203,12 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
     const cleanMobile = rawMobile.replace(/\D/g, '');
     const formatted = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
 
+    // Trigger call enquiry to ensure lead creation & WhatsApp message / notification to broker
+    submitCallEnquiry.mutate(
+      { propertyId: pid, token },
+      { onError: (err) => console.warn('Call enquiry mutation error:', err.message) }
+    );
+
     const isUnlocked = useUnlocked.getState().isUnlocked(brokerId);
     if (isUnlocked) {
       if (type === 'call') {
@@ -212,7 +219,6 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
       }
     } else {
       // Perform background submission using user profile details
-      const { token, user } = useAuth.getState();
       const { unlock, add: addLead } = useUnlocked.getState();
       const addLeadFn = useLeads.getState().add;
       const leadDetails = {
@@ -227,20 +233,6 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
       addLeadFn(leadDetails);
       useUnlocked.getState().unlock(brokerId);
 
-      // Submit enquiry to backend in background
-      submitEnquiry.mutate(
-        { 
-          propertyId: pid, 
-          data: { name: leadDetails.name, mobile: leadDetails.mobile, message: leadDetails.message }, 
-          token 
-        },
-        {
-          onError: (err) => {
-            console.warn('Enquiry background mutation error:', err.message);
-          },
-        }
-      );
-
       toast.success('Contact unlocked!', {
         description: 'Broker details are now visible using your registered profile.',
       });
@@ -253,7 +245,7 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
         window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
       }
     }
-  }, [pid, p, submitEnquiry]);
+  }, [pid, p, submitCallEnquiry]);
 
   return (
     <article

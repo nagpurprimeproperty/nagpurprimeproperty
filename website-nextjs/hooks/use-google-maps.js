@@ -46,7 +46,11 @@ export function useGoogleMaps() {
 
         const existing = document.getElementById(SCRIPT_ID);
         if (existing) {
-            // Script tag exists but not yet loaded — wait for it
+            // Script tag exists — check if already loaded, otherwise wait for it
+            if (window.google) {
+                setLoaded(true);
+                return;
+            }
             const handleLoad = () => setLoaded(true);
             existing.addEventListener("load", handleLoad);
             return () => {
@@ -69,7 +73,21 @@ export function useGoogleMaps() {
                 return;
             }
 
-            if (document.getElementById(SCRIPT_ID)) return;
+            const existingScript = document.getElementById(SCRIPT_ID);
+            if (existingScript) {
+                // Another hook instance created the script while we were fetching the key
+                // Add a load listener to track when it finishes loading
+                const handleLoad = () => {
+                    if (isMounted) setLoaded(true);
+                };
+                existingScript.addEventListener("load", handleLoad);
+                // Also check if it already loaded between our check and adding the listener
+                if (window.google) {
+                    setLoaded(true);
+                    existingScript.removeEventListener("load", handleLoad);
+                }
+                return;
+            }
 
             const script = document.createElement("script");
             script.id = SCRIPT_ID;
