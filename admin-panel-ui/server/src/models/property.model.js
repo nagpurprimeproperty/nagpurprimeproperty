@@ -395,6 +395,7 @@ const propertySchema = new mongoose.Schema(
       default: [],
     },
     video: { type: String, default: null },
+    brochure: { type: String, default: null },
 
     amenities: [{ type: String }],
 

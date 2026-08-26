@@ -1,5 +1,7 @@
 import propertyService from "./property.service.js";
 import { validatePropertyPayload } from "./property.schema.js";
+import leadService from "../lead/lead.service.js";
+import userService from "../user/user.service.js";
 
 
 export const getPopularLocalitiesCount = async (req, res, next) => {
@@ -149,6 +151,53 @@ export const updateMyPropertyStatus = async (req, res, next) => {
     const { status } = req.body;
     const updated = await propertyService.updateMyPropertyStatus(userId, id, status);
     res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const accessPropertyBrochure = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const propertyId = req.params.id;
+    const userIp = req?.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
+
+    const property = await propertyService.getProperty(propertyId, userId, userIp);
+    if (!property) {
+      return res.status(404).json({ success: false, message: 'Property not found' });
+    }
+
+    if (!property.brochure) {
+      return res.status(404).json({ success: false, message: 'No brochure available for this property' });
+    }
+
+    const fullUser = await userService.getUser(userId).catch(() => null);
+    const userArg = {
+      id: userId ? userId.toString() : '',
+      name: fullUser?.name || req.user?.name || 'Verified User',
+      mobile: fullUser?.mobile || req.user?.mobile || '9876543210',
+    };
+
+    const existingLead = await leadService.getLeadByPropertyAndUser(propertyId, userId);
+    const brokerId = property.brokerId?._id || property.brokerId;
+    const brokerDetails = await userService.getUser(brokerId).catch(() => null);
+
+    if (existingLead) {
+      return res.json({
+        success: true,
+        message: 'Brochure accessed (lead already exists)',
+        brochureUrl: property.brochure,
+        data: { brochureUrl: property.brochure, ...existingLead._doc, brokerDetails },
+      });
+    }
+
+    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(propertyId, userArg);
+    return res.json({
+      success: true,
+      message: 'Brochure accessed and lead recorded',
+      brochureUrl: property.brochure,
+      data: { brochureUrl: property.brochure, ...lead._doc, brokerDetails },
+    });
   } catch (error) {
     next(error);
   }

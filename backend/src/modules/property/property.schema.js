@@ -395,6 +395,7 @@ export const basePropertySchema = z.object({
     .min(PHOTOS_MIN_COUNT, PHOTOS_MIN_COUNT_MESSAGE)
     .max(PHOTOS_MAX_COUNT, PHOTOS_MAX_COUNT_MESSAGE),
   video: z.string().url('Video must be a valid URL').nullable().optional(),
+  brochure: z.string().url('Brochure must be a valid URL').nullable().optional(),
   // Include details and pricing for creation (validated further in controller)
   details: z.unknown().optional(),
   pricing: z.unknown().optional(),
@@ -729,6 +730,7 @@ export const updatePropertySchema = z.object({
     .max(PHOTOS_MAX_COUNT, PHOTOS_MAX_COUNT_MESSAGE)
     .optional(),
   video: z.string().url('Video must be a valid URL').nullable().optional(),
+  brochure: z.string().url('Brochure must be a valid URL').nullable().optional(),
   // Allow partial updates to details and pricing (accept any object structure)
   details: z.unknown().optional(),
   pricing: z.unknown().optional(),

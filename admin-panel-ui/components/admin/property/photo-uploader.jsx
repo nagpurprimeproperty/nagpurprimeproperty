@@ -18,19 +18,21 @@
  */
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { ImageIcon, Video, X, Upload, Loader2 } from "lucide-react";
+import { ImageIcon, Video, FileText, X, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { uploadMedia, deleteMedia } from "@/lib/api/media.api";
 import { useToast } from "@/hooks/use-toast";
 // ─── Component ────────────────────────────────────────────────────────────────
-export function PhotoUploader({ value = [], videoUrl = null, onChange, onVideoChange, disabled = false, maxPhotos = 15, }) {
+export function PhotoUploader({ value = [], videoUrl = null, brochureUrl = null, onChange, onVideoChange, onBrochureChange, disabled = false, maxPhotos = 15, }) {
     const { toast } = useToast();
     const photoInputRef = useRef(null);
     const videoInputRef = useRef(null);
+    const brochureInputRef = useRef(null);
     const [uploadingPhotos, setUploadingPhotos] = useState([]);
     const [deletingUrls, setDeletingUrls] = useState(new Set());
     const [uploadingVideo, setUploadingVideo] = useState(false);
+    const [uploadingBrochure, setUploadingBrochure] = useState(false);
     // ── Photo add ─────────────────────────────────────────────────────────────
     const handlePhotoAdd = useCallback(async (files) => {
         if (!files || files.length === 0)
@@ -118,6 +120,45 @@ export function PhotoUploader({ value = [], videoUrl = null, onChange, onVideoCh
             onVideoChange?.(null);
         }
     }, [videoUrl, onVideoChange]);
+    // ─────────────────────────────────────────────────────────────────────────
+    // ── Brochure add ──────────────────────────────────────────────────────────
+    const handleBrochureAdd = useCallback(async (file) => {
+        if (!file)
+            return;
+        setUploadingBrochure(true);
+        try {
+            const result = await uploadMedia([], null, file);
+            onBrochureChange?.(result.brochure);
+        }
+        catch (err) {
+            toast({
+                title: "Brochure upload failed",
+                description: err?.response?.data?.message ?? "Could not upload PDF brochure. Please try again.",
+                variant: "destructive",
+            });
+        }
+        finally {
+            setUploadingBrochure(false);
+        }
+    }, [onBrochureChange, toast]);
+
+    // ── Brochure remove ───────────────────────────────────────────────────────
+    const handleBrochureRemove = useCallback(async () => {
+        if (!brochureUrl)
+            return;
+        setDeletingUrls((prev) => new Set(prev).add(brochureUrl));
+        try {
+            await deleteMedia([brochureUrl]);
+        }
+        catch {
+            console.warn('[PhotoUploader] Failed to delete brochure from storage:', brochureUrl);
+        }
+        finally {
+            setDeletingUrls((prev) => { const s = new Set(prev); s.delete(brochureUrl); return s; });
+            onBrochureChange?.(null);
+        }
+    }, [brochureUrl, onBrochureChange]);
+
     // ─────────────────────────────────────────────────────────────────────────
     const totalSlots = value.length + uploadingPhotos.length;
     const canAddMore = totalSlots < maxPhotos && !disabled;
@@ -214,6 +255,49 @@ export function PhotoUploader({ value = [], videoUrl = null, onChange, onVideoCh
             <Video className="h-6 w-6"/>
             <span className="text-sm">Click to add a video</span>
             <span className="text-xs opacity-60">MP4, MOV, AVI, WebM — max 100 MB</span>
+          </button>)}
+      </div>
+
+      {/* ── PDF Brochure section ── */}
+      <div className="space-y-3 border-t pt-4">
+        <Label className="flex items-center gap-2 text-sm font-semibold">
+          <FileText className="h-4 w-4 text-muted-foreground"/>
+          Brochure (PDF)
+          <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+        </Label>
+
+        <input ref={brochureInputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => handleBrochureAdd(e.target.files?.[0] ?? null)} onClick={(e) => { e.target.value = ''; }}/>
+
+        {uploadingBrochure ? (<div className="flex h-20 items-center justify-center gap-3 rounded-xl border-2 border-dashed text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin"/>
+            <span className="text-sm">Uploading brochure PDF…</span>
+          </div>) : brochureUrl ? (<div className="space-y-2">
+            <div className="flex items-center justify-between p-3.5 rounded-xl border bg-muted/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">Property Brochure PDF</p>
+                  <a href={brochureUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate block">
+                    View PDF File
+                  </a>
+                </div>
+              </div>
+              {deletingUrls.has(brochureUrl) ? (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              ) : (!disabled && (
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={handleBrochureRemove}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>) : (<button type="button" onClick={() => brochureInputRef.current?.click()} disabled={disabled} className="flex h-20 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:cursor-not-allowed disabled:opacity-50">
+            <FileText className="h-6 w-6"/>
+            <span className="text-sm">Click to upload property brochure PDF</span>
+            <span className="text-xs opacity-60">PDF document — max 50 MB</span>
           </button>)}
       </div>
     </div>);

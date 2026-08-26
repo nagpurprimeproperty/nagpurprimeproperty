@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import {getPopularLocalitiesCount,getListedProperties,getPropertyById,getSimilarProperties, getMyProperties, getMyProperty, createMyProperty, updateMyProperty, deleteMyProperty, toggleFeaturedMyProperty, updateMyPropertyStatus} from "./property.controller.js";
+import {getPopularLocalitiesCount,getListedProperties,getPropertyById,getSimilarProperties, getMyProperties, getMyProperty, createMyProperty, updateMyProperty, deleteMyProperty, toggleFeaturedMyProperty, updateMyPropertyStatus, accessPropertyBrochure} from "./property.controller.js";
 import {userProtect} from "../../middlewares/auth.middleware.js";
 import {savePropertyToggle} from "./savedProperty.controller.js";
 import { attachUser } from "../../middlewares/attachUser.middleware.js";
@@ -74,6 +74,7 @@ router.get("/:id", getPropertyById);
 router.post("/:id/save-toggle", userProtect, savePropertyToggle);
 router.post("/:id/create-enquiry", userProtect, validateCreateLead, createLead);
 router.post("/:id/create-call-enquiry", userProtect, createLeadByOnlyFetchDataFromPropertyId);
+router.post("/:id/brochure-lead", userProtect, accessPropertyBrochure);
 router.get("/:id/similar-properties", getSimilarProperties); // Reuse listing logic for similar properties
 
 export default router;

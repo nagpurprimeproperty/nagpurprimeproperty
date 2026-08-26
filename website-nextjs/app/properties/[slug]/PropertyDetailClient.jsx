@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronLeft, Heart, MapPin, MessageCircle, Phone, Share2, Sparkles,
+  ChevronLeft, Heart, MapPin, MessageCircle, Phone, Share2, Sparkles, FileText, Download,
 } from 'lucide-react'
 import { useFavorites, useViewed, useUnlocked, useLeads, useAuth, getPersistedAuth, useHasHydrated } from '@/lib/stores'
 import { BrokerCard } from '@/components/site/BrokerCard'
@@ -12,7 +12,7 @@ import { PropertyCard } from '@/components/site/PropertyCard'
 import { PropertyMedia } from '@/components/site/PropertyMedia'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { useSubmitEnquiry, useSubmitCallEnquiry } from '@/lib/hooks/useEnquiry'
+import { useSubmitEnquiry, useSubmitCallEnquiry, useSubmitBrochureEnquiry } from '@/lib/hooks/useEnquiry'
 import { useSaveToggle } from '@/lib/hooks/useProperties'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -142,6 +142,35 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
     toast.success('Visit Scheduled!', {
       description: 'The broker will contact you shortly on your registered number.',
     });
+  };
+
+  const submitBrochureEnquiry = useSubmitBrochureEnquiry();
+
+  const handleDownloadBrochure = () => {
+    const { token, user } = getPersistedAuth();
+    if (!token || !user) { useAuth.getState().openAuth(); return; }
+
+    const brochureUrl = p.brochure;
+    if (!brochureUrl) {
+      toast.error('No brochure available for this property');
+      return;
+    }
+
+    toast.loading('Accessing brochure...', { id: 'brochure-toast' });
+    submitBrochureEnquiry.mutate(
+      { propertyId: pid, token },
+      {
+        onSuccess: (res) => {
+          toast.success('Brochure unlocked! Lead sent to broker.', { id: 'brochure-toast' });
+          const targetUrl = res?.brochureUrl || brochureUrl;
+          if (targetUrl) window.open(targetUrl, '_blank');
+        },
+        onError: (err) => {
+          toast.dismiss('brochure-toast');
+          toast.error(err?.message || 'Could not access brochure');
+        },
+      }
+    );
   };
 
   return (
@@ -321,6 +350,11 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
               <Button variant="hero" size="lg" className="w-full text-base font-semibold" onClick={handleScheduleVisit}>
                 Schedule a Visit
               </Button>
+              {p.brochure && (
+                <Button variant="outline" size="lg" className="w-full text-base font-semibold border-primary/30 text-primary hover:bg-primary/5 gap-2" onClick={handleDownloadBrochure}>
+                  <FileText className="h-5 w-5" /> Download Brochure
+                </Button>
+              )}
             </div>
           </aside>
         </div>
@@ -338,13 +372,18 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
 
       {/* Mobile CTA Footer */}
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-border/60 bg-background/95 backdrop-blur md:hidden shadow-lg">
-        <div className="grid grid-cols-3 gap-2 p-2">
+        <div className={cn("grid gap-2 p-2", p.brochure ? "grid-cols-4" : "grid-cols-3")}>
           <button onClick={handleCall} className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/40 active:scale-95 transition-transform cursor-pointer">
             <Phone className="h-4 w-4 text-primary" /> Call
           </button>
           <button onClick={handleWhatsApp} className="inline-flex items-center justify-center gap-1 rounded-lg bg-whatsapp py-2.5 text-xs font-bold text-whatsapp-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
             <MessageCircle className="h-4 w-4" /> WhatsApp
           </button>
+          {p.brochure && (
+            <button onClick={handleDownloadBrochure} className="inline-flex items-center justify-center gap-1 rounded-lg border border-primary/40 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 active:scale-95 transition-transform cursor-pointer">
+              <FileText className="h-4 w-4" /> Brochure
+            </button>
+          )}
           <button onClick={handleScheduleVisit} className="inline-flex items-center justify-center gap-1 rounded-lg bg-gradient-primary py-2.5 text-xs font-bold text-primary-foreground hover:opacity-95 active:scale-95 transition-transform cursor-pointer">
             Visit
           </button>

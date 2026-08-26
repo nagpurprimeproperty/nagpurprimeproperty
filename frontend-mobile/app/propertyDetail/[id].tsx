@@ -5,6 +5,7 @@ import {
   useTogglePropertySave,
   useCreatePropertyEnquiry,
   useCreateCallEnquiry,
+  useCreateBrochureLead,
   useDeleteMyProperty,
 } from "@/features/property";
 import { useAuthStore } from "@/features/auth";
@@ -43,6 +44,7 @@ import {
   Map,
   Briefcase,
   Zap,
+  FileText,
   CircleDollarSign,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -1210,6 +1212,33 @@ export default function PropertyDetailsScreen() {
     }
   };
 
+  const createBrochureLeadMutation = useCreateBrochureLead();
+
+  const handleDownloadBrochure = async () => {
+    if (!isAuthenticated) {
+      openAuth("viewContact");
+      return;
+    }
+
+    const brochureUrl = property?.brochure;
+    if (!brochureUrl) {
+      Alert.alert("Brochure", "No brochure available for this property.");
+      return;
+    }
+
+    try {
+      const res = await createBrochureLeadMutation.mutateAsync(id);
+      const targetUrl = res?.brochureUrl || (typeof res?.data === 'object' && res?.data?.brochureUrl) || brochureUrl;
+      if (targetUrl) {
+        Linking.openURL(targetUrl).catch(() => {
+          Alert.alert("Brochure", "Unable to open brochure file.");
+        });
+      }
+    } catch (e: any) {
+      Alert.alert("Brochure Error", e?.message || "Could not access brochure.");
+    }
+  };
+
   const handleShare = () => {
     Share.share({
       message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/properties/${id}`,
@@ -1944,6 +1973,17 @@ export default function PropertyDetailsScreen() {
           >
             <Text className="text-[14px] font-bold text-white">WhatsApp</Text>
           </TouchableOpacity>
+
+          {Boolean(property?.brochure) && (
+            <TouchableOpacity
+              onPress={handleDownloadBrochure}
+              activeOpacity={0.85}
+              className="flex-1 flex-row items-center justify-center py-3.5 bg-orange-50 border border-orange-200 rounded-2xl"
+            >
+              <FileText size={18} color="#F97316" />
+              <Text className="text-[14px] font-bold text-orange-600 ml-1.5">Brochure</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

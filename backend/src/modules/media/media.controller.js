@@ -16,6 +16,8 @@ export const uploadMedia = async (req, res, next) => {
     let uploadFolder = 'properties';
     if (file.mimetype && file.mimetype.startsWith('video/')) {
       uploadFolder = 'properties/videos';
+    } else if (file.mimetype === 'application/pdf') {
+      uploadFolder = 'properties/brochures';
     }
 
     // Upload single file and get URL

@@ -372,6 +372,8 @@ export const basePropertySchema = z.object({
   brokerId: z.string().min(1, 'Broker (User) ID is required'),
   location: locationSchema,
   amenities: z.array(z.string()).optional().default([]),
+  video: z.string().url('Video must be a valid URL').nullable().optional(),
+  brochure: z.string().url('Brochure must be a valid URL').nullable().optional(),
 });
 
 /**
