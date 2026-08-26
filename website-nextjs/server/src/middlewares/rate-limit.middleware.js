@@ -45,11 +45,7 @@ try {
 }
 
 const ipKeyGenerator = (req) => {
-  return (
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
+  return req.ip || req.socket?.remoteAddress || 'unknown';
 };
 
 // General API limiter

@@ -12,6 +12,9 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 
+// Trust reverse proxy (Nginx) for secure IP extraction (prevents rate-limit IP spoofing)
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet());
 
