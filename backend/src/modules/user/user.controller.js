@@ -42,7 +42,13 @@ export const verifyOTP = async (req, res, next) => {
       await UserService.updateFcmToken(user._id, fcmToken);
     }
 
-    res.cookie('userToken', token, { httpOnly: true });
+    const isProd = env.NODE_ENV === 'production';
+    res.cookie('userToken', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
     res.json({ success: true, message: 'OTP verified successfully', data: user, token });
   } catch (error) {
     next(error);

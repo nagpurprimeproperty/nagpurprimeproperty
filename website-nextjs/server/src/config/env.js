@@ -30,7 +30,7 @@ const env = {
 
   // Auth
   JWT_SECRET: required('JWT_SECRET', isDev ? 'dev-secret-key-change-in-prod' : null),
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '30d',
   JWT_REFRESH_SECRET: required('JWT_REFRESH_SECRET', isDev ? 'dev-refresh-secret' : null),
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 
