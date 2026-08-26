@@ -40,6 +40,7 @@ export default function Home() {
 
   const [page, setPage] = useState(1);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [activeListingCategory, setActiveListingCategory] = useState("all");
 
   const { mutate: toggleSave } = useTogglePropertySave();
   const { mutateAsync: createCall } = useCreateCallEnquiry();
@@ -59,8 +60,11 @@ export default function Home() {
     } else if (selectedLocality) {
       params.locality = selectedLocality;
     }
+    if (activeListingCategory !== "all") {
+      params.listingCategory = activeListingCategory;
+    }
     return params;
-  }, [selectedLocality, selectedLatitude, selectedLongitude]);
+  }, [selectedLocality, selectedLatitude, selectedLongitude, activeListingCategory]);
 
   const feedParams = useMemo(() => {
     const params: Record<string, unknown> = {
@@ -77,8 +81,12 @@ export default function Home() {
     if (activeCategory !== "all") {
       params.propertyType = CATEGORY_MAP[activeCategory];
     }
+    // "all" is the chip's reset value; don't send the param when unfiltered
+    if (activeListingCategory !== "all") {
+      params.listingCategory = activeListingCategory;
+    }
     return params;
-  }, [selectedLocality, selectedLatitude, selectedLongitude, page, activeCategory, CATEGORY_MAP]);
+  }, [selectedLocality, selectedLatitude, selectedLongitude, page, activeCategory, activeListingCategory, CATEGORY_MAP]);
 
   // ─── Main feed — filtered by locality when set ───────────────────────────────
   const {
@@ -116,22 +124,34 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps: reads loadStage3 via ref, never needs recreation
 
-  // ─── Featured & Recommended — always global, no locality filter ─────────────
+  // ─── Featured & Recommended — filtered by listingCategory when active ────────
+  const featuredParams = useMemo(() => {
+    const p: Record<string, unknown> = { featured: true, limit: 8 };
+    if (activeListingCategory !== "all") p.listingCategory = activeListingCategory;
+    return p;
+  }, [activeListingCategory]);
+
+  const recommendedParams = useMemo(() => {
+    const p: Record<string, unknown> = { isRecommended: true, limit: 8 };
+    if (activeListingCategory !== "all") p.listingCategory = activeListingCategory;
+    return p;
+  }, [activeListingCategory]);
+
   const {
     data: featuredProperties = EMPTY_ARRAY,
     isLoading: featuredLoading,
     refetch: refetchFeatured,
     isFetched: featuredFetched,
-  } = useProperties({ featured: true, limit: 8 }, shouldEnableStage2);
+  } = useProperties(featuredParams, shouldEnableStage2);
 
   const {
     data: recommendedProperties = EMPTY_ARRAY,
     isLoading: recommendedLoading,
     refetch: refetchRecommended,
     isFetched: recommendedFetched,
-  } = useProperties({ isRecommended: true, limit: 8 }, shouldEnableStage2);
+  } = useProperties(recommendedParams, shouldEnableStage2);
 
-  // ─── Near You — filtered by locality when set ────────────────────────────────
+  // ─── Near You — filtered by locality and listingCategory when set ─────────────
   const {
     data: nearYouProperties = EMPTY_ARRAY,
     isLoading: nearYouLoading,
@@ -163,7 +183,7 @@ export default function Home() {
     refetch: combinedRefetch,
     page,
     setPage,
-    resetDeps: [selectedLocality, selectedLatitude, selectedLongitude, activeCategory],
+    resetDeps: [selectedLocality, selectedLatitude, selectedLongitude, activeCategory, activeListingCategory],
   });
 
   const lengthsRef = useRef({
@@ -226,6 +246,11 @@ export default function Home() {
     [],
   );
 
+  // Toggle listing category: tap active chip → reset to "all"
+  const toggleListingCategory = useCallback((id: string) => {
+    setActiveListingCategory((prev) => (prev === id ? "all" : id));
+  }, []);
+
   // Memoize the ListHeaderComponent to prevent FlashList from unmounting and
   // remounting the entire HomeHeader (featured, recommended, near you) on every render.
   const listHeader = useMemo(() => (
@@ -236,6 +261,8 @@ export default function Home() {
       selectedLocality={selectedLocality}
       activeCategory={activeCategory}
       onCategoryChange={setActiveCategory}
+      activeListingCategory={activeListingCategory}
+      onListingCategoryChange={toggleListingCategory}
       loadStage3={loadStage3}
       onToggleSave={toggleSave}
       onCreateCallEnquiry={createCall}
@@ -246,6 +273,8 @@ export default function Home() {
     nearYouProperties,
     selectedLocality,
     activeCategory,
+    activeListingCategory,
+    toggleListingCategory,
     loadStage3,
     toggleSave,
     createCall,
@@ -318,6 +347,8 @@ const HomeHeader = memo(function HomeHeader({
   selectedLocality,
   activeCategory,
   onCategoryChange,
+  activeListingCategory,
+  onListingCategoryChange,
   loadStage3,
   onToggleSave,
   onCreateCallEnquiry,
@@ -328,6 +359,8 @@ const HomeHeader = memo(function HomeHeader({
   selectedLocality: string | null;
   activeCategory: string;
   onCategoryChange: (category: string) => void;
+  activeListingCategory: string;
+  onListingCategoryChange: (category: string) => void;
   loadStage3: boolean;
   onToggleSave?: (id: string) => void;
   onCreateCallEnquiry?: (id: string) => Promise<any>;
@@ -342,7 +375,12 @@ const HomeHeader = memo(function HomeHeader({
   return (
     <View>
       <View className="mt-0 mb-2">
-        <CategoryTabs activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onCategoryChange={onCategoryChange}
+          activeListingCategory={activeListingCategory}
+          onListingCategoryChange={onListingCategoryChange}
+        />
       </View>
 
       {/* Featured Section */}

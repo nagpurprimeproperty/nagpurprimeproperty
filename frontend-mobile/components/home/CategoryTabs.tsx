@@ -11,12 +11,21 @@ import Animated, {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+// Listing-category chips shown in the same row after a divider
+const LISTING_CATEGORIES = [
+  { id: "Resale",  label: "Resale",       icon: "refresh-circle-outline" as const },
+  { id: "Rental",  label: "Rental",        icon: "key-outline" as const },
+  { id: "New",     label: "New Project",   icon: "sparkles-outline" as const },
+];
+
 type CategoryTabsProps = {
   activeCategory: string;
   onCategoryChange: (category: string) => void;
+  activeListingCategory: string;
+  onListingCategoryChange: (category: string) => void;
 };
 
-// Map icons to match search screen icons
+// Map icons for property-type chips
 const ICON_MAP: Record<string, string> = {
   all: "grid-outline",
   plot: "crop-outline",
@@ -25,32 +34,48 @@ const ICON_MAP: Record<string, string> = {
   commercial: "briefcase-outline",
 };
 
-export default function CategoryTabs({ activeCategory, onCategoryChange }: CategoryTabsProps) {
+export default function CategoryTabs({
+  activeCategory,
+  onCategoryChange,
+  activeListingCategory,
+  onListingCategoryChange,
+}: CategoryTabsProps) {
   const { colors } = useTheme();
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(200).duration(500).springify()}
-    >
+    <Animated.View entering={FadeInDown.delay(200).duration(500).springify()}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 6, paddingTop: 2, alignItems: "center" }}
       >
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {categories.map((item) => {
-            const isActive = activeCategory === item.id;
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+          {/* — Property Type chips — */}
+          {categories.map((item) => (
+            <CategoryChip
+              key={item.id}
+              item={item}
+              isActive={activeCategory === item.id}
+              activeColor="#EA580C"
+              iconName={ICON_MAP[item.id] || item.icon}
+              onPress={() => onCategoryChange(item.id)}
+            />
+          ))}
 
-            return (
-              <CategoryChip
-                key={item.id}
-                item={item}
-                isActive={isActive}
-                colors={colors}
-                onPress={() => onCategoryChange(item.id)}
-              />
-            );
-          })}
+          {/* — Thin vertical divider — */}
+          <View style={{ width: 1.5, height: 24, backgroundColor: "#E2E8F0", marginHorizontal: 2 }} />
+
+          {/* — Listing Category chips — */}
+          {LISTING_CATEGORIES.map((item) => (
+            <CategoryChip
+              key={item.id}
+              item={item}
+              isActive={activeListingCategory === item.id}
+              activeColor="#16A34A"
+              iconName={item.icon}
+              onPress={() => onListingCategoryChange(item.id)}
+            />
+          ))}
         </View>
       </ScrollView>
     </Animated.View>
@@ -60,12 +85,14 @@ export default function CategoryTabs({ activeCategory, onCategoryChange }: Categ
 function CategoryChip({
   item,
   isActive,
-  colors,
+  activeColor,
+  iconName,
   onPress,
 }: {
-  item: { id: string; label: string; icon: string };
+  item: { id: string; label: string };
   isActive: boolean;
-  colors: any;
+  activeColor: string;
+  iconName: string;
   onPress: () => void;
 }) {
   const scale = useSharedValue(1);
@@ -74,42 +101,36 @@ function CategoryChip({
     transform: [{ scale: scale.value }],
   }));
 
-  const iconName = ICON_MAP[item.id] || item.icon;
-
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={() => {
-        scale.value = withSpring(0.92);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1);
-      }}
+      onPressIn={() => { scale.value = withSpring(0.92); }}
+      onPressOut={() => { scale.value = withSpring(1); }}
       style={[
         animStyle,
         {
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 7,
           borderRadius: 10,
-          backgroundColor: isActive ? "#EA580C" : "white",
+          backgroundColor: isActive ? activeColor : "white",
           borderWidth: 1.5,
-          borderColor: isActive ? "#EA580C" : "#E2E8F0",
-          gap: 6,
+          borderColor: isActive ? activeColor : "#E2E8F0",
+          gap: 5,
         },
       ]}
     >
       <Ionicons
         name={iconName as any}
-        size={14}
+        size={13}
         color={isActive ? "white" : "#64748B"}
       />
       <Text
         style={{
           color: isActive ? "white" : "#64748B",
           fontWeight: "700",
-          fontSize: 12,
+          fontSize: 11,
         }}
       >
         {item.label}
