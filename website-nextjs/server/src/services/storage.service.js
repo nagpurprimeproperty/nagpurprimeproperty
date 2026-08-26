@@ -46,7 +46,20 @@ const storageService = {
   // 🔹 Delete from S3
   delete: async (url) => {
     try {
-      const key = url.split(`${env.S3_PUBLIC_URL}/`)[1];
+      if (!url || typeof url !== 'string') {
+        throw { status: 400, message: 'Invalid media URL' };
+      }
+
+      const s3UrlPrefix = `${env.S3_PUBLIC_URL}/`;
+      if (!url.startsWith(s3UrlPrefix)) {
+        throw { status: 400, message: 'URL does not belong to configured S3 storage' };
+      }
+
+      const key = url.slice(s3UrlPrefix.length);
+      if (!key || key.trim() === '' || key.includes('..')) {
+        throw { status: 400, message: 'Invalid S3 object key' };
+      }
+
       const s3 = initS3();
 
       const command = new DeleteObjectCommand({
@@ -58,6 +71,7 @@ const storageService = {
 
       return { success: true };
     } catch (error) {
+      if (error.status) throw error;
       console.error('S3 delete error:', error.message);
       throw {
         status: 500,
