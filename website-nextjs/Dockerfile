@@ -33,7 +33,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
-RUN npm run build
+RUN --mount=type=secret,id=ENV_FILE,target=/app/.env.production,required=false npm run build
 
 # ─── Stage 3: Runner ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
