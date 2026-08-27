@@ -219,14 +219,16 @@ function PropertiesContent({ initialProperties, initialAreas }) {
     initialData: initialProperties,
     initialDataUpdatedAt: 0,
   })
-  const { data: areas = [] } = useAreas({
-    initialData: initialAreas,
+  const { data: areasData } = useAreas({
+    initialData: Array.isArray(initialAreas) ? initialAreas : [],
     initialDataUpdatedAt: 0,
   })
 
+  const areas = Array.isArray(areasData) ? areasData : (Array.isArray(initialAreas) ? initialAreas : [])
+
   const properties = Array.isArray(propData)
     ? propData
-    : propData?.data ?? []
+    : (Array.isArray(propData?.data) ? propData.data : [])
 
   const totalPages = propData?.totalPages ?? 1
   const total = propData?.total ?? 0

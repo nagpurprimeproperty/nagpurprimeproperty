@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { PropertyCard } from '@/components/site/PropertyCard'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 export default function AreaClient({ area: a, props, related, blogs = [] }) {
   // Safely normalise array fields that may be missing in older documents
@@ -77,7 +78,7 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
               <Block kicker="Overview" title={`About ${a.name}`}>
                 <div
                   className="rich-text"
-                  dangerouslySetInnerHTML={{ __html: a.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(a.description) }}
                 />
               </Block>
             )}
@@ -96,7 +97,7 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
                   </div>
                   <div
                     className="rich-text text-sm w-full min-w-0"
-                    dangerouslySetInnerHTML={{ __html: a.connectivity }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(a.connectivity) }}
                   />
                 </div>
               </Block>
@@ -130,7 +131,7 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
                   </div>
                   <div
                     className="rich-text text-sm w-full min-w-0"
-                    dangerouslySetInnerHTML={{ __html: a.investment }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(a.investment) }}
                   />
                 </div>
               </Block>
@@ -167,7 +168,7 @@ export default function AreaClient({ area: a, props, related, blogs = [] }) {
                       <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
                         <div
                           className="rich-text text-sm"
-                          dangerouslySetInnerHTML={{ __html: f.a }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(f.a) }}
                         />
                       </AccordionContent>
                     </AccordionItem>

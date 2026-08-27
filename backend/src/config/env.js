@@ -50,7 +50,7 @@ const env = {
 
   // Auth
   JWT_SECRET: required('JWT_SECRET', isDev ? 'dev-secret-key-change-in-prod' : null),
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '30d',
   JWT_REFRESH_SECRET: required('JWT_REFRESH_SECRET', isDev ? 'dev-refresh-secret' : null),
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 
@@ -97,7 +97,7 @@ const env = {
   WHATSAPP_ENABLED: process.env.WHATSAPP_ENABLED === 'true',
   WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN || '',
   WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
-  WHATSAPP_VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN || 'NagpurPrimeWhatsAppWebhook2026',
+  WHATSAPP_VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN || '',
   WHATSAPP_OTP_TEMPLATE_NAME: process.env.WHATSAPP_OTP_TEMPLATE_NAME || '',
   WHATSAPP_LEAD_TEMPLATE_NAME: process.env.WHATSAPP_LEAD_TEMPLATE_NAME || 'new_lead_notification',
   WHATSAPP_LEAD_TEMPLATE_LANGUAGE: process.env.WHATSAPP_LEAD_TEMPLATE_LANGUAGE || process.env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en_US',

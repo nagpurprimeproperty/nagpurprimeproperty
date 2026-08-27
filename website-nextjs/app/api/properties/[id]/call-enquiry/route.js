@@ -27,23 +27,27 @@ export async function POST(req, { params }) {
     };
 
     const property = await propertyService.getProperty(id, userId, userIp);
-    console.log('[DEBUG LOG] property:', JSON.stringify(property, null, 2));
-    const existingLead = await leadService.getLeadByPropertyAndUser(id, userId);
+    if (!property) {
+      return NextResponse.json({ success: false, message: 'Property not found' }, { status: 404 });
+    }
+
+    const realPropertyId = property._id;
+    const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
 
     const brokerId = property.brokerId?._id || property.brokerId;
-    const brokerDetails = await userService.getUser(brokerId);
+    const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
     if (existingLead) {
       return NextResponse.json({
         success: true,
         message: 'Lead already exists for this property and user',
-        data: { ...existingLead, brokerDetails }
+        data: { ...(existingLead._doc || existingLead), brokerDetails }
       });
     }
 
-    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(id, userArg);
+    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(realPropertyId, userArg);
 
-    return NextResponse.json({ success: true, data: { ...lead._doc, brokerDetails } });
+    return NextResponse.json({ success: true, data: { ...(lead._doc || lead), brokerDetails } });
   } catch (err) {
     const status = err.status || 500;
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status });

@@ -4,8 +4,8 @@ export const  loginUser = async (req, res, next) => {
   try {
     const { mobile, name } = req.body;
     const user = await UserService.findOrCreateByMobile(mobile, name);
-    const otp = await UserService.generateOTP(user);
-    res.json({ success: true,message: 'OTP sent successfully', data: otp });
+    await UserService.generateOTP(user);
+    res.json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
     next(error);
   }
@@ -14,8 +14,8 @@ export const  loginUser = async (req, res, next) => {
 export const resendOTP = async (req, res, next) => {
   try {
     const { mobile } = req.body;
-    const otp = await UserService.resendOTP(mobile);
-    res.json({ success: true, message: 'OTP resent successfully', data: otp });
+    await UserService.resendOTP(mobile);
+    res.json({ success: true, message: 'OTP resent successfully' });
   } catch (error) {
     next(error);
   }
@@ -33,7 +33,13 @@ export const verifyOTP = async (req, res, next) => {
       await UserService.updateFcmToken(user._id, fcmToken);
     }
 
-    res.cookie('userToken', token, { httpOnly: true });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('userToken', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
     res.json({ success: true, message: 'OTP verified successfully', data: user, token });
   } catch (error) {
     next(error);

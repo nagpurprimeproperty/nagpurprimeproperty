@@ -1,4 +1,5 @@
 import Admin from '../../models/admin.model.js';
+import { escapeRegex } from '../../utils/query-sanitizer.js';
 
 const subAdminRepository = {
   /**
@@ -28,10 +29,11 @@ const subAdminRepository = {
     const filter = { role: 'sub-admin' };
 
     if (search && search.trim()) {
+      const safeSearch = escapeRegex(search.trim());
       filter.$or = [
-        { firstName: { $regex: search.trim(), $options: 'i' } },
-        { lastName:  { $regex: search.trim(), $options: 'i' } },
-        { email:     { $regex: search.trim(), $options: 'i' } },
+        { firstName: { $regex: safeSearch, $options: 'i' } },
+        { lastName:  { $regex: safeSearch, $options: 'i' } },
+        { email:     { $regex: safeSearch, $options: 'i' } },
       ];
     }
 

@@ -121,18 +121,25 @@ export const useViewed = create()(
   ),
 );
 
-// ─── Unlocked Brokers Store ───────────────────────────────────────────────────
+// ─── Unlocked Properties Store (Property-wise contact unlocking) ───────────────
 export const useUnlocked = create()(
   persist(
     (set, get) => ({
-      brokerIds: [],
-      unlock: (brokerId) =>
+      propertyIds: [],
+      unlock: (propertyId) => {
+        if (!propertyId) return;
+        const current = get().propertyIds || [];
         set({
-          brokerIds: Array.from(new Set([...get().brokerIds, brokerId])),
-        }),
-      isUnlocked: (brokerId) => get().brokerIds.includes(brokerId),
+          propertyIds: Array.from(new Set([...current, String(propertyId)])),
+        });
+      },
+      isUnlocked: (propertyId) => {
+        if (!propertyId) return false;
+        const current = get().propertyIds || [];
+        return current.includes(String(propertyId));
+      },
     }),
-    { name: "nh-unlocked" },
+    { name: "nh-unlocked-properties" },
   ),
 );
 

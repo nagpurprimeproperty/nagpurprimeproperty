@@ -12,12 +12,13 @@ import { useSendOTP, useVerifyOTP, useResendOTP } from "@/lib/hooks/useAuthMutat
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { getSafeRedirectUrl } from "@/lib/utils";
 
 function LoginContent() {
   const { login, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/profile";
+  const redirect = getSafeRedirectUrl(searchParams.get("redirect"), "/profile");
 
   const [step, setStep] = useState("mobile");
   const [name, setName] = useState("");
@@ -55,14 +56,10 @@ function LoginContent() {
       return;
     }
     try {
-      const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: name.trim() });
+      await sendOTPMutation.mutateAsync({ mobile, name: name.trim() });
       setStep("otp");
       setResendIn(60);
-      if (typeof otpVal === 'string') {
-        toast.success(`OTP sent to your mobile number. OTP: ${otpVal}`);
-      } else {
-        toast.success("OTP sent to your mobile number");
-      }
+      toast.success("OTP sent to your mobile number");
       setTimeout(() => otpRefs.current[0]?.focus(), 60);
     } catch (err) {
       toast.error(err.message || "Failed to send OTP. Please try again.");
@@ -71,14 +68,10 @@ function LoginContent() {
 
   const resendOtp = async () => {
     try {
-      const otpVal = await resendOTPMutation.mutateAsync({ mobile });
+      await resendOTPMutation.mutateAsync({ mobile });
       setResendIn(60);
       setOtp(["", "", "", ""]);
-      if (typeof otpVal === 'string') {
-        toast.success(`OTP resent to your mobile number. OTP: ${otpVal}`);
-      } else {
-        toast.success("OTP resent to your mobile number");
-      }
+      toast.success("OTP resent to your mobile number");
       setTimeout(() => otpRefs.current[0]?.focus(), 60);
     } catch (err) {
       toast.error(err.message || "Failed to resend OTP. Please try again.");

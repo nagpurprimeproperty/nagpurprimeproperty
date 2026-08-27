@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export const BrokerCard = React.memo(function BrokerCard({ broker, propertyTitle, propertyId }) {
   const hydrated = useHasHydrated();
-  const unlockedStore = useUnlocked((s) => s.isUnlocked(broker?.id));
+  const unlockedStore = useUnlocked((s) => s.isUnlocked(propertyId));
   // Gate with hydrated so SSR (false) matches client first render
   const isUnlocked = hydrated && unlockedStore;
   const submitEnquiry = useSubmitEnquiry();
@@ -35,7 +35,9 @@ export const BrokerCard = React.memo(function BrokerCard({ broker, propertyTitle
     };
 
     useLeads.getState().add(leadDetails);
-    useUnlocked.getState().unlock(broker.id);
+    if (propertyId) {
+      useUnlocked.getState().unlock(propertyId);
+    }
 
     if (propertyId) {
       submitCallEnquiry.mutate({

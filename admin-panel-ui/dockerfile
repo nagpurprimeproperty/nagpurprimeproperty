@@ -56,8 +56,8 @@ ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 ARG NEXT_PUBLIC_FIREBASE_VAPID_KEY
 ENV NEXT_PUBLIC_FIREBASE_VAPID_KEY=$NEXT_PUBLIC_FIREBASE_VAPID_KEY
 
-# Build the Next.js app
-RUN pnpm build
+# Build the Next.js app with optional mounted secret env file (never written to image history)
+RUN --mount=type=secret,id=ENV_FILE,target=/app/.env.production,required=false pnpm build
 
 # ─── Stage 2: Runner ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner

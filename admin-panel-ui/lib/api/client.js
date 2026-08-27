@@ -72,75 +72,33 @@ export class ApiError extends Error {
         this.name = 'ApiError';
     }
 }
-// ─── Token helper ─────────────────────────────────────────────────────────────
+// ─── Token helper (In-Memory Only) ──────────────────────────────────────────────
 function getToken() {
     if (typeof window === 'undefined')
         return null;
-    try {
-        const raw = localStorage.getItem('auth-store');
-        if (!raw)
-            return null;
-        const parsed = JSON.parse(raw);
-        return parsed?.state?.token ?? null;
-    }
-    catch {
-        return null;
-    }
+    return useAuthStore.getState().token ?? null;
 }
 function getRefreshToken() {
     // Refresh token is stored in an httpOnly cookie — the browser sends it
-    // automatically; no JS read needed. This function is intentionally empty.
+    // automatically with withCredentials: true.
     return null;
 }
 function setToken(token) {
     if (typeof window === 'undefined')
         return;
-    try {
-        useAuthStore.setState({ token });
-        const raw = localStorage.getItem('auth-store');
-        if (!raw) {
-            localStorage.setItem('auth-store', JSON.stringify({ state: { token } }));
-            return;
-        }
-        const parsed = JSON.parse(raw);
-        if (parsed?.state) {
-            parsed.state.token = token;
-            // Remove any stale refreshToken that may have been stored previously
-            delete parsed.state.refreshToken;
-            localStorage.setItem('auth-store', JSON.stringify(parsed));
-        }
-        else {
-            localStorage.setItem('auth-store', JSON.stringify({ state: { token } }));
-        }
-    }
-    catch {
-        // ignore
-    }
+    useAuthStore.setState({ token });
 }
 function clearAuth() {
     if (typeof window === 'undefined')
         return;
-    try {
-        const raw = localStorage.getItem('auth-store');
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed?.state) {
-                parsed.state.token = null;
-                delete parsed.state.refreshToken;
-                localStorage.setItem('auth-store', JSON.stringify(parsed));
-            }
-        }
-    }
-    catch {
-        localStorage.removeItem('auth-store');
-    }
+    useAuthStore.setState({ token: null });
     // Clear the httpOnly refresh-token cookie via the server logout endpoint
     fetch('/api/v1/admin/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     window.location.href = '/login';
 }
 let isRefreshing = false;
 let refreshQueue = [];
-async function doRefresh() {
+export async function doRefresh() {
     // The refresh token lives in an httpOnly cookie; send it with credentials.
     // Do NOT read it from localStorage.
     const res = await axios.post(

@@ -126,10 +126,8 @@ module.exports = ({ config }) => {
           // Enable R8 code minification and resource shrinking for release builds
           enableMinifyInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
-          // Allow HTTP (cleartext) traffic to dev/staging backend.
-          // usesCleartextTraffic cannot be set directly in the android config
-          // object (schema violation) — this is the correct Expo approach.
-          usesCleartextTraffic: true,
+          // Allow HTTP (cleartext) traffic only in development; enforce HTTPS in production builds.
+          usesCleartextTraffic: process.env.NODE_ENV === "development" || process.env.APP_ENV === "development",
         },
       },
     ],

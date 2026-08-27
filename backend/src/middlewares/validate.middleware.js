@@ -1,7 +1,6 @@
 export default function validate(schema) {
   return (req, _res, next) => {
     try {
-      console.log('Validating request...', req.body);
       // ── Helper: format Zod errors ─────────────────────────
       const formatZodErrors = (issues, prefix = "") => {
         return issues.map((e) => ({

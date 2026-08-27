@@ -84,9 +84,11 @@ const userService = {
   },
 
   generateToken: (user) => {
-     // use jwt to generate a token with user id and mobile as payload
-    const payload = { id: user._id, mobile: user.mobile, };
-    const token = jwt.sign(payload, env.JWT_SECRET);
+    // use jwt to generate a token with user id and mobile as payload
+    const payload = { id: user._id, mobile: user.mobile };
+    const token = jwt.sign(payload, env.JWT_SECRET, {
+      expiresIn: env.JWT_EXPIRES_IN || '30d',
+    });
     return token;
   },
 

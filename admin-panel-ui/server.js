@@ -116,13 +116,38 @@ function getMimeType(ext) {
   return map[ext.toLowerCase()] || 'application/octet-stream';
 }
 
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (!origin) return;
+
+  if (process.env.NODE_ENV !== 'production') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    return;
+  }
+
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [];
+
+  const allowedOrigins = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_WEBSITE_URL,
+    ...envOrigins,
+  ].filter(Boolean);
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+}
+
 // ── Raw media upload handler (bypasses Next.js 10MB body limit) ───────────────
 function handleMediaUpload(req, res) {
   return new Promise((resolve) => {
+    setCorsHeaders(req, res);
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.statusCode = 401;
       res.end(JSON.stringify({ success: false, message: 'No token provided' }));
       return resolve();
@@ -130,8 +155,6 @@ function handleMediaUpload(req, res) {
     try {
       jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
     } catch {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.statusCode = 401;
       res.end(JSON.stringify({ success: false, message: 'Invalid token' }));
       return resolve();
@@ -169,30 +192,22 @@ function handleMediaUpload(req, res) {
     busboy.on('finish', async () => {
       try {
         if (photos.length === 0 && !video) {
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Credentials', 'true');
           res.statusCode = 400;
           res.end(JSON.stringify({ success: false, message: 'No files provided. Send at least one photo or a video.' }));
           return resolve();
         }
         if (photos.length > 15) {
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Credentials', 'true');
           res.statusCode = 400;
           res.end(JSON.stringify({ success: false, message: 'Maximum 15 photos allowed per upload batch.' }));
           return resolve();
         }
         for (const p of photos) {
           if (!ALLOWED_IMAGE.includes(p.mimetype)) {
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.statusCode = 400;
             res.end(JSON.stringify({ success: false, message: `Invalid image type "${p.mimetype}". Allowed: JPEG, PNG, WebP.` }));
             return resolve();
           }
           if (p.size > MAX_IMG) {
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.statusCode = 400;
             res.end(JSON.stringify({ success: false, message: `Image "${p.originalname}" exceeds 10 MB limit.` }));
             return resolve();
@@ -200,15 +215,11 @@ function handleMediaUpload(req, res) {
         }
         if (video) {
           if (!ALLOWED_VIDEO.includes(video.mimetype)) {
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.statusCode = 400;
             res.end(JSON.stringify({ success: false, message: `Invalid video type "${video.mimetype}". Allowed: MP4, MOV, AVI, WebM.` }));
             return resolve();
           }
           if (video.size > MAX_VID) {
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.statusCode = 400;
             res.end(JSON.stringify({ success: false, message: 'Video exceeds 100 MB limit.' }));
             return resolve();
@@ -244,8 +255,6 @@ function handleMediaUpload(req, res) {
           ? await uploadToS3(compressedVideo.buffer, compressedVideo.name, 'properties/videos', compressedVideo.type)
           : null;
 
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.setHeader('Content-Type', 'application/json');
         res.statusCode = 201;
         res.end(JSON.stringify({
@@ -256,8 +265,6 @@ function handleMediaUpload(req, res) {
         resolve();
       } catch (err) {
         console.error('[media/upload] error:', err);
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.statusCode = 500;
         res.end(JSON.stringify({ success: false, message: err.message || 'Upload failed' }));
         resolve();
@@ -266,8 +273,6 @@ function handleMediaUpload(req, res) {
 
     busboy.on('error', (err) => {
       console.error('[media/upload] busboy error:', err);
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.statusCode = 500;
       res.end(JSON.stringify({ success: false, message: 'Failed to parse upload' }));
       resolve();

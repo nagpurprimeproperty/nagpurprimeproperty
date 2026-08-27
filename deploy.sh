@@ -39,9 +39,8 @@ echo "--- Step 5: Cleaning up old Docker images, build caches & host build files
 docker image prune -a -f
 docker builder prune -a -f
 
-# Clean up host-level build artifacts (.next, logs) to free maximum space
+# Clean up host-level temporary build artifacts to free space
 rm -rf website-nextjs/.next admin-panel-ui/.next
-find . -name "*.log" -type f -delete
 
 echo ""
 echo "================================================="

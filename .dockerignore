@@ -8,9 +8,23 @@
 **/dist
 **/build
 
-# Ignore local environment files
-.env*.local
-.env.production.local
+# Ignore environment variables & secrets (inject at runtime, never bake into image)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+*.keystore
+id_rsa*
+serviceAccountKey.json
+firebase-*.json
+google-services.json
+GoogleService-Info.plist
+**/*.script.js
 
 # Ignore version control & logs
 .git

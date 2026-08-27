@@ -30,21 +30,25 @@ export function MapPreview({
   const markersRef = useRef([]);
 
   // Check if Maps SDK loaded successfully
-  const useRealMap = loaded;
+  const useRealMap = Boolean(loaded && typeof window !== 'undefined' && window.google?.maps?.Map);
 
   // ─── Real Google Map Initialization ──────────────────────────────────────────
   useEffect(() => {
-    if (!useRealMap || !mapRef.current) return;
+    if (!useRealMap || !mapRef.current || !window.google?.maps?.Map) return;
 
-    const map = new google.maps.Map(mapRef.current, {
-      center: NAGPUR_CENTER,
-      zoom: 12,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }],
-    });
-    mapInstance.current = map;
+    try {
+      const map = new google.maps.Map(mapRef.current, {
+        center: NAGPUR_CENTER,
+        zoom: 12,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }],
+      });
+      mapInstance.current = map;
+    } catch (e) {
+      console.warn("Could not initialize MapPreview instance:", e?.message);
+    }
 
     // Trigger map resize event to handle dynamic layout calculations
     const timer = setTimeout(() => {

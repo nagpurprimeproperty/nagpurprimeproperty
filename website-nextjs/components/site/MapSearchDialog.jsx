@@ -272,8 +272,8 @@ export function MapSearchDialog({
   // Initialize Map - uses ref to prevent re-initialization on re-renders
   useEffect(() => {
     if (!isOpen) return;
-    // Proceed if Google Maps SDK is available (either from hook state or direct check)
-    if (!loaded && !(typeof window !== 'undefined' && window.google)) return;
+    // Proceed if Google Maps SDK is available
+    if (!loaded && !(typeof window !== 'undefined' && window.google?.maps?.Map)) return;
     if (mapInitializedRef.current) return;
 
     let cancelled = false;
@@ -282,23 +282,28 @@ export function MapSearchDialog({
     const initMap = () => {
       if (cancelled) return;
       const container = document.getElementById('dialog-map-canvas');
-      if (!container || !window.google) {
+      if (!container || !window.google?.maps?.Map) {
         retryTimer = setTimeout(initMap, 100);
         return;
       }
       if (mapInitializedRef.current) return;
       
-      const map = new google.maps.Map(container, {
-        center: markerPos,
-        zoom: currentArea ? 14 : 12,
-        mapId: 'DEMO_MAP_ID',
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
-      });
-      setMapInstance(map);
-      mapInitializedRef.current = true;
+      try {
+        const map = new google.maps.Map(container, {
+          center: markerPos,
+          zoom: currentArea ? 14 : 12,
+          mapId: 'DEMO_MAP_ID',
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
+        });
+        setMapInstance(map);
+        mapInitializedRef.current = true;
+      } catch (e) {
+        console.warn('Map initialization failed:', e?.message);
+        return;
+      }
 
       // Create user/selected location pin (draggable)
       let userMarker;

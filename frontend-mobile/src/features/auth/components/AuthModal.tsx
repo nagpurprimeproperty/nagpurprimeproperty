@@ -107,13 +107,8 @@ export default function AuthModal() {
         name: name.trim() || "Customer",
       });
 
-      const otpCode = response.data?.trim();
-      const toastMessage =
-        otpCode && /^\d{4,8}$/.test(otpCode)
-          ? `OTP: ${otpCode}`
-          : response.message || `OTP sent to ${enteredPhone}`;
-
-      hotToast.success(toastMessage, { duration: 7000 });
+      const toastMessage = response.message || `OTP sent to ${enteredPhone}`;
+      hotToast.success(toastMessage, { duration: 5000 });
       setPhone(enteredPhone);
       setStep("otp");
     } catch (error) {
@@ -145,13 +140,8 @@ export default function AuthModal() {
         mobile: phone,
       });
 
-      const otpCode = response.data?.trim();
-      const toastMessage =
-        otpCode && /^\d{4,8}$/.test(otpCode)
-          ? `OTP resent: ${otpCode}`
-          : response.message || `OTP resent to ${phone}`;
-
-      hotToast.success(toastMessage, { duration: 7000 });
+      const toastMessage = response.message || `OTP resent to ${phone}`;
+      hotToast.success(toastMessage, { duration: 5000 });
     } catch (error) {
       const message =
         error instanceof Error
