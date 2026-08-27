@@ -1939,6 +1939,22 @@ export default function PropertyDetailsScreen() {
             <Text className="text-[14px] font-bold text-slate-900">Share</Text>
           </TouchableOpacity>
 
+          {Boolean(property?.brochure) && (
+            <TouchableOpacity
+              onPress={() => {
+                if (property?.brochure) {
+                  Linking.openURL(property.brochure as string).catch(() => {
+                    Alert.alert('Brochure', 'Unable to open brochure file.');
+                  });
+                }
+              }}
+              activeOpacity={0.85}
+              className="w-12 h-12 bg-blue-50 border border-blue-200 rounded-2xl items-center justify-center"
+            >
+              <FileText size={18} color="#3B82F6" />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             onPress={() => setDeleteConfirmVisible(true)}
             activeOpacity={0.85}
