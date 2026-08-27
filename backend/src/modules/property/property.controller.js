@@ -178,7 +178,8 @@ export const accessPropertyBrochure = async (req, res, next) => {
       mobile: fullUser?.mobile || req.user?.mobile || '9876543210',
     };
 
-    const existingLead = await leadService.getLeadByPropertyAndUser(propertyId, userId);
+    const realPropertyId = property._id;
+    const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
     const brokerId = property.brokerId?._id || property.brokerId;
     const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
@@ -187,16 +188,16 @@ export const accessPropertyBrochure = async (req, res, next) => {
         success: true,
         message: 'Brochure accessed (lead already exists)',
         brochureUrl: property.brochure,
-        data: { brochureUrl: property.brochure, ...existingLead._doc, brokerDetails },
+        data: { brochureUrl: property.brochure, ...(existingLead._doc || existingLead), brokerDetails },
       });
     }
 
-    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(propertyId, userArg);
+    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(realPropertyId, userArg);
     return res.json({
       success: true,
       message: 'Brochure accessed and lead recorded',
       brochureUrl: property.brochure,
-      data: { brochureUrl: property.brochure, ...lead._doc, brokerDetails },
+      data: { brochureUrl: property.brochure, ...(lead._doc || lead), brokerDetails },
     });
   } catch (error) {
     next(error);

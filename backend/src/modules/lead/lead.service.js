@@ -171,9 +171,16 @@ const leadService = {
    */
   getLeadByPropertyAndUser: async (propertyId, userId) => {
     if (!propertyId || !userId) return null;
-    const pId = mongoose.Types.ObjectId.isValid(propertyId) ? new mongoose.Types.ObjectId(propertyId) : propertyId;
-    const uId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
-    return leadRepository.findOne({ propertyId: pId, userId: uId });
+    const pId = mongoose.Types.ObjectId.isValid(propertyId) ? new mongoose.Types.ObjectId(propertyId) : null;
+    const uId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : null;
+    
+    const conditions = [];
+    if (pId && uId) conditions.push({ propertyId: pId, userId: uId });
+    if (pId) conditions.push({ propertyId: pId, userId: String(userId) });
+    if (uId) conditions.push({ propertyId: String(propertyId), userId: uId });
+    conditions.push({ propertyId: String(propertyId), userId: String(userId) });
+
+    return leadRepository.findOne({ $or: conditions });
   },
 
   createLead: async (payload, session) => {
@@ -185,16 +192,37 @@ const leadService = {
   createLeadByOnlyFetchDataFromPropertyId: async (propertyId, user, session) => {
     const property = await propertyRepository.findById(propertyId);
     if (!property) throw { status: 404, message: 'Property not found' };
-   
+
+    const realPropertyId = property._id;
+    const rawUserId = user?.id || user?._id;
+
+    // Idempotent safeguard: if lead already exists, return it immediately without duplicate creation
+    if (realPropertyId && rawUserId) {
+      const existing = await leadService.getLeadByPropertyAndUser(realPropertyId, rawUserId);
+      if (existing) {
+        return existing;
+      }
+    }
+
+    const rawBrokerId = property.brokerId?._id || property.brokerId;
+    const brokerId = rawBrokerId && mongoose.Types.ObjectId.isValid(rawBrokerId)
+      ? new mongoose.Types.ObjectId(rawBrokerId)
+      : rawBrokerId;
+
+    const userId = rawUserId && mongoose.Types.ObjectId.isValid(rawUserId)
+      ? new mongoose.Types.ObjectId(rawUserId)
+      : rawUserId;
+
     const payload = {
-      propertyId,
-      userId: user.id,
-      propertyType: property.propertyType,
-      brokerId: property.brokerId,
-      area: property.location?.locality,
-      budget: property.pricing?.totalPrice || property?.pricing?.monthlyRent,
-      customerName: user?.name,
-      phone: user?.mobile,
+      propertyId: realPropertyId,
+      userId,
+      propertyType: property.propertyType || 'Residential',
+      brokerId,
+      area: property.location?.locality || property.location?.city || property.area || 'Nagpur',
+      budget: String(property.pricing?.totalPrice || property.pricing?.startingPrice || property.pricing?.monthlyRent || property.totalPrice || property.price || 'Price on request'),
+      customerName: user?.name || 'Verified Buyer',
+      phone: user?.mobile || '9876543210',
+      source: 'Mobile/App Lead',
     };
 
     const updatedPayload = await leadService.processLeadQuotaAndWhatsApp(payload, property.title);

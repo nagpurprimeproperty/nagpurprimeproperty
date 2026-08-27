@@ -34,14 +34,7 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
 
   useEffect(() => {
     pushViewed(pid);
-    const { token, user } = getPersistedAuth();
-    if (token && user && pid) {
-      submitCallEnquiry.mutate(
-        { propertyId: pid, token },
-        { onError: (err) => console.warn('Property visit lead logging error:', err.message) }
-      );
-    }
-  }, [pid, pushViewed, submitCallEnquiry]);
+  }, [pid, pushViewed]);
 
   const handleSaveToggle = () => {
     // Read directly from localStorage — 100% reliable, no Zustand hydration involved

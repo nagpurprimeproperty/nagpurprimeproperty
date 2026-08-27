@@ -32,7 +32,8 @@ export async function POST(req, { params }) {
       mobile: fullUser?.mobile || auth.user?.mobile || '9876543210',
     };
 
-    const existingLead = await leadService.getLeadByPropertyAndUser(id, userId);
+    const realPropertyId = property._id;
+    const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
     const brokerId = property.brokerId?._id || property.brokerId;
     const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
@@ -41,11 +42,11 @@ export async function POST(req, { params }) {
         success: true,
         message: 'Brochure accessed (lead already exists)',
         brochureUrl: property.brochure,
-        data: { brochureUrl: property.brochure, ...existingLead, brokerDetails },
+        data: { brochureUrl: property.brochure, ...(existingLead._doc || existingLead), brokerDetails },
       });
     }
 
-    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(id, userArg);
+    const lead = await leadService.createLeadByOnlyFetchDataFromPropertyId(realPropertyId, userArg);
 
     return NextResponse.json({
       success: true,
