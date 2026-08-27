@@ -118,19 +118,25 @@ function getMimeType(ext) {
 
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin;
+  if (!origin) return;
+
+  if (process.env.NODE_ENV !== 'production') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    return;
+  }
+
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [];
+
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.NEXT_PUBLIC_WEBSITE_URL,
-    'https://admin.nagpurprimeproperty.com',
-    'https://admindevelopment.nagpurprimeproperty.com',
-    'https://nagpurprimeproperty.com',
-    'https://websitedevelopment.nagpurprimeproperty.com',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3003',
+    ...envOrigins,
   ].filter(Boolean);
 
-  if (origin && allowedOrigins.includes(origin)) {
+  if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
