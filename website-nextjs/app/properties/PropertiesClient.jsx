@@ -25,10 +25,12 @@ import {
 import { PropertyFilters } from '@/components/site/PropertyFilters'
 
 function getPaginationRange(current, total) {
+  const safeCurrent = Math.max(Number(current) || 1, 1);
+  const safeTotal = Math.max(Number(total) || 1, 1);
   const range = []
   const delta = 1
-  for (let i = 1; i <= total; i++) {
-    if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+  for (let i = 1; i <= safeTotal; i++) {
+    if (i === 1 || i === safeTotal || (i >= safeCurrent - delta && i <= safeCurrent + delta)) {
       range.push(i)
     }
   }
@@ -113,7 +115,7 @@ function PropertiesContent({ initialProperties, initialAreas }) {
   // ── Sync state → URL whenever any filter changes ──────────────────────────
   const syncUrl = useCallback((updates) => {
     // Build new params from current URL + updates
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
 
     const set = (key, value) => {
       if (value === null || value === undefined || value === '') {
@@ -132,12 +134,15 @@ function PropertiesContent({ initialProperties, initialAreas }) {
     if ('page' in updates)             set('page', updates.page)
     if ('amenities' in updates) {
       const arr = updates.amenities
-      arr.length > 0 ? params.set('amenities', arr.join(',')) : params.delete('amenities')
+      Array.isArray(arr) && arr.length > 0 ? params.set('amenities', arr.join(',')) : params.delete('amenities')
     }
 
     const qs = params.toString()
-    router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false })
-  }, [searchParams, router, pathname])
+    const targetUrl = `${pathname}${qs ? `?${qs}` : ''}`
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', targetUrl)
+    }
+  }, [searchParams, pathname])
 
   // ── Debounce localQuery → query & sync URL ──
   useEffect(() => {
@@ -170,8 +175,10 @@ function PropertiesContent({ initialProperties, initialAreas }) {
     setListingCategory(null)
     setSelectedAmenities([])
     setPage(1)
-    router.replace(pathname, { scroll: false })
-  }, [router, pathname])
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', pathname)
+    }
+  }, [pathname])
 
   // Sync URL search params back to local state (for back/forward navigation or link transitions)
   useEffect(() => {
@@ -191,9 +198,12 @@ function PropertiesContent({ initialProperties, initialAreas }) {
   }, [searchParams, query])
 
   const handlePageChange = useCallback((newPage) => {
-    setPage(newPage)
-    syncUrl({ page: newPage })
-    window.scrollTo({ top: 300, behavior: 'smooth' })
+    const validPage = Math.max(Number(newPage) || 1, 1)
+    setPage(validPage)
+    syncUrl({ page: validPage })
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 300, behavior: 'smooth' })
+    }
   }, [syncUrl])
 
   // ── Build API filters from current state (memoized to avoid query key churn) ────────────
@@ -211,12 +221,9 @@ function PropertiesContent({ initialProperties, initialAreas }) {
   }), [page, type, bhk, area, query, budget, listingCategory, selectedAmenities])
 
   // ── Seed TanStack Query with server-fetched data ─────────────────────────────
-  // initialData: seeds the cache instantly (no loading flash on first visit)
-  // initialDataUpdatedAt: 0 marks it as already-stale → one background refresh
-  //   happens to validate freshness, but the page is never blank.
-  // On 2nd+ visits: cache is warm (staleTime=5min), zero API calls.
+  const isDefaultInitialFilter = page === 1 && !type && !bhk && !area && !query && budget[0] === 0 && budget[1] === 200 && !listingCategory && selectedAmenities.length === 0
   const { data: propData, isLoading, isFetching, isPlaceholderData, isError, refetch } = useProperties(filters, {
-    initialData: initialProperties,
+    initialData: isDefaultInitialFilter ? initialProperties : undefined,
     initialDataUpdatedAt: 0,
   })
   const { data: areasData } = useAreas({
@@ -230,8 +237,8 @@ function PropertiesContent({ initialProperties, initialAreas }) {
     ? propData
     : (Array.isArray(propData?.data) ? propData.data : [])
 
-  const totalPages = propData?.totalPages ?? 1
-  const total = propData?.total ?? 0
+  const totalPages = Number(propData?.totalPages) || 1
+  const total = Number(propData?.total) || 0
 
   // Count active filters for the badge
   const activeFilterCount = [
