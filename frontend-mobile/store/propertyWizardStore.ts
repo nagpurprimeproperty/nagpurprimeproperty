@@ -62,6 +62,7 @@ export type Step4Data = Record<string, any>;
 export interface Step5Data {
   photos: string[];        // local URIs; index 0 = cover photo
   video: string | null;
+  brochure: string | null; // local URI of PDF brochure (optional)
 }
 
 export interface Step6Data {
@@ -157,7 +158,7 @@ export interface PropertyWizardStore {
   setSubmitting: (val: boolean) => void;
 
   // Payload builder — accepts pre-uploaded CDN URLs from propertyUploadStore
-  buildSubmitPayload: (uploadedPhotos?: string[], uploadedVideoUrl?: string | null) => any;
+  buildSubmitPayload: (uploadedPhotos?: string[], uploadedVideoUrl?: string | null, uploadedBrochureUrl?: string | null) => any;
 
   // Edit actions
   loadPropertyForEdit: (property: any, origin?: string) => void;
@@ -200,7 +201,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
   step2: initialStep2,
   step3: {},
   step4: {},
-  step5: { photos: [], video: null },
+  step5: { photos: [], video: null, brochure: null },
   step6: { amenities: [], customAmenities: [] },
   errors: {},
   isSubmitting: false,
@@ -349,7 +350,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
 
   // ─── Payload builder ───────────────────────────────────────────────────────
 
-  buildSubmitPayload: (uploadedPhotos, uploadedVideoUrl) => {
+  buildSubmitPayload: (uploadedPhotos, uploadedVideoUrl, uploadedBrochureUrl) => {
     const s = get();
 
     // 1. Listing Category mapping
@@ -616,6 +617,10 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       video: uploadedVideoUrl !== undefined
         ? uploadedVideoUrl
         : (s.step5.video ?? null),
+      // Prefer pre-uploaded CDN URL; fall back to caller-supplied URL; then raw step5 URI
+      brochure: uploadedBrochureUrl !== undefined
+        ? uploadedBrochureUrl
+        : (s.step5.brochure ?? null),
       amenities: s.step6.amenities,
     };
   },
@@ -631,7 +636,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       step2: initialStep2,
       step3: {},
       step4: {},
-      step5: { photos: [], video: null },
+      step5: { photos: [], video: null, brochure: null },
       step6: { amenities: [], customAmenities: [] },
       errors: {},
       isSubmitting: false,
@@ -793,6 +798,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       step5: {
         photos: Array.isArray(property.photos) ? property.photos : [],
         video: property.video || null,
+        brochure: property.brochure || null,
       },
       step6: {
         amenities: Array.isArray(property.amenities) ? property.amenities : [],

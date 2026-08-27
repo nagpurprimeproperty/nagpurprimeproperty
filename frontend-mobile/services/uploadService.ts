@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../api/apiClient';
-import { useAuthStore } from '@/features/auth/store/authStore';
+import { useAuthStore } from '@/features/auth';
 
 export interface UploadMediaResponse {
   success: boolean;
@@ -13,22 +13,33 @@ export interface UploadMediaResponse {
  * Uploads a single local photo or video file using fetch() API
  * to prevent Axios serialization bugs in React Native.
  */
-export async function uploadFile(uri: string): Promise<string> {
+export async function uploadFile(
+  uri: string,
+  options?: { mimeType?: string; filename?: string }
+): Promise<string> {
   if (!uri) return '';
   if (uri.startsWith('http://') || uri.startsWith('https://')) {
     return uri;
   }
 
-  const filename = uri.split('/').pop() || `file_${Date.now()}`;
+  let filename = options?.filename || uri.split('/').pop() || `file_${Date.now()}`;
   const match = /\.(\w+)$/.exec(filename);
-  let type = 'application/octet-stream';
+  let type = options?.mimeType || 'application/octet-stream';
   if (match) {
     const ext = match[1].toLowerCase();
     if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
       type = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
     } else if (['mp4', 'mov', 'm4v', '3gp', 'avi'].includes(ext)) {
       type = `video/${ext === 'mov' ? 'quicktime' : ext}`;
+    } else if (ext === 'pdf') {
+      type = 'application/pdf';
     }
+  } else if (options?.mimeType) {
+    type = options.mimeType;
+  }
+
+  if (type === 'application/pdf' && !filename.toLowerCase().endsWith('.pdf')) {
+    filename = `${filename}.pdf`;
   }
 
   const formData = new FormData();

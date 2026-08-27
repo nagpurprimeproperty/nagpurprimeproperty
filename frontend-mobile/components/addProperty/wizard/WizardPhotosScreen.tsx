@@ -13,13 +13,14 @@ import {
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
 import { usePropertyWizardStore, PREDEFINED_AMENITIES } from '@/store/propertyWizardStore';
 import { usePropertyUploadStore } from '@/store/propertyUploadStore';
 import { uploadFile } from '@/services/uploadService';
 import { prepareImageForUpload } from '@/shared/utils/imagePrep';
 import { toast } from 'react-hot-toast/headless';
 import { validateStepPhotos } from '@/lib/validation';
-import { Camera, Image as ImageIcon, Trash2, Star, Plus, List, ArrowRight, Check, AlertCircle, Video, CheckCircle, CloudUpload } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, Trash2, Star, Plus, List, ArrowRight, Check, AlertCircle, Video, CheckCircle, CloudUpload, FileText } from 'lucide-react-native';
 import colors from '@/theme/colors';
 import shadows from '@/theme/shadows';
 import ImageCropModal from '@/components/addProperty/ImageCropModal';
@@ -88,6 +89,7 @@ export default function WizardPhotosScreen() {
   const uploadCache           = usePropertyUploadStore((s) => s.uploadCache);
   const setUploadedPhotoUrl   = usePropertyUploadStore((s) => s.setUploadedPhotoUrl);
   const setUploadedVideoUrl   = usePropertyUploadStore((s) => s.setUploadedVideoUrl);
+  const setUploadedBrochureUrl = usePropertyUploadStore((s) => s.setUploadedBrochureUrl);
   const setUploadingMedia     = usePropertyUploadStore((s) => s.setUploadingMedia);
   const removeUploadedPhotoUrl = usePropertyUploadStore((s) => s.removeUploadedPhotoUrl);
 
@@ -102,6 +104,8 @@ export default function WizardPhotosScreen() {
   const [uploadingUris, setUploadingUris] = useState<Set<string>>(new Set());
   // Track video upload state
   const [videoUploading, setVideoUploading] = useState(false);
+  // Track brochure upload state
+  const [brochureUploading, setBrochureUploading] = useState(false);
   // Ref to count in-flight uploads so setUploadingMedia is accurate
   const inFlightCount = useRef(0);
 
@@ -170,7 +174,63 @@ export default function WizardPhotosScreen() {
     [setUploadedVideoUrl]
   );
 
-  const { photos, video } = step5;
+  /** Upload the brochure PDF in the background and cache the CDN URL */
+  const uploadBrochureInBackground = useCallback(
+    async (uri: string, filename?: string) => {
+      if (uri.startsWith('http://') || uri.startsWith('https://')) return;
+      setBrochureUploading(true);
+      markInFlight(1);
+      try {
+        const cdnUrl = await uploadFile(uri, {
+          mimeType: 'application/pdf',
+          filename: filename || 'brochure.pdf',
+        });
+        setUploadedBrochureUrl(cdnUrl);
+        toast.success('Brochure uploaded successfully');
+      } catch (err) {
+        if (__DEV__) {
+          console.warn('[WizardPhotos] Brochure upload failed:', err);
+        }
+        // Non-fatal: submit will retry
+      } finally {
+        setBrochureUploading(false);
+        markInFlight(-1);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setUploadedBrochureUrl]
+  );
+
+  /** Pick a PDF brochure from the device document library */
+  const handlePickBrochure = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+      const asset = result.assets[0];
+
+      // Size check — backend allows max 50 MB for PDFs
+      const MAX_PDF_BYTES = 50 * 1024 * 1024;
+      if (asset.size && asset.size > MAX_PDF_BYTES) {
+        toast.error(`PDF is ${(asset.size / (1024 * 1024)).toFixed(1)} MB. Max allowed is 50 MB.`);
+        return;
+      }
+
+      updateStep5({ brochure: asset.uri });
+      // Clear any previously cached CDN URL for a different brochure
+      setUploadedBrochureUrl(null);
+      // Eagerly upload the brochure in the background
+      uploadBrochureInBackground(asset.uri, asset.name);
+    } catch (err) {
+      if (__DEV__) console.error('[handlePickBrochure] Error:', err);
+      toast.error('Could not select brochure PDF.');
+    }
+  }, [updateStep5, setUploadedBrochureUrl, uploadBrochureInBackground]);
+
+  const { photos, video, brochure } = step5;
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAmenityName, setNewAmenityName] = useState('');
@@ -670,6 +730,75 @@ export default function WizardPhotosScreen() {
               <Video size={24} color={colors.primary} strokeWidth={2.5} />
               <Text className="text-orange-600 text-xs font-black uppercase mt-2 tracking-wider">
                 Select Video Walkthrough
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Brochure PDF Upload Section */}
+        <View className="mt-8 border-t border-slate-100 pt-6">
+          <Text className="text-slate-800 font-extrabold text-xs mb-2 uppercase tracking-wider">
+            Property Brochure PDF (Optional)
+          </Text>
+          <Text className="text-slate-400 text-xs font-semibold mb-4 leading-4">
+            Upload a brochure PDF to let interested buyers download it. Viewers must log in — generating a lead for you automatically.
+          </Text>
+
+          {brochure ? (
+            <View
+              style={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderWidth: 1, ...shadows.card }}
+              className="rounded-xl p-4 flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center gap-3 flex-1 mr-2">
+                <View className="w-10 h-10 rounded-lg bg-blue-50 items-center justify-center">
+                  <FileText size={18} color="#3B82F6" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-slate-800 text-xs font-bold" numberOfLines={1}>
+                    {/* Show filename from URI or a friendly fallback */}
+                    {(() => {
+                      const name = brochure.split('/').pop() || 'brochure.pdf';
+                      return name.length > 35 ? name.slice(0, 32) + '…' : name;
+                    })()}
+                  </Text>
+                  {/* Upload status */}
+                  {brochureUploading ? (
+                    <View className="flex-row items-center gap-1.5 mt-0.5">
+                      <ActivityIndicator size="small" color={colors.primary} />
+                      <Text className="text-orange-500 text-[10px] font-bold">Uploading…</Text>
+                    </View>
+                  ) : uploadCache.brochureUrl || brochure.startsWith('https://') ? (
+                    <View className="flex-row items-center gap-1.5 mt-0.5">
+                      <CheckCircle size={11} color={colors.success ?? '#22c55e'} />
+                      <Text style={{ color: colors.success ?? '#22c55e' }} className="text-[10px] font-bold">Uploaded</Text>
+                    </View>
+                  ) : (
+                    <Text className="text-slate-400 text-[10px] font-semibold mt-0.5">Ready for upload</Text>
+                  )}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => {
+                  updateStep5({ brochure: null });
+                  setUploadedBrochureUrl(null);
+                }}
+                activeOpacity={0.7}
+                className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 items-center justify-center"
+              >
+                <Trash2 size={14} color={colors.error} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={handlePickBrochure}
+              activeOpacity={0.8}
+              style={{ borderColor: '#3B82F6', borderStyle: 'dashed', borderWidth: 1.5 }}
+              className="rounded-xl py-6 items-center justify-center bg-blue-50/10"
+            >
+              <FileText size={24} color="#3B82F6" strokeWidth={2.5} />
+              <Text className="text-blue-600 text-xs font-black uppercase mt-2 tracking-wider">
+                Select Brochure PDF
               </Text>
             </TouchableOpacity>
           )}
