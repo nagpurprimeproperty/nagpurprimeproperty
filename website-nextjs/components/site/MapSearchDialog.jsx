@@ -288,8 +288,9 @@ export function MapSearchDialog({
       }
       if (mapInitializedRef.current) return;
       
+      let map = null;
       try {
-        const map = new google.maps.Map(container, {
+        map = new google.maps.Map(container, {
           center: markerPos,
           zoom: currentArea ? 14 : 12,
           mapId: 'DEMO_MAP_ID',
@@ -304,6 +305,8 @@ export function MapSearchDialog({
         console.warn('Map initialization failed:', e?.message);
         return;
       }
+
+      if (!map) return;
 
       // Create user/selected location pin (draggable)
       let userMarker;

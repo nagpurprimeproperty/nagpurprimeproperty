@@ -36,8 +36,9 @@ export function MapPreview({
   useEffect(() => {
     if (!useRealMap || !mapRef.current || !window.google?.maps?.Map) return;
 
+    let map = null;
     try {
-      const map = new google.maps.Map(mapRef.current, {
+      map = new google.maps.Map(mapRef.current, {
         center: NAGPUR_CENTER,
         zoom: 12,
         mapTypeControl: false,
@@ -48,7 +49,10 @@ export function MapPreview({
       mapInstance.current = map;
     } catch (e) {
       console.warn("Could not initialize MapPreview instance:", e?.message);
+      return;
     }
+
+    if (!map) return;
 
     // Trigger map resize event to handle dynamic layout calculations
     const timer = setTimeout(() => {
