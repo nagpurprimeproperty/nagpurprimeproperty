@@ -58,24 +58,40 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
     const { token, user } = getPersistedAuth();
     if (!token || !user) { useAuth.getState().openAuth(); return; }
 
-    const brokerId = p.brokerId || (broker && broker.id);
+    const executeCall = (phoneNum) => {
+      if (phoneNum) {
+        const clean = phoneNum.replace(/\D/g, '');
+        const formatted = clean.length === 10 ? `91${clean}` : clean;
+        window.location.href = `tel:+${formatted}`;
+      } else {
+        toast.error('Broker phone number not available');
+      }
+    };
+
+    const existingPhone = broker?.phone || p.brokerId?.phone || p.brokerId?.mobile || '';
 
     if (pid) {
       submitCallEnquiry.mutate(
         { propertyId: pid, token },
-        { onError: (err) => console.warn('Call enquiry error:', err.message) }
+        {
+          onSuccess: (res) => {
+            useUnlocked.getState().unlock(pid);
+            const serverPhone = res?.data?.brokerDetails?.mobile || existingPhone;
+            executeCall(serverPhone);
+          },
+          onError: (err) => {
+            console.warn('Call enquiry error:', err.message);
+            if (existingPhone) {
+              useUnlocked.getState().unlock(pid);
+              executeCall(existingPhone);
+            } else {
+              toast.error('Could not connect to broker. Please try again.');
+            }
+          },
+        }
       );
-    }
-
-    if (brokerId) useUnlocked.getState().unlock(brokerId);
-
-    const phoneStr = broker?.phone || p.brokerId?.phone || p.brokerId?.mobile || '';
-    if (phoneStr) {
-      const clean = phoneStr.replace(/\D/g, '');
-      const formatted = clean.length === 10 ? `91${clean}` : clean;
-      window.location.href = `tel:+${formatted}`;
-    } else {
-      toast.error('Broker phone number not available');
+    } else if (existingPhone) {
+      executeCall(existingPhone);
     }
   };
 
@@ -83,25 +99,41 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
     const { token, user } = getPersistedAuth();
     if (!token || !user) { useAuth.getState().openAuth(); return; }
 
-    const brokerId = p.brokerId || (broker && broker.id);
+    const executeWhatsApp = (phoneNum) => {
+      if (phoneNum) {
+        const clean = phoneNum.replace(/\D/g, '');
+        const formatted = clean.length === 10 ? `91${clean}` : clean;
+        const msg = encodeURIComponent(`Hi, I am interested in "${p.title}" listed on Nagpur Prime Property.`);
+        window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
+      } else {
+        toast.error('Broker WhatsApp number not available');
+      }
+    };
+
+    const existingPhone = broker?.whatsapp || broker?.phone || p.brokerId?.mobile || p.brokerId?.phone || '';
 
     if (pid) {
       submitCallEnquiry.mutate(
         { propertyId: pid, token },
-        { onError: (err) => console.warn('WhatsApp enquiry error:', err.message) }
+        {
+          onSuccess: (res) => {
+            useUnlocked.getState().unlock(pid);
+            const serverPhone = res?.data?.brokerDetails?.mobile || existingPhone;
+            executeWhatsApp(serverPhone);
+          },
+          onError: (err) => {
+            console.warn('WhatsApp enquiry error:', err.message);
+            if (existingPhone) {
+              useUnlocked.getState().unlock(pid);
+              executeWhatsApp(existingPhone);
+            } else {
+              toast.error('Could not connect to broker. Please try again.');
+            }
+          },
+        }
       );
-    }
-
-    if (brokerId) useUnlocked.getState().unlock(brokerId);
-
-    const phoneStr = broker?.whatsapp || broker?.phone || p.brokerId?.mobile || p.brokerId?.phone || '';
-    if (phoneStr) {
-      const clean = phoneStr.replace(/\D/g, '');
-      const formatted = clean.length === 10 ? `91${clean}` : clean;
-      const msg = encodeURIComponent(`Hi, I am interested in "${p.title}" listed on Nagpur Prime Property.`);
-      window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
-    } else {
-      toast.error('Broker WhatsApp number not available');
+    } else if (existingPhone) {
+      executeWhatsApp(existingPhone);
     }
   };
 
@@ -121,9 +153,9 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       propertyId: pid,
     };
 
-    // Optimistically update local store and unlock contact
+    // Optimistically update local store and unlock contact for this property
     useLeads.getState().add(leadDetails);
-    if (brokerId) useUnlocked.getState().unlock(brokerId);
+    if (pid) useUnlocked.getState().unlock(pid);
 
     // Submit backend enquiry
     submitEnquiry.mutate(

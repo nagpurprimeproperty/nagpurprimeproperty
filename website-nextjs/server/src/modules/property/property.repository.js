@@ -471,7 +471,14 @@ const propertyRepository = {
                 localField: 'brokerId',
                 foreignField: '_id',
                 pipeline: [
-                  { $project: { name: 1, email: 1, mobile: 1, avatar: 1, profileImage: 1 } },
+                  {
+                    $project: {
+                      name: 1,
+                      avatar: 1,
+                      profileImage: 1,
+                      ...(params.brokerId ? { email: 1, mobile: 1 } : {}),
+                    },
+                  },
                 ],
                 as: 'broker',
               },
@@ -664,7 +671,7 @@ const propertyRepository = {
         .lean();
 
       if (bySlug) {
-        // Resolve isSaved and return
+        // Resolve isSaved
         if (userId && mongoose.Types.ObjectId.isValid(userId)) {
           const isSaved = await SavedProperty.exists({
             userId: new mongoose.Types.ObjectId(userId),
@@ -674,6 +681,27 @@ const propertyRepository = {
         } else {
           bySlug.isSaved = false;
         }
+
+        const broker = bySlug.brokerId;
+        const hasLeadForProperty = Boolean(
+          userId &&
+          broker &&
+          (await Lead.exists({
+            propertyId: bySlug._id,
+            userId,
+          }))
+        );
+
+        if (broker && !hasLeadForProperty) {
+          bySlug.brokerId = {
+            _id: broker._id,
+            name: broker.name ?? '',
+            avatar: broker.avatar ?? broker.profileImage ?? '',
+            city: broker.city ?? '',
+            area: broker.area ?? '',
+          };
+        }
+
         return formatPropertyDetail(bySlug);
       }
 
@@ -697,6 +725,26 @@ const propertyRepository = {
       property.isSaved = !!isSaved;
     } else {
       property.isSaved = false;
+    }
+
+    const broker = property.brokerId;
+    const hasLeadForProperty = Boolean(
+      userId &&
+      broker &&
+      (await Lead.exists({
+        propertyId: property._id,
+        userId,
+      }))
+    );
+
+    if (broker && !hasLeadForProperty) {
+      property.brokerId = {
+        _id: broker._id,
+        name: broker.name ?? '',
+        avatar: broker.avatar ?? broker.profileImage ?? '',
+        city: broker.city ?? '',
+        area: broker.area ?? '',
+      };
     }
 
     return formatPropertyDetail(property);

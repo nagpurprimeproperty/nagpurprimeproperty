@@ -33,6 +33,10 @@ const leadService = {
     leadPayload.brokerId = brokerId;
 
     try {
+      const customerName = leadPayload.customerName || 'Verified Buyer';
+      const phone = leadPayload.phone || 'N/A';
+      const propTitle = propertyName || leadPayload.propertyName || 'Property';
+
       const broker = await userService.getUser(brokerId).catch(() => null);
       const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId);
 

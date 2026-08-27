@@ -450,7 +450,14 @@ const propertyRepository = {
                 localField: 'brokerId',
                 foreignField: '_id',
                 pipeline: [
-                  { $project: { name: 1, email: 1, mobile: 1, profileImage: 1 } },
+                  {
+                    $project: {
+                      name: 1,
+                      profileImage: 1,
+                      avatar: 1,
+                      ...(params.brokerId ? { email: 1, mobile: 1 } : {}),
+                    },
+                  },
                 ],
                 as: 'broker',
               },
@@ -632,20 +639,22 @@ const propertyRepository = {
     }
 
     const broker = property.brokerId;
-    const hasLeadWithBroker = Boolean(
+    const hasLeadForProperty = Boolean(
       userId &&
       broker &&
-      (broker._id || broker) &&
       (await Lead.exists({
-        brokerId: broker._id || broker,
+        propertyId: property._id,
         userId,
       }))
     );
 
-    if (broker && !hasLeadWithBroker) {
+    if (broker && !hasLeadForProperty) {
       property.brokerId = {
         _id: broker._id,
         name: broker.name ?? '',
+        avatar: broker.avatar ?? broker.profileImage ?? '',
+        city: broker.city ?? '',
+        area: broker.area ?? '',
       };
     }
 

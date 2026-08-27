@@ -146,7 +146,7 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
   const saveToggleMutation = useSaveToggle();
   const submitEnquiry = useSubmitEnquiry();
   const submitCallEnquiry = useSubmitCallEnquiry();
-  const unlockedStore = useUnlocked((s) => s.isUnlocked(p.broker?._id || p.brokerId));
+  const unlockedStore = useUnlocked((s) => s.isUnlocked(pid));
   // Gate with hydrated so SSR (false) matches client first render
   const isUnlocked = hydrated && unlockedStore;
 
@@ -193,58 +193,55 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
     if (!token || !user) { useAuth.getState().openAuth(); return; }
 
     const brokerId = p.broker?._id || p.brokerId;
-    if (!brokerId) return;
 
-    const rawMobile = p.broker?.mobile || p.broker?.phone || '';
-    if (!rawMobile) {
-      toast.error('Broker contact number not available');
-      return;
-    }
-    const cleanMobile = rawMobile.replace(/\D/g, '');
-    const formatted = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
+    const executeAction = (mobileNumber) => {
+      if (!mobileNumber) {
+        toast.error('Broker contact number not available');
+        return;
+      }
+      const cleanMobile = mobileNumber.replace(/\D/g, '');
+      const formatted = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
 
-    // Trigger call enquiry to ensure lead creation & WhatsApp message / notification to broker
+      if (type === 'call') {
+        window.location.href = `tel:+${formatted}`;
+      } else {
+        const msg = encodeURIComponent(`Hi, I am interested in your property "${p.title}" listed on Nagpur Prime Property.`);
+        window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
+      }
+    };
+
+    // Always trigger call enquiry to ensure lead creation & WhatsApp message / notification to broker
     submitCallEnquiry.mutate(
       { propertyId: pid, token },
-      { onError: (err) => console.warn('Call enquiry mutation error:', err.message) }
+      {
+        onSuccess: (res) => {
+          if (pid) useUnlocked.getState().unlock(pid);
+          const rawMobile = res?.data?.brokerDetails?.mobile || p.broker?.mobile || p.broker?.phone || '';
+          executeAction(rawMobile);
+        },
+        onError: (err) => {
+          console.warn('Call enquiry mutation error:', err.message);
+          const rawMobile = p.broker?.mobile || p.broker?.phone || '';
+          if (rawMobile) {
+            if (pid) useUnlocked.getState().unlock(pid);
+            executeAction(rawMobile);
+          } else {
+            toast.error('Could not connect to broker. Please try again.');
+          }
+        },
+      }
     );
 
-    const isUnlocked = useUnlocked.getState().isUnlocked(brokerId);
-    if (isUnlocked) {
-      if (type === 'call') {
-        window.location.href = `tel:+${formatted}`;
-      } else {
-        const msg = encodeURIComponent(`Hi, I am interested in your property "${p.title}" listed on Nagpur Prime Property.`);
-        window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
-      }
-    } else {
-      // Perform background submission using user profile details
-      const { unlock, add: addLead } = useUnlocked.getState();
-      const addLeadFn = useLeads.getState().add;
-      const leadDetails = {
-        name: user?.name || 'Verified User',
-        mobile: user?.mobile || '9876543210',
-        message: `Requested contact details for: ${p.title}`,
-        brokerId,
-        propertyId: pid,
-      };
-
-      // Optimistically update local store and unlock
-      addLeadFn(leadDetails);
-      useUnlocked.getState().unlock(brokerId);
-
-      toast.success('Contact unlocked!', {
-        description: 'Broker details are now visible using your registered profile.',
-      });
-
-      // Now trigger the action after unlocking
-      if (type === 'call') {
-        window.location.href = `tel:+${formatted}`;
-      } else {
-        const msg = encodeURIComponent(`Hi, I am interested in your property "${p.title}" listed on Nagpur Prime Property.`);
-        window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
-      }
-    }
+    // Save local lead record
+    const addLeadFn = useLeads.getState().add;
+    const leadDetails = {
+      name: user?.name || 'Verified User',
+      mobile: user?.mobile || '',
+      message: `Requested contact details for: ${p.title}`,
+      brokerId,
+      propertyId: pid,
+    };
+    addLeadFn(leadDetails);
   }, [pid, p, submitCallEnquiry]);
 
   return (
