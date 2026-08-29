@@ -414,7 +414,12 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
     ];
     for (const f of numFields) {
       if (f in details) {
-        details[f] = parseNum(details[f]);
+        const parsed = parseNum(details[f]);
+        if (parsed === undefined) {
+          delete details[f];
+        } else {
+          details[f] = parsed;
+        }
       }
     }
 
@@ -512,6 +517,13 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       }
     }
 
+    // Clean up any remaining empty strings, undefined, or NaN keys in details
+    for (const key of Object.keys(details)) {
+      if (details[key] === undefined || details[key] === '' || (typeof details[key] === 'number' && isNaN(details[key]))) {
+        delete details[key];
+      }
+    }
+
     // 5. Step 4 (Pricing) normalization
     const pricing: Record<string, any> = { ...s.step4 };
 
@@ -522,13 +534,25 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
     ];
     for (const f of pricingNumFields) {
       if (f in pricing) {
-        pricing[f] = parseNum(pricing[f]);
+        const parsed = parseNum(pricing[f]);
+        if (parsed === undefined) {
+          delete pricing[f];
+        } else {
+          pricing[f] = parsed;
+        }
       }
     }
 
     // Delete temporary slider fields to satisfy backend schema validation
     delete pricing.priceRangeMin;
     delete pricing.priceRangeMax;
+
+    // Clean up any remaining empty strings, undefined, or NaN keys in pricing
+    for (const key of Object.keys(pricing)) {
+      if (pricing[key] === undefined || pricing[key] === '' || (typeof pricing[key] === 'number' && isNaN(pricing[key]))) {
+        delete pricing[key];
+      }
+    }
 
     // Copy/default possessionDate for new projects under pricing to satisfy backend schema
     if (s.step1.listingCategory === 'new') {

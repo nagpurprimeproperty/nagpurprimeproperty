@@ -350,7 +350,12 @@ function buildDetailsSchema(listingCategory, propertyType) {
         }
         case "Office Space": {
             if (isNew)
-                return commercialOfficeBase.merge(newProjectCore).merge(z.object({
+                return commercialOfficeBase.extend({
+                    carpetArea: optPosNum(),
+                    washrooms: optIntRange(1, 10, "Washrooms must be between 1 and 10"),
+                    furnishing: optEnum(FURNISHING_OPTIONS, "Select a furnishing option"),
+                    floorNumber: optIntRange(0, 99, "Floor number must be between 0 and 99"),
+                }).merge(newProjectCore).merge(z.object({
                     minCarpetArea: optPosNum(),
                     maxCarpetArea: optPosNum(),
                     minBuiltUpArea: optPosNum(),
@@ -369,7 +374,10 @@ function buildDetailsSchema(listingCategory, propertyType) {
         }
         case "Shop": {
             if (isNew)
-                return shopBase.merge(newProjectCore).merge(z.object({
+                return shopBase.extend({
+                    carpetArea: optPosNum(),
+                    shopFloor: optEnum(SHOP_FLOOR_OPTIONS, "Select the shop floor"),
+                }).merge(newProjectCore).merge(z.object({
                     minCarpetArea: optPosNum(),
                     maxCarpetArea: optPosNum(),
                     minBuiltUpArea: optPosNum(),
@@ -383,7 +391,9 @@ function buildDetailsSchema(listingCategory, propertyType) {
         }
         case "Showroom": {
             if (isNew)
-                return showroomBase.merge(newProjectCore).merge(z.object({
+                return showroomBase.extend({
+                    showroomArea: optPosNum(),
+                }).merge(newProjectCore).merge(z.object({
                     minShowroomArea: optPosNum(),
                     maxShowroomArea: optPosNum(),
                     minSqft: optPosNum(),
@@ -395,7 +405,10 @@ function buildDetailsSchema(listingCategory, propertyType) {
         }
         case "Warehouse/Godown": {
             if (isNew)
-                return warehouseBase.merge(newWarehouseCore).merge(z.object({
+                return warehouseBase.extend({
+                    warehouseArea: optPosNum(),
+                    warehouseHeight: optPosNum(),
+                }).merge(newWarehouseCore).merge(z.object({
                     minWarehouseArea: optPosNum(),
                     maxWarehouseArea: optPosNum(),
                     minSqft: optPosNum(),
@@ -407,7 +420,9 @@ function buildDetailsSchema(listingCategory, propertyType) {
         }
         case "Residential Plot": {
             if (isNew)
-                return residentialPlotBase.merge(newResPlotCore);
+                return residentialPlotBase.extend({
+                    plotAreaSqFt: optPosNum(),
+                }).merge(newResPlotCore);
             if (isResale)
                 return residentialPlotBase.merge(plotResaleExtra);
             return residentialPlotBase;

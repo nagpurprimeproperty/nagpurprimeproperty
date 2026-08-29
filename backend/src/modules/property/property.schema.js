@@ -577,7 +577,12 @@ export function validatePropertyPayload(payload) {
       let schema = commercialOfficeBase;
 
       if (listingCategory === 'New') {
-        schema = schema.merge(newProjectDetails).merge(z.object({
+        schema = commercialOfficeBase.extend({
+          carpetArea: optionalPosNum(),
+          washrooms: optionalPosNum(),
+          furnishing: optionalEnum(FURNISHING_OPTIONS, FURNISHING_OPTIONS_MESSAGE),
+          floorNumber: optionalPosNum(),
+        }).merge(newProjectDetails).merge(z.object({
           minCarpetArea: optionalPosNum(),
           maxCarpetArea: optionalPosNum(),
           minBuiltUpArea: optionalPosNum(),
@@ -610,7 +615,10 @@ export function validatePropertyPayload(payload) {
       let schema = shopBase;
 
       if (listingCategory === 'New') {
-        schema = schema.merge(newProjectDetails).merge(z.object({
+        schema = shopBase.extend({
+          carpetArea: optionalPosNum(),
+          shopFloor: optionalEnum(SHOP_FLOOR_OPTIONS, SHOP_FLOOR_OPTIONS_MESSAGE),
+        }).merge(newProjectDetails).merge(z.object({
           minCarpetArea: optionalPosNum(),
           maxCarpetArea: optionalPosNum(),
           minBuiltUpArea: optionalPosNum(),
@@ -636,7 +644,10 @@ export function validatePropertyPayload(payload) {
       let schema = showroomBase;
 
       if (listingCategory === 'New') {
-        schema = schema.merge(newProjectDetails).merge(z.object({
+        schema = showroomBase.extend({
+          showroomArea: optionalPosNum(),
+          parkingAvailable: optionalBool(),
+        }).merge(newProjectDetails).merge(z.object({
           minShowroomArea: optionalPosNum(),
           maxShowroomArea: optionalPosNum(),
           minSqft: optionalPosNum(),
@@ -666,7 +677,11 @@ export function validatePropertyPayload(payload) {
         }));
       } else if (listingCategory === 'New') {
         // doc §33: projectName / builderName optional, but RERA required for new warehouses
-        schema = schema.merge(z.object({
+        schema = warehouseBase.extend({
+          warehouseArea: optionalPosNum(),
+          warehouseHeight: optionalPosNum(),
+          truckAccess: optionalBool(),
+        }).merge(z.object({
           projectName: optionalString(PROJECT_NAME_MAX_LENGTH, PROJECT_NAME_MAX_LENGTH_MESSAGE),
           builderName: optionalString(BUILDER_NAME_MAX_LENGTH, BUILDER_NAME_MAX_LENGTH_MESSAGE),
           reraNumber: z.string().nullable().optional(),
@@ -693,7 +708,9 @@ export function validatePropertyPayload(payload) {
       let schema = residentialPlotBase;
 
       if (listingCategory === 'New') {
-        schema = schema.merge(z.object({
+        schema = residentialPlotBase.extend({
+          plotAreaSqFt: optionalPosNum(),
+        }).merge(z.object({
           layoutProjectName: z.string().min(1).max(LAYOUT_PROJECT_NAME_MAX_LENGTH, LAYOUT_PROJECT_NAME_MAX_LENGTH_MESSAGE),
           builderName: z.string().min(1).max(BUILDER_NAME_MAX_LENGTH, BUILDER_NAME_MAX_LENGTH_MESSAGE),
           reraNumber: z.string().nullable().optional(),
