@@ -423,6 +423,21 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       }
     }
 
+    // Strip fields that belong exclusively to the other category branch for res_plot.
+    // Without this, stale step3 data from a previous session (or category switch)
+    // leaks into the payload and the backend receives e.g. plotAreaSqFt=undefined
+    // for a new-project listing, which it serialises as NaN.
+    if (s.step1.propertyType === 'res_plot') {
+      if (s.step1.listingCategory === 'new') {
+        // new-project res_plot only uses minPlotAreaSqFt / maxPlotAreaSqFt
+        delete details.plotAreaSqFt;
+      } else {
+        // resale/rental res_plot only uses plotAreaSqFt
+        delete details.minPlotAreaSqFt;
+        delete details.maxPlotAreaSqFt;
+      }
+    }
+
     // Standardize shopFloor enum
     if (details.shopFloor !== undefined && details.shopFloor !== null) {
       const validOptions = ['Lower Ground', 'Ground', '1st', '2nd', '3rd+'];

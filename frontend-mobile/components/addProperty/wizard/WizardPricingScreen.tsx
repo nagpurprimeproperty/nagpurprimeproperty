@@ -11,7 +11,7 @@ import {
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useAddPropertyStore } from '@/store/addPropertyStore';
 import { validateStepPricing } from '@/lib/validation';
-import { ArrowRight, Check, List, AlertCircle, Calculator } from 'lucide-react-native';
+import { ArrowRight, Check, List, AlertCircle, Calculator, Pencil } from 'lucide-react-native';
 import colors from '@/theme/colors';
 import shadows from '@/theme/shadows';
 import PriceRangeSlider from '@/components/addProperty/fields/PriceRangeSlider';
@@ -435,35 +435,70 @@ export default function WizardPricingScreen() {
         {/* Resale Category Additional Fields */}
         {category === 'resale' && (
           <>
-            {/* Auto-calculated Price per Sqft */}
+            {/* Price per Sqft — auto when area is known, manual otherwise */}
             <View className="mb-6">
-              <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
-                Price per Sqft (₹)
-                <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}> (Auto)</Text>
-              </Text>
-              <View
-                style={{
-                  height: 54,
-                  backgroundColor: '#F8F6F3',
-                  borderColor: '#E2E8F0',
-                  borderWidth: 1,
-                  borderRadius: 16,
-                }}
-                className="flex-row items-center px-5"
-              >
-                <Calculator size={16} color={colors.primary} style={{ marginRight: 8 }} />
-                <Text
-                  style={{
-                    color: autoPerSqft ? colors.text : '#9CA3AF',
-                    fontSize: 14,
-                    fontWeight: '700',
-                    flex: 1,
-                  }}
-                >
-                  {autoPerSqft ? `₹ ${autoPerSqft.toLocaleString('en-IN')} / sq.ft` : 'Enter price & area to calculate'}
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider text-[#6B6B6B]">
+                  Price per Sqft (₹){' '}
+                  {autoPerSqft !== null
+                    ? <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Auto)</Text>
+                    : <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Optional)</Text>
+                  }
                 </Text>
+                {autoPerSqft === null && (
+                  <View className="flex-row items-center gap-1">
+                    <Pencil size={11} color="#9CA3AF" />
+                    <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Enter manually</Text>
+                  </View>
+                )}
               </View>
-              {!!autoPerSqft && (
+
+              {autoPerSqft !== null ? (
+                /* Auto-calculated — read-only display */
+                <View
+                  style={{
+                    height: 54,
+                    backgroundColor: '#F8F6F3',
+                    borderColor: '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                  }}
+                  className="flex-row items-center px-5"
+                >
+                  <Calculator size={16} color={colors.primary} style={{ marginRight: 8 }} />
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700', flex: 1 }}>
+                    ₹ {autoPerSqft.toLocaleString('en-IN')} / sq.ft
+                  </Text>
+                </View>
+              ) : (
+                /* Manual entry — fully editable */
+                <View
+                  style={{
+                    height: 54,
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                  }}
+                  className="flex-row items-center px-5"
+                >
+                  <Text className="text-slate-400 font-bold text-sm mr-2">₹</Text>
+                  <TextInput
+                    placeholder="e.g. 4500"
+                    keyboardType="numeric"
+                    value={step4.pricePerSqft !== undefined && step4.pricePerSqft !== null ? String(step4.pricePerSqft) : ''}
+                    onChangeText={(txt) => {
+                      const cleaned = txt.replace(/[^0-9]/g, '');
+                      handlePriceChange('pricePerSqft', cleaned ? parseInt(cleaned, 10) : null);
+                    }}
+                    placeholderTextColor={colors.textPlaceholder}
+                    className="flex-1 text-slate-800 text-sm font-semibold"
+                  />
+                  <Text style={{ color: '#CBD5E1', fontSize: 12, fontWeight: '600' }}>/ sq.ft</Text>
+                </View>
+              )}
+
+              {autoPerSqft !== null && (
                 <Text style={{ color: '#9CA3AF', fontSize: 11, marginTop: 4, fontWeight: '500' }}>
                   Calculated from {mainPriceLabel.replace(' (₹)', '')} ÷ {areaLabel}
                 </Text>
@@ -476,35 +511,70 @@ export default function WizardPricingScreen() {
         {/* New Launches Additional Fields */}
         {category === 'new' && (
           <>
-            {/* Auto-calculated Price per Sqft */}
+            {/* Price per Sqft — auto when area is known, manual otherwise */}
             <View className="mb-6">
-              <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
-                Price per Sqft (₹)
-                <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}> (Auto)</Text>
-              </Text>
-              <View
-                style={{
-                  height: 54,
-                  backgroundColor: '#F8F6F3',
-                  borderColor: '#E2E8F0',
-                  borderWidth: 1,
-                  borderRadius: 16,
-                }}
-                className="flex-row items-center px-5"
-              >
-                <Calculator size={16} color={colors.primary} style={{ marginRight: 8 }} />
-                <Text
-                  style={{
-                    color: autoPerSqft ? colors.text : '#9CA3AF',
-                    fontSize: 14,
-                    fontWeight: '700',
-                    flex: 1,
-                  }}
-                >
-                  {autoPerSqft ? `₹ ${autoPerSqft.toLocaleString('en-IN')} / sq.ft` : 'Enter price & area to calculate'}
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider text-[#6B6B6B]">
+                  Price per Sqft (₹){' '}
+                  {autoPerSqft !== null
+                    ? <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Auto)</Text>
+                    : <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Optional)</Text>
+                  }
                 </Text>
+                {autoPerSqft === null && (
+                  <View className="flex-row items-center gap-1">
+                    <Pencil size={11} color="#9CA3AF" />
+                    <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Enter manually</Text>
+                  </View>
+                )}
               </View>
-              {!!autoPerSqft && (
+
+              {autoPerSqft !== null ? (
+                /* Auto-calculated — read-only display */
+                <View
+                  style={{
+                    height: 54,
+                    backgroundColor: '#F8F6F3',
+                    borderColor: '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                  }}
+                  className="flex-row items-center px-5"
+                >
+                  <Calculator size={16} color={colors.primary} style={{ marginRight: 8 }} />
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700', flex: 1 }}>
+                    ₹ {autoPerSqft.toLocaleString('en-IN')} / sq.ft
+                  </Text>
+                </View>
+              ) : (
+                /* Manual entry — fully editable */
+                <View
+                  style={{
+                    height: 54,
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                  }}
+                  className="flex-row items-center px-5"
+                >
+                  <Text className="text-slate-400 font-bold text-sm mr-2">₹</Text>
+                  <TextInput
+                    placeholder="e.g. 4500"
+                    keyboardType="numeric"
+                    value={step4.pricePerSqft !== undefined && step4.pricePerSqft !== null ? String(step4.pricePerSqft) : ''}
+                    onChangeText={(txt) => {
+                      const cleaned = txt.replace(/[^0-9]/g, '');
+                      handlePriceChange('pricePerSqft', cleaned ? parseInt(cleaned, 10) : null);
+                    }}
+                    placeholderTextColor={colors.textPlaceholder}
+                    className="flex-1 text-slate-800 text-sm font-semibold"
+                  />
+                  <Text style={{ color: '#CBD5E1', fontSize: 12, fontWeight: '600' }}>/ sq.ft</Text>
+                </View>
+              )}
+
+              {autoPerSqft !== null && (
                 <Text style={{ color: '#9CA3AF', fontSize: 11, marginTop: 4, fontWeight: '500' }}>
                   Calculated from {mainPriceLabel.replace(' (₹)', '')} ÷ {areaLabel}
                 </Text>
