@@ -555,12 +555,6 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
         } else {
           pricing[f] = parsed;
         }
-        const parsed = parseNum(pricing[f]);
-        if (parsed === undefined) {
-          delete pricing[f];
-        } else {
-          pricing[f] = parsed;
-        }
       }
     }
 
