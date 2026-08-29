@@ -82,7 +82,7 @@ export const PREFERRED_TENANTS_OPTIONS = [
   'Family', 'Bachelors', 'Female Tenants', 'Any',
 ];
 
-export const APPROVED_BY_OPTIONS = ['NIT', 'NMC', 'NMRDA', 'MHADA'];
+export const APPROVED_BY_OPTIONS = ['NIT', 'NMC', 'NMRD-RL', 'MHADA'];
 
 export const ZONE_TYPE_OPTIONS = ['Residential', 'Commercial', 'Industrial', 'Mixed'];
 

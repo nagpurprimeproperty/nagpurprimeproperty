@@ -18,7 +18,6 @@ export async function POST(req, { params }) {
 
     // Fetch full user details to obtain customer name and mobile
     const fullUser = await userService.getUser(userId).catch(() => null);
-    console.log('[DEBUG LOG] fullUser:', JSON.stringify(fullUser, null, 2));
 
     const userArg = {
       id: userId.toString(),
@@ -32,12 +31,15 @@ export async function POST(req, { params }) {
     }
 
     const realPropertyId = property._id;
+    console.log(`[Website Call/WhatsApp Enquiry] 🚀 Processing call enquiry for property "${property.title}" (${realPropertyId}), Buyer: "${userArg.name}" (${userArg.mobile})`);
+
     const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
 
     const brokerId = property.brokerId?._id || property.brokerId;
     const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
     if (existingLead) {
+      console.log(`[Website Call/WhatsApp Enquiry] ℹ️ Lead already exists for user ${userId} and property ${realPropertyId}`);
       return NextResponse.json({
         success: true,
         message: 'Lead already exists for this property and user',
@@ -49,6 +51,7 @@ export async function POST(req, { params }) {
 
     return NextResponse.json({ success: true, data: { ...(lead._doc || lead), brokerDetails } });
   } catch (err) {
+    console.error('[Website Call/WhatsApp Enquiry] ❌ Error in call-enquiry route:', err.message);
     const status = err.status || 500;
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status });
   }

@@ -33,11 +33,14 @@ export async function POST(req, { params }) {
     };
 
     const realPropertyId = property._id;
+    console.log(`[Website Brochure Lead] 🚀 Processing brochure download for property "${property.title}" (${realPropertyId}), Buyer: "${userArg.name}" (${userArg.mobile})`);
+
     const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
     const brokerId = property.brokerId?._id || property.brokerId;
     const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
     if (existingLead) {
+      console.log(`[Website Brochure Lead] ℹ️ Lead already exists for user ${userId} and property ${realPropertyId}`);
       return NextResponse.json({
         success: true,
         message: 'Brochure accessed (lead already exists)',
@@ -55,6 +58,7 @@ export async function POST(req, { params }) {
       data: { brochureUrl: property.brochure, ...(lead._doc || lead), brokerDetails },
     });
   } catch (err) {
+    console.error('[Website Brochure Lead] ❌ Error in brochure-lead route:', err.message);
     const status = err.status || 500;
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status });
   }

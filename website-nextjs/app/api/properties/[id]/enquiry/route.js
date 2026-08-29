@@ -19,12 +19,18 @@ export async function POST(req, { params }) {
     const body = await req.json();
 
     const property = await propertyService.getProperty(id, userId, userIp);
-    const existingLead = await leadService.getLeadByPropertyAndUser(id, userId);
+    if (!property) {
+      return NextResponse.json({ success: false, message: 'Property not found' }, { status: 404 });
+    }
+
+    const realPropertyId = property._id;
+    const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
 
     const brokerId = property.brokerId?._id || property.brokerId;
     const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
     if (existingLead) {
+      console.log(`[Website Enquiry] ℹ️ Lead already exists for user ${userId} and property ${realPropertyId}`);
       return NextResponse.json({
         success: true,
         message: 'Lead already exists for this property and user',
@@ -39,22 +45,26 @@ export async function POST(req, { params }) {
     const phone = body.mobile || body.phone || fullUser?.mobile || '9876543210';
     const notes = body.message || body.notes || '';
 
+    console.log(`[Website Enquiry] 🚀 Creating Schedule Visit enquiry for property "${property.title}" (${realPropertyId}), Broker: ${brokerId}, Buyer: ${customerName} (${phone})`);
+
     const leadPayload = {
       customerName,
       phone,
       notes,
-      propertyType: property.propertyType,
-      area: property.location?.locality,
-      budget: property.pricing?.totalPrice || property?.pricing?.monthlyRent,
+      propertyType: property.propertyType || 'Residential',
+      area: property.location?.locality || property.location?.city || property.area || 'Nagpur',
+      budget: String(property.pricing?.totalPrice || property?.pricing?.monthlyRent || property.totalPrice || property.price || 'Price on request'),
       userId,
-      propertyId: id,
-      brokerId
+      propertyId: realPropertyId,
+      brokerId,
+      source: 'Website Lead',
     };
 
     const lead = await leadService.createLead(leadPayload);
 
     return NextResponse.json({ success: true, data: { ...(lead._doc || lead), brokerDetails } });
   } catch (err) {
+    console.error('[Website Enquiry] ❌ Error handling enquiry route:', err.message);
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status: 500 });
   }
 }

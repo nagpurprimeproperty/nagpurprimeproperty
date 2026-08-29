@@ -566,7 +566,7 @@ export default function WizardDetailsAScreen() {
                       {renderTextInputField('plotWidth', 'Plot Width (ft)', 'Optional', 'numeric', false)}
                       {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
                       {renderTextInputField('fsiAvailable', 'FSI Available', 'Optional', 'numeric', false)}
-                      {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRDA', 'MHADA', 'Private Layout'])}
+                      {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRD-RL', 'MHADA', 'Private Layout'])}
                     </>
                   ) : (
                     <>
@@ -575,7 +575,7 @@ export default function WizardDetailsAScreen() {
                       {renderTextInputField('plotWidth', 'Plot Width (ft)', 'Optional', 'numeric', false)}
                       {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
                       {renderTextInputField('fsiAvailable', 'FSI Available', 'Optional', 'numeric', false)}
-                      {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRDA', 'MHADA', 'Private Layout'])}
+                      {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRD-RL', 'MHADA', 'Private Layout'])}
                     </>
                   )}
                 </View>

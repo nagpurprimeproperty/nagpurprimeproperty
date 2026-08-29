@@ -37,6 +37,8 @@ const leadService = {
       const phone = leadPayload.phone || 'N/A';
       const propTitle = propertyName || leadPayload.propertyName || 'Property';
 
+      console.log(`[Lead Processing] 📥 New lead triggered for broker ${brokerId} | Property: "${propTitle}" | Buyer: "${customerName}" (${phone})`);
+
       const broker = await userService.getUser(brokerId).catch(() => null);
       const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId);
 
@@ -46,6 +48,8 @@ const leadService = {
 
       const hasQuotaLeft = !!subscription && (isUnlimited || leadAccessCount > leadsUnlocked);
 
+      console.log(`[Lead Processing] 📊 Quota Check for broker ${brokerId}: Subscription=${subscription ? 'Active' : 'None'}, Unlimited=${isUnlimited}, Limit=${leadAccessCount}, Unlocked=${leadsUnlocked}, HasQuotaLeft=${hasQuotaLeft}`);
+
       const maskPhone = (p) => (p && p.length >= 4 ? `***${p.slice(-4)}` : '***');
 
       // Deduct quota and send WhatsApp notification if quota available
@@ -53,11 +57,14 @@ const leadService = {
         leadPayload.isOpened = true;
 
         // Deduct 1 lead quota from broker subscription
-        await purchasePlanRepository.markAsLeadOpened(subscription._id);
+        await purchasePlanRepository.markAsLeadOpened(subscription._id).catch((err) => {
+          console.error('[Lead Processing] ⚠️ Failed to deduct lead quota:', err.message);
+        });
 
         // Send WhatsApp Notification to Broker if enabled & phone number exists
         if (env.WHATSAPP_ENABLED && broker?.mobile) {
           const templateId = env.WHATSAPP_LEAD_TEMPLATE_NAME || 'new_lead_notification';
+          console.log(`[Lead Processing] 📲 Sending WhatsApp notification to broker (${maskPhone(broker.mobile)}) using template "${templateId}"...`);
 
           communicationService.sendWhatsApp({
             to: broker.mobile,
@@ -82,12 +89,14 @@ const leadService = {
               ],
             },
           }).then((res) => {
-            console.log(`[WhatsApp Lead Alert Success] Message sent to broker (${maskPhone(broker.mobile)}), logId: ${res?.logId}`);
-          }).catch((err) => console.error('[WhatsApp Lead Notification Error]:', err.message));
+            console.log(`[Lead Processing] ✅ [WhatsApp Lead Alert Success] Message sent to broker (${maskPhone(broker.mobile)}), logId: ${res?.logId}`);
+          }).catch((err) => console.error('[Lead Processing] ❌ [WhatsApp Lead Notification Error]:', err.message));
+        } else {
+          console.log(`[Lead Processing] ℹ️ WhatsApp skipped: WHATSAPP_ENABLED=${env.WHATSAPP_ENABLED}, broker mobile=${broker?.mobile ? maskPhone(broker.mobile) : 'MISSING'}`);
         }
       } else {
         leadPayload.isOpened = false;
-        console.log(`[Lead Processing] No quota or active sub for broker ${brokerId}. Lead set to isOpened=false (Limit: ${leadAccessCount}, Unlocked: ${leadsUnlocked}).`);
+        console.log(`[Lead Processing] ℹ️ Lead set to isOpened=false (Limit: ${leadAccessCount}, Unlocked: ${leadsUnlocked}). Broker will need to unlock lead in app.`);
       }
 
       // Always create In-App Notification & send FCM Push Notification to Broker
@@ -109,22 +118,37 @@ const leadService = {
           type: 'LEAD',
           propertyId: leadPayload.propertyId?.toString() || '',
         },
-      }).catch((err) => console.error('[In-App Notification Error]:', err.message));
+      }).then(() => {
+        console.log(`[Lead Processing] ✅ In-App Notification created for broker ${brokerId}`);
+      }).catch((err) => console.error('[Lead Processing] ❌ [In-App Notification Error]:', err.message));
 
-      if (broker?.fcmToken) {
+      // Resolve FCM Token (check broker object or fallback direct DB query)
+      let brokerFcmToken = broker?.fcmToken;
+      if (!brokerFcmToken) {
+        const User = (await import('../user/user.model.js')).default;
+        const u = await User.findById(brokerId).select('fcmToken').lean();
+        brokerFcmToken = u?.fcmToken;
+      }
+
+      if (brokerFcmToken) {
+        console.log(`[Lead Processing] 🚀 Dispatching FCM push notification to broker ${brokerId}...`);
         communicationService.sendPush({
-          fcmToken: broker.fcmToken,
+          fcmToken: brokerFcmToken,
           title: notifTitle,
           body: notifBody,
           data: {
             type: 'LEAD',
             propertyId: leadPayload.propertyId?.toString() || '',
           },
-        }).catch((err) => console.error('[FCM Push Notification Error]:', err.message));
+        }).then(() => {
+          console.log(`[Lead Processing] ✅ Push notification delivered to broker ${brokerId}`);
+        }).catch((err) => console.error('[Lead Processing] ❌ [Push Notification Error]:', err.message));
+      } else {
+        console.warn(`[Lead Processing] ⚠️ Push skipped: broker ${brokerId} has no registered fcmToken in database`);
       }
 
     } catch (err) {
-      console.error('[Process Lead Quota & Notification Error]:', err.message);
+      console.error('[Lead Processing] ❌ [Process Lead Quota & Notification Error]:', err.message);
       leadPayload.isOpened = false;
     }
 
@@ -150,6 +174,9 @@ const leadService = {
 
   createLead: async (payload, session) => {
     const property = payload.propertyId ? await propertyRepository.findById(payload.propertyId) : null;
+    if (property?._id) {
+      payload.propertyId = property._id;
+    }
     const updatedPayload = await leadService.processLeadQuotaAndWhatsApp(payload, property?.title);
     return leadRepository.create(updatedPayload, session);
   },

@@ -17,12 +17,18 @@ const initFirebase = () => {
 
       // ── Option 2: Individual env vars ─────────────────────────────────────
       } else if (env.FIREBASE_PROJECT_ID && env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY) {
+        let rawPrivateKey = env.FIREBASE_PRIVATE_KEY.trim();
+        if (rawPrivateKey.startsWith('"') && rawPrivateKey.endsWith('"')) {
+          rawPrivateKey = rawPrivateKey.slice(1, -1);
+        }
+        if (rawPrivateKey.startsWith("'") && rawPrivateKey.endsWith("'")) {
+          rawPrivateKey = rawPrivateKey.slice(1, -1);
+        }
         firebaseApp = admin.initializeApp({
           credential: admin.credential.cert({
             projectId:   env.FIREBASE_PROJECT_ID,
             clientEmail: env.FIREBASE_CLIENT_EMAIL,
-            // .env stores \n literally — replace with real newline
-            privateKey:  env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            privateKey:  rawPrivateKey.replace(/\\n/g, '\n'),
           }),
         });
         console.log('Firebase initialized (individual env vars)');
@@ -39,8 +45,8 @@ const initFirebase = () => {
 
     return firebaseApp;
   } catch (error) {
-    console.error('Firebase init error:', error.message);
-    process.exit(1);
+    console.error('[Firebase Init Error]:', error.message);
+    return null;
   }
 };
 
@@ -50,7 +56,10 @@ const initFirebase = () => {
  */
 const getMessaging = () => {
   if (!admin.apps.length) {
-    initFirebase();
+    const app = initFirebase();
+    if (!app) {
+      throw new Error('Firebase Admin SDK failed to initialize');
+    }
   }
   return admin.messaging();
 };
