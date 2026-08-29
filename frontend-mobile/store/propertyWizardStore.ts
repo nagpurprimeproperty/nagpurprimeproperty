@@ -400,12 +400,14 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
 
     // Parse numeric fields in details
     const numFields = [
-      "bhk", "bathrooms", "balconies", "floorNumber", "totalFloors",
-      "carpetArea", "builtUpArea", "superBuiltUpArea", "plotArea", "parkingSlots",
+      "bhk", "minBhk", "maxBhk", "bathrooms", "balconies", "floorNumber", "totalFloors",
+      "carpetArea", "minCarpetArea", "maxCarpetArea", "builtUpArea", "minBuiltUpArea", "maxBuiltUpArea",
+      "superBuiltUpArea", "minSuperBuiltUpArea", "maxSuperBuiltUpArea", "plotArea", "minPlotArea", "maxPlotArea",
+      "minSqft", "maxSqft", "parkingSlots",
       "roadWidth", "terraceArea", "totalUnitsInBuilding", "cabinCount", "openDesks",
-      "washrooms", "frontage", "depth", "ceilingHeight", "showroomArea",
-      "numberOfShowroomFloors", "warehouseArea", "warehouseHeight", "numberOfDocks",
-      "openYardArea", "powerLoad", "plotAreaSqFt", "plotLength",
+      "washrooms", "frontage", "depth", "ceilingHeight", "showroomArea", "minShowroomArea", "maxShowroomArea",
+      "numberOfShowroomFloors", "warehouseArea", "minWarehouseArea", "maxWarehouseArea", "warehouseHeight", "numberOfDocks",
+      "openYardArea", "powerLoad", "plotAreaSqFt", "minPlotAreaSqFt", "maxPlotAreaSqFt", "plotLength",
       "plotWidth", "fsiAvailable", "areaAcres", "areaHectares", "distanceFromCity",
       "totalUnitsInProject", "unitsAvailable", "totalVillasInProject",
       "totalPlotsInLayout", "plotsAvailable"

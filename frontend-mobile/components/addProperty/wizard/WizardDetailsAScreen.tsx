@@ -24,6 +24,7 @@ export default function WizardDetailsAScreen() {
   const goToPhase = useAddPropertyStore((s) => s.goToPhase);
 
   const type = step1.propertyType || 'flat';
+  const category = step1.listingCategory || 'resale';
 
   // Initialize stepper fields to their min values if currently undefined
   React.useEffect(() => {
@@ -38,17 +39,31 @@ export default function WizardDetailsAScreen() {
     };
 
     if (['flat', 'builder_floor', 'penthouse'].includes(type)) {
-      checkAndSet('bhk', 0);
-      checkAndSet('bathrooms', 0);
-      checkAndSet('balconies', 0);
+      if (category === 'new') {
+        checkAndSet('minBhk', 1);
+        checkAndSet('maxBhk', 3);
+      } else {
+        checkAndSet('bhk', 0);
+        checkAndSet('bathrooms', 0);
+        checkAndSet('balconies', 0);
+      }
     } else if (type === 'villa') {
-      checkAndSet('bhk', 0);
-      checkAndSet('bathrooms', 0);
-      checkAndSet('parkingSlots', 0);
+      if (category === 'new') {
+        checkAndSet('minBhk', 2);
+        checkAndSet('maxBhk', 4);
+      } else {
+        checkAndSet('bhk', 0);
+        checkAndSet('bathrooms', 0);
+        checkAndSet('parkingSlots', 0);
+      }
     } else if (type === 'office') {
-      checkAndSet('washrooms', 1);
+      if (category !== 'new') {
+        checkAndSet('washrooms', 1);
+      }
     } else if (type === 'showroom') {
-      checkAndSet('numberOfShowroomFloors', 1);
+      if (category !== 'new') {
+        checkAndSet('numberOfShowroomFloors', 1);
+      }
     } else if (type === 'warehouse') {
       checkAndSet('numberOfDocks', 0);
     }
@@ -56,7 +71,7 @@ export default function WizardDetailsAScreen() {
     if (changed) {
       updateStep3Batch(defaultValues);
     }
-  }, [type]);
+  }, [type, category]);
 
   // Stepper handlers
   const handleFieldChange = (key: string, val: any) => {
@@ -69,7 +84,7 @@ export default function WizardDetailsAScreen() {
   };
 
   const handleContinue = () => {
-    const stepErrors = validateStepDetailsA(step3, type);
+    const stepErrors = validateStepDetailsA(step3, type, category);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
       return;
@@ -364,16 +379,33 @@ export default function WizardDetailsAScreen() {
             case 'penthouse': {
               return (
                 <View>
-                  <View className="mb-6">
-                    {renderCardStepper('bhk', 'BHK', 0, 8, true)}
-                    {renderCardStepper('bathrooms', 'Bathrooms', 0, 15, true)}
-                    {renderCardStepper('balconies', 'Balconies', 0, 10)}
-                  </View>
-                  {renderTextInputField('floorNumber', 'Property Floor', 'e.g. 3 (0 for Ground)', 'numeric', true)}
-                  {renderTextInputField('totalFloors', 'Total Floors', 'e.g. 10', 'numeric', true)}
-                  {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'e.g. 1200', 'numeric', true)}
-                  {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('superBuiltUpArea', 'Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                  {category === 'new' ? (
+                    <>
+                      <View className="mb-6">
+                        {renderCardStepper('minBhk', 'Min BHK', 0, 8, true)}
+                        {renderCardStepper('maxBhk', 'Max BHK', 0, 8, true)}
+                        {renderCardStepper('bathrooms', 'Bathrooms', 0, 15, false)}
+                        {renderCardStepper('balconies', 'Balconies', 0, 10, false)}
+                      </View>
+                      {renderTextInputField('minCarpetArea', 'Min Carpet Area (sq.ft)', 'e.g. 800', 'numeric', true)}
+                      {renderTextInputField('maxCarpetArea', 'Max Carpet Area (sq.ft)', 'e.g. 1800', 'numeric', true)}
+                      {renderTextInputField('minSuperBuiltUpArea', 'Min Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('maxSuperBuiltUpArea', 'Max Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                    </>
+                  ) : (
+                    <>
+                      <View className="mb-6">
+                        {renderCardStepper('bhk', 'BHK', 0, 8, true)}
+                        {renderCardStepper('bathrooms', 'Bathrooms', 0, 15, true)}
+                        {renderCardStepper('balconies', 'Balconies', 0, 10)}
+                      </View>
+                      {renderTextInputField('floorNumber', 'Property Floor', 'e.g. 3 (0 for Ground)', 'numeric', true)}
+                      {renderTextInputField('totalFloors', 'Total Floors', 'e.g. 10', 'numeric', true)}
+                      {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'e.g. 1200', 'numeric', true)}
+                      {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('superBuiltUpArea', 'Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                    </>
+                  )}
                   {type === 'builder_floor' && (
                     <View className="mt-4">
                       {renderTextInputField('totalUnitsInBuilding', 'Total Units in Building', 'Optional', 'numeric', false)}
@@ -391,78 +423,161 @@ export default function WizardDetailsAScreen() {
             case 'villa': {
               return (
                 <View>
-                  <View className="mb-6">
-                    {renderCardStepper('bhk', 'BHK', 0, 8, true)}
-                    {renderCardStepper('bathrooms', 'Bathrooms', 0, 15, true)}
-                    {renderCardStepper('parkingSlots', 'Parking Slots', 0, 10)}
-                  </View>
-                  {renderDropdownField('numberOfFloors', 'Number of Floors', ['1', '1.5', '2', '2.5', '3', '3.5', '4+'], true)}
-                  {renderTextInputField('plotArea', 'Plot Area (sq.ft)', 'e.g. 1500', 'numeric', true)}
-                  {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'e.g. 1800', 'numeric', true)}
-                  {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
+                  {category === 'new' ? (
+                    <>
+                      <View className="mb-6">
+                        {renderCardStepper('minBhk', 'Min BHK', 0, 8, false)}
+                        {renderCardStepper('maxBhk', 'Max BHK', 0, 8, false)}
+                        {renderCardStepper('bathrooms', 'Bathrooms', 0, 15, false)}
+                        {renderCardStepper('parkingSlots', 'Parking Slots', 0, 10, false)}
+                      </View>
+                      {renderTextInputField('minPlotArea', 'Min Plot Area (sq.ft)', 'e.g. 1500', 'numeric', false)}
+                      {renderTextInputField('maxPlotArea', 'Max Plot Area (sq.ft)', 'e.g. 3000', 'numeric', false)}
+                      {renderTextInputField('minBuiltUpArea', 'Min Built-up Area (sq.ft)', 'e.g. 1800', 'numeric', false)}
+                      {renderTextInputField('maxBuiltUpArea', 'Max Built-up Area (sq.ft)', 'e.g. 3500', 'numeric', false)}
+                      {renderTextInputField('minCarpetArea', 'Min Carpet Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('maxCarpetArea', 'Max Carpet Area (sq.ft)', 'Optional', 'numeric', false)}
+                    </>
+                  ) : (
+                    <>
+                      <View className="mb-6">
+                        {renderCardStepper('bhk', 'BHK', 0, 8, true)}
+                        {renderCardStepper('bathrooms', 'Bathrooms', 0, 15, true)}
+                        {renderCardStepper('parkingSlots', 'Parking Slots', 0, 10)}
+                      </View>
+                      {renderDropdownField('numberOfFloors', 'Number of Floors', ['1', '1.5', '2', '2.5', '3', '3.5', '4+'], true)}
+                      {renderTextInputField('plotArea', 'Plot Area (sq.ft)', 'e.g. 1500', 'numeric', true)}
+                      {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'e.g. 1800', 'numeric', true)}
+                      {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
+                    </>
+                  )}
                 </View>
               );
             }
             case 'office': {
               return (
                 <View>
-                  <View className="mb-6">
-                    {renderCardStepper('washrooms', 'Washrooms', 1, 10)}
-                  </View>
-                  {renderTextInputField('floorNumber', 'Property Floor', 'e.g. 2', 'numeric', true)}
-                  {renderTextInputField('totalFloors', 'Total Floors', 'Optional', 'numeric', false)}
-                  {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'e.g. 1000', 'numeric', true)}
-                  {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('superBuiltUpArea', 'Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('cabinCount', 'Cabin Count', 'Optional', 'numeric', false)}
-                  {renderTextInputField('openDesks', 'Open Desks', 'Optional', 'numeric', false)}
+                  {category === 'new' ? (
+                    <>
+                      {renderTextInputField('minCarpetArea', 'Min Carpet Area (sq.ft)', 'e.g. 500', 'numeric', true)}
+                      {renderTextInputField('maxCarpetArea', 'Max Carpet Area (sq.ft)', 'e.g. 2000', 'numeric', true)}
+                      {renderTextInputField('minSuperBuiltUpArea', 'Min Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('maxSuperBuiltUpArea', 'Max Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('cabinCount', 'Cabin Count', 'Optional', 'numeric', false)}
+                      {renderTextInputField('openDesks', 'Open Desks', 'Optional', 'numeric', false)}
+                    </>
+                  ) : (
+                    <>
+                      <View className="mb-6">
+                        {renderCardStepper('washrooms', 'Washrooms', 1, 10)}
+                      </View>
+                      {renderTextInputField('floorNumber', 'Property Floor', 'e.g. 2', 'numeric', true)}
+                      {renderTextInputField('totalFloors', 'Total Floors', 'Optional', 'numeric', false)}
+                      {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'e.g. 1000', 'numeric', true)}
+                      {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('superBuiltUpArea', 'Super Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('cabinCount', 'Cabin Count', 'Optional', 'numeric', false)}
+                      {renderTextInputField('openDesks', 'Open Desks', 'Optional', 'numeric', false)}
+                    </>
+                  )}
                 </View>
               );
             }
             case 'shop': {
               return (
                 <View>
-                  {renderDropdownField('shopFloor', 'Shop Floor', ['Lower Ground', 'Ground', '1st', '2nd', '3rd+'], true)}
-                  {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'e.g. 500', 'numeric', true)}
-                  {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('frontage', 'Frontage (ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('depth', 'Depth (ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('ceilingHeight', 'Ceiling Height (ft)', 'Optional', 'numeric', false)}
+                  {category === 'new' ? (
+                    <>
+                      {renderTextInputField('minCarpetArea', 'Min Carpet Area (sq.ft)', 'e.g. 300', 'numeric', true)}
+                      {renderTextInputField('maxCarpetArea', 'Max Carpet Area (sq.ft)', 'e.g. 1000', 'numeric', true)}
+                      {renderTextInputField('frontage', 'Frontage (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('depth', 'Depth (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('ceilingHeight', 'Ceiling Height (ft)', 'Optional', 'numeric', false)}
+                    </>
+                  ) : (
+                    <>
+                      {renderDropdownField('shopFloor', 'Shop Floor', ['Lower Ground', 'Ground', '1st', '2nd', '3rd+'], true)}
+                      {renderTextInputField('carpetArea', 'Carpet Area (sq.ft)', 'e.g. 500', 'numeric', true)}
+                      {renderTextInputField('builtUpArea', 'Built-up Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('frontage', 'Frontage (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('depth', 'Depth (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('ceilingHeight', 'Ceiling Height (ft)', 'Optional', 'numeric', false)}
+                    </>
+                  )}
                 </View>
               );
             }
             case 'showroom': {
               return (
                 <View>
-                  {renderCardStepper('numberOfShowroomFloors', 'Number of Showroom Floors', 1, 5)}
-                  {renderTextInputField('showroomArea', 'Showroom Area (sq.ft)', 'e.g. 2000', 'numeric', true)}
-                  {renderTextInputField('frontage', 'Frontage (ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('ceilingHeight', 'Ceiling Height (ft)', 'Optional', 'numeric', false)}
+                  {category === 'new' ? (
+                    <>
+                      {renderTextInputField('minShowroomArea', 'Min Showroom Area (sq.ft)', 'e.g. 1000', 'numeric', true)}
+                      {renderTextInputField('maxShowroomArea', 'Max Showroom Area (sq.ft)', 'e.g. 5000', 'numeric', true)}
+                      {renderTextInputField('frontage', 'Frontage (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('ceilingHeight', 'Ceiling Height (ft)', 'Optional', 'numeric', false)}
+                    </>
+                  ) : (
+                    <>
+                      {renderCardStepper('numberOfShowroomFloors', 'Number of Showroom Floors', 1, 5)}
+                      {renderTextInputField('showroomArea', 'Showroom Area (sq.ft)', 'e.g. 2000', 'numeric', true)}
+                      {renderTextInputField('frontage', 'Frontage (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('ceilingHeight', 'Ceiling Height (ft)', 'Optional', 'numeric', false)}
+                    </>
+                  )}
                 </View>
               );
             }
             case 'warehouse': {
               return (
                 <View>
-                  {renderTextInputField('warehouseArea', 'Warehouse Area (sq.ft)', 'e.g. 5000', 'numeric', true)}
-                  {renderTextInputField('warehouseHeight', 'Warehouse Height (ft)', 'e.g. 24', 'numeric', true)}
-                  {renderCardStepper('numberOfDocks', 'Number of Loading Docks', 0, 20)}
-                  {renderTextInputField('floorLoadCapacity', 'Floor Load Capacity (tons/sqft)', 'Optional', 'default', false)}
-                  {renderTextInputField('openYardArea', 'Open Yard Area (sq.ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('powerLoad', 'Power Load (KW)', 'Optional', 'numeric', false)}
+                  {category === 'new' ? (
+                    <>
+                      {renderTextInputField('minWarehouseArea', 'Min Warehouse Area (sq.ft)', 'e.g. 2000', 'numeric', true)}
+                      {renderTextInputField('maxWarehouseArea', 'Max Warehouse Area (sq.ft)', 'e.g. 10000', 'numeric', true)}
+                      {renderTextInputField('warehouseHeight', 'Warehouse Height (ft)', 'Optional', 'numeric', false)}
+                      {renderCardStepper('numberOfDocks', 'Number of Loading Docks', 0, 20)}
+                      {renderTextInputField('floorLoadCapacity', 'Floor Load Capacity (tons/sqft)', 'Optional', 'default', false)}
+                      {renderTextInputField('openYardArea', 'Open Yard Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('powerLoad', 'Power Load (KW)', 'Optional', 'numeric', false)}
+                    </>
+                  ) : (
+                    <>
+                      {renderTextInputField('warehouseArea', 'Warehouse Area (sq.ft)', 'e.g. 5000', 'numeric', true)}
+                      {renderTextInputField('warehouseHeight', 'Warehouse Height (ft)', 'e.g. 24', 'numeric', true)}
+                      {renderCardStepper('numberOfDocks', 'Number of Loading Docks', 0, 20)}
+                      {renderTextInputField('floorLoadCapacity', 'Floor Load Capacity (tons/sqft)', 'Optional', 'default', false)}
+                      {renderTextInputField('openYardArea', 'Open Yard Area (sq.ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('powerLoad', 'Power Load (KW)', 'Optional', 'numeric', false)}
+                    </>
+                  )}
                 </View>
               );
             }
             case 'res_plot': {
               return (
                 <View>
-                  {renderTextInputField('plotAreaSqFt', 'Plot Area (sq.ft)', 'e.g. 1200', 'numeric', true)}
-                  {renderTextInputField('plotLength', 'Plot Length (ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('plotWidth', 'Plot Width (ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
-                  {renderTextInputField('fsiAvailable', 'FSI Available', 'Optional', 'numeric', false)}
-                  {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRDA', 'MHADA', 'Private Layout'])}
+                  {category === 'new' ? (
+                    <>
+                      {renderTextInputField('minPlotAreaSqFt', 'Min Plot Area (sq.ft)', 'e.g. 1000', 'numeric', true)}
+                      {renderTextInputField('maxPlotAreaSqFt', 'Max Plot Area (sq.ft)', 'e.g. 3000', 'numeric', true)}
+                      {renderTextInputField('plotLength', 'Plot Length (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('plotWidth', 'Plot Width (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('fsiAvailable', 'FSI Available', 'Optional', 'numeric', false)}
+                      {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRDA', 'MHADA', 'Private Layout'])}
+                    </>
+                  ) : (
+                    <>
+                      {renderTextInputField('plotAreaSqFt', 'Plot Area (sq.ft)', 'e.g. 1200', 'numeric', true)}
+                      {renderTextInputField('plotLength', 'Plot Length (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('plotWidth', 'Plot Width (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('roadWidth', 'Road Width (ft)', 'Optional', 'numeric', false)}
+                      {renderTextInputField('fsiAvailable', 'FSI Available', 'Optional', 'numeric', false)}
+                      {renderMultiSelectField('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRDA', 'MHADA', 'Private Layout'])}
+                    </>
+                  )}
                 </View>
               );
             }

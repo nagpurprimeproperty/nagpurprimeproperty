@@ -57,122 +57,195 @@ export function validateStepMap(latitude: number | null, longitude: number | nul
   return errors;
 }
 
-export function validateStepDetailsA(step3Data: Record<string, any>, propertyType: string) {
+export function validateStepDetailsA(step3Data: Record<string, any>, propertyType: string, category?: string) {
   const errors: Record<string, string> = {};
 
   const isResidential = ['flat', 'villa', 'builder_floor', 'penthouse'].includes(propertyType);
   const isLand = ['res_plot', 'agri_land'].includes(propertyType);
+  const isNew = category === 'new';
 
-  // Area validations
-  if (propertyType === 'villa') {
-    // Villa: plotArea and builtUpArea are both required
-    const plotVal = step3Data.plotArea;
-    if (plotVal === undefined || plotVal === null || String(plotVal).trim() === '') {
-      errors.plotArea = 'Plot Area is required';
-    } else {
-      const num = Number(plotVal);
-      if (isNaN(num) || num <= 0) errors.plotArea = 'Plot Area must be a valid positive number';
-    }
+  if (isNew) {
+    if (['flat', 'builder_floor', 'penthouse'].includes(propertyType)) {
+      if (step3Data.minBhk === undefined || step3Data.minBhk === null || Number(step3Data.minBhk) < 0 || Number(step3Data.minBhk) > 8) {
+        errors.minBhk = 'Min BHK must be between 0 and 8';
+      }
+      if (step3Data.maxBhk === undefined || step3Data.maxBhk === null || Number(step3Data.maxBhk) < 0 || Number(step3Data.maxBhk) > 8) {
+        errors.maxBhk = 'Max BHK must be between 0 and 8';
+      }
+      if (step3Data.minBhk !== undefined && step3Data.maxBhk !== undefined && Number(step3Data.minBhk) > Number(step3Data.maxBhk)) {
+        errors.maxBhk = 'Max BHK must be >= Min BHK';
+      }
 
-    const builtVal = step3Data.builtUpArea;
-    if (builtVal === undefined || builtVal === null || String(builtVal).trim() === '') {
-      errors.builtUpArea = 'Built-up Area is required';
-    } else {
-      const num = Number(builtVal);
-      if (isNaN(num) || num <= 0) errors.builtUpArea = 'Built-up Area must be a valid positive number';
-    }
-  } else {
-    // Other types: single main area validation
-    const areaKey = isLand
-      ? (propertyType === 'agri_land' ? 'areaAcres' : 'plotAreaSqFt')
-      : (propertyType === 'showroom' ? 'showroomArea' : propertyType === 'warehouse' ? 'warehouseArea' : 'carpetArea');
-
-    const areaLabel = isLand 
-      ? (propertyType === 'agri_land' ? 'Total Area (Acres)' : 'Plot Area (sq.ft)') 
-      : (propertyType === 'showroom' ? 'Showroom Area (sq.ft)' : propertyType === 'warehouse' ? 'Warehouse Area (sq.ft)' : 'Carpet Area (sq.ft)');
-
-    const enteredArea = step3Data[areaKey];
-    if (enteredArea === undefined || enteredArea === null || String(enteredArea).trim() === '') {
-      errors[areaKey] = `${areaLabel} is required`;
-    } else {
-      const num = Number(enteredArea);
-      if (isNaN(num) || num <= 0) {
-        errors[areaKey] = `${areaLabel} must be a valid positive number`;
+      if (!step3Data.minCarpetArea || Number(step3Data.minCarpetArea) <= 0) {
+        errors.minCarpetArea = 'Min Carpet Area is required and must be > 0';
+      }
+      if (!step3Data.maxCarpetArea || Number(step3Data.maxCarpetArea) <= 0) {
+        errors.maxCarpetArea = 'Max Carpet Area is required and must be > 0';
+      }
+      if (step3Data.minCarpetArea && step3Data.maxCarpetArea && Number(step3Data.minCarpetArea) > Number(step3Data.maxCarpetArea)) {
+        errors.maxCarpetArea = 'Max Carpet Area must be >= Min Carpet Area';
+      }
+    } else if (propertyType === 'villa') {
+      if (step3Data.minBhk && step3Data.maxBhk && Number(step3Data.minBhk) > Number(step3Data.maxBhk)) {
+        errors.maxBhk = 'Max BHK must be >= Min BHK';
+      }
+      if (step3Data.minPlotArea && step3Data.maxPlotArea && Number(step3Data.minPlotArea) > Number(step3Data.maxPlotArea)) {
+        errors.maxPlotArea = 'Max Plot Area must be >= Min Plot Area';
+      }
+    } else if (propertyType === 'office' || propertyType === 'shop') {
+      if (!step3Data.minCarpetArea || Number(step3Data.minCarpetArea) <= 0) {
+        errors.minCarpetArea = 'Min Carpet Area is required and must be > 0';
+      }
+      if (!step3Data.maxCarpetArea || Number(step3Data.maxCarpetArea) <= 0) {
+        errors.maxCarpetArea = 'Max Carpet Area is required and must be > 0';
+      }
+      if (step3Data.minCarpetArea && step3Data.maxCarpetArea && Number(step3Data.minCarpetArea) > Number(step3Data.maxCarpetArea)) {
+        errors.maxCarpetArea = 'Max Carpet Area must be >= Min Carpet Area';
+      }
+    } else if (propertyType === 'showroom') {
+      if (!step3Data.minShowroomArea || Number(step3Data.minShowroomArea) <= 0) {
+        errors.minShowroomArea = 'Min Showroom Area is required and must be > 0';
+      }
+      if (!step3Data.maxShowroomArea || Number(step3Data.maxShowroomArea) <= 0) {
+        errors.maxShowroomArea = 'Max Showroom Area is required and must be > 0';
+      }
+      if (step3Data.minShowroomArea && step3Data.maxShowroomArea && Number(step3Data.minShowroomArea) > Number(step3Data.maxShowroomArea)) {
+        errors.maxShowroomArea = 'Max Showroom Area must be >= Min Showroom Area';
+      }
+    } else if (propertyType === 'warehouse') {
+      if (!step3Data.minWarehouseArea || Number(step3Data.minWarehouseArea) <= 0) {
+        errors.minWarehouseArea = 'Min Warehouse Area is required and must be > 0';
+      }
+      if (!step3Data.maxWarehouseArea || Number(step3Data.maxWarehouseArea) <= 0) {
+        errors.maxWarehouseArea = 'Max Warehouse Area is required and must be > 0';
+      }
+      if (step3Data.minWarehouseArea && step3Data.maxWarehouseArea && Number(step3Data.minWarehouseArea) > Number(step3Data.maxWarehouseArea)) {
+        errors.maxWarehouseArea = 'Max Warehouse Area must be >= Min Warehouse Area';
+      }
+    } else if (propertyType === 'res_plot') {
+      if (!step3Data.minPlotAreaSqFt || Number(step3Data.minPlotAreaSqFt) <= 0) {
+        errors.minPlotAreaSqFt = 'Min Plot Area is required and must be > 0';
+      }
+      if (!step3Data.maxPlotAreaSqFt || Number(step3Data.maxPlotAreaSqFt) <= 0) {
+        errors.maxPlotAreaSqFt = 'Max Plot Area is required and must be > 0';
+      }
+      if (step3Data.minPlotAreaSqFt && step3Data.maxPlotAreaSqFt && Number(step3Data.minPlotAreaSqFt) > Number(step3Data.maxPlotAreaSqFt)) {
+        errors.maxPlotAreaSqFt = 'Max Plot Area must be >= Min Plot Area';
+      }
+    } else if (propertyType === 'agri_land') {
+      if (!step3Data.areaAcres || Number(step3Data.areaAcres) <= 0) {
+        errors.areaAcres = 'Total Area (Acres) is required and must be > 0';
       }
     }
-  }
+  } else {
+    // Area validations for resale & rental
+    if (propertyType === 'villa') {
+      // Villa: plotArea and builtUpArea are both required
+      const plotVal = step3Data.plotArea;
+      if (plotVal === undefined || plotVal === null || String(plotVal).trim() === '') {
+        errors.plotArea = 'Plot Area is required';
+      } else {
+        const num = Number(plotVal);
+        if (isNaN(num) || num <= 0) errors.plotArea = 'Plot Area must be a valid positive number';
+      }
 
-  // Steppers (bhk, bathrooms, balconies) validation
-  if (isResidential) {
-    if (step3Data.bhk === undefined || step3Data.bhk === null || Number(step3Data.bhk) < 0 || Number(step3Data.bhk) > 8) {
-      errors.bhk = 'BHK must be between 0 and 8';
-    }
-    if (step3Data.bathrooms === undefined || step3Data.bathrooms === null || Number(step3Data.bathrooms) < 0 || Number(step3Data.bathrooms) > 15) {
-      errors.bathrooms = 'Bathrooms must be between 0 and 15';
-    }
-  }
-
-  // Villa specific validation: numberOfFloors, parkingSlots
-  if (propertyType === 'villa') {
-    if (!step3Data.numberOfFloors) {
-      errors.numberOfFloors = 'Number of floors is required';
-    }
-    if (step3Data.parkingSlots === undefined || step3Data.parkingSlots === null || Number(step3Data.parkingSlots) < 0 || Number(step3Data.parkingSlots) > 10) {
-      errors.parkingSlots = 'Parking slots must be between 0 and 10';
-    }
-  }
-
-  // Office Space specific validation: washrooms
-  if (propertyType === 'office') {
-    if (step3Data.washrooms === undefined || step3Data.washrooms === null || Number(step3Data.washrooms) < 1 || Number(step3Data.washrooms) > 10) {
-      errors.washrooms = 'Washrooms must be between 1 and 10';
-    }
-  }
-
-  // Shop specific validation: shopFloor
-  if (propertyType === 'shop') {
-    if (!step3Data.shopFloor) {
-      errors.shopFloor = 'Shop floor selection is required';
-    }
-  }
-
-  // Warehouse specific validation: warehouseHeight
-  if (propertyType === 'warehouse') {
-    const hVal = step3Data.warehouseHeight;
-    if (hVal === undefined || hVal === null || String(hVal).trim() === '') {
-      errors.warehouseHeight = 'Warehouse height is required';
+      const builtVal = step3Data.builtUpArea;
+      if (builtVal === undefined || builtVal === null || String(builtVal).trim() === '') {
+        errors.builtUpArea = 'Built-up Area is required';
+      } else {
+        const num = Number(builtVal);
+        if (isNaN(num) || num <= 0) errors.builtUpArea = 'Built-up Area must be a valid positive number';
+      }
     } else {
-      const num = Number(hVal);
-      if (isNaN(num) || num <= 0) errors.warehouseHeight = 'Warehouse height must be a valid positive number';
+      // Other types: single main area validation
+      const areaKey = isLand
+        ? (propertyType === 'agri_land' ? 'areaAcres' : 'plotAreaSqFt')
+        : (propertyType === 'showroom' ? 'showroomArea' : propertyType === 'warehouse' ? 'warehouseArea' : 'carpetArea');
+
+      const areaLabel = isLand 
+        ? (propertyType === 'agri_land' ? 'Total Area (Acres)' : 'Plot Area (sq.ft)') 
+        : (propertyType === 'showroom' ? 'Showroom Area (sq.ft)' : propertyType === 'warehouse' ? 'Warehouse Area (sq.ft)' : 'Carpet Area (sq.ft)');
+
+      const enteredArea = step3Data[areaKey];
+      if (enteredArea === undefined || enteredArea === null || String(enteredArea).trim() === '') {
+        errors[areaKey] = `${areaLabel} is required`;
+      } else {
+        const num = Number(enteredArea);
+        if (isNaN(num) || num <= 0) {
+          errors[areaKey] = `${areaLabel} must be a valid positive number`;
+        }
+      }
     }
-  }
 
-  // Floors validation for high-rise flat/office
-  const showFloorsInfo = ['flat', 'builder_floor', 'penthouse', 'office'].includes(propertyType);
-  if (showFloorsInfo) {
-    const isOffice = propertyType === 'office';
-    
-    // floorNumber is required for all
-    if (step3Data.floorNumber === undefined || step3Data.floorNumber === null || String(step3Data.floorNumber).trim() === '') {
-      errors.floorNumber = 'Floor number is required';
-    } else {
-      const fNum = Number(step3Data.floorNumber);
-      if (isNaN(fNum) || fNum < 0 || fNum > 99) errors.floorNumber = 'Floor number must be between 0 and 99';
+    // Steppers (bhk, bathrooms, balconies) validation
+    if (isResidential) {
+      if (step3Data.bhk === undefined || step3Data.bhk === null || Number(step3Data.bhk) < 0 || Number(step3Data.bhk) > 8) {
+        errors.bhk = 'BHK must be between 0 and 8';
+      }
+      if (step3Data.bathrooms === undefined || step3Data.bathrooms === null || Number(step3Data.bathrooms) < 0 || Number(step3Data.bathrooms) > 15) {
+        errors.bathrooms = 'Bathrooms must be between 0 and 15';
+      }
     }
 
-    // totalFloors is required for residential but optional for office
-    const tfVal = step3Data.totalFloors;
-    const hasTf = tfVal !== undefined && tfVal !== null && String(tfVal).trim() !== '';
+    // Villa specific validation: numberOfFloors, parkingSlots
+    if (propertyType === 'villa') {
+      if (!step3Data.numberOfFloors) {
+        errors.numberOfFloors = 'Number of floors is required';
+      }
+      if (step3Data.parkingSlots === undefined || step3Data.parkingSlots === null || Number(step3Data.parkingSlots) < 0 || Number(step3Data.parkingSlots) > 10) {
+        errors.parkingSlots = 'Parking slots must be between 0 and 10';
+      }
+    }
 
-    if (!isOffice && !hasTf) {
-      errors.totalFloors = 'Total floors is required';
-    } else if (hasTf) {
-      const tFloors = Number(tfVal);
-      if (isNaN(tFloors) || tFloors < 1 || tFloors > 99) {
-        errors.totalFloors = 'Total floors must be between 1 and 99';
-      } else if (step3Data.floorNumber !== undefined && step3Data.floorNumber !== null) {
-        if (Number(step3Data.floorNumber) > tFloors) {
-          errors.floorNumber = 'Floor number cannot exceed total floors';
+    // Office Space specific validation: washrooms
+    if (propertyType === 'office') {
+      if (step3Data.washrooms === undefined || step3Data.washrooms === null || Number(step3Data.washrooms) < 1 || Number(step3Data.washrooms) > 10) {
+        errors.washrooms = 'Washrooms must be between 1 and 10';
+      }
+    }
+
+    // Shop specific validation: shopFloor
+    if (propertyType === 'shop') {
+      if (!step3Data.shopFloor) {
+        errors.shopFloor = 'Shop floor selection is required';
+      }
+    }
+
+    // Warehouse specific validation: warehouseHeight
+    if (propertyType === 'warehouse') {
+      const h = step3Data.warehouseHeight;
+      if (h === undefined || h === null || String(h).trim() === '' || Number(h) <= 0) {
+        errors.warehouseHeight = 'Warehouse height is required and must be > 0';
+      }
+    }
+
+    // Floors validation for high-rise flat/office (resale / rental)
+    const showFloorsInfo = ['flat', 'builder_floor', 'penthouse', 'office'].includes(propertyType);
+    if (showFloorsInfo) {
+      const isOffice = propertyType === 'office';
+      
+      // floorNumber is required for all
+      if (step3Data.floorNumber === undefined || step3Data.floorNumber === null || String(step3Data.floorNumber).trim() === '') {
+        errors.floorNumber = 'Floor number is required';
+      } else {
+        const fNum = Number(step3Data.floorNumber);
+        if (isNaN(fNum) || fNum < 0 || fNum > 99) errors.floorNumber = 'Floor number must be between 0 and 99';
+      }
+
+      // totalFloors is required for residential but optional for office
+      const tfVal = step3Data.totalFloors;
+      const hasTf = tfVal !== undefined && tfVal !== null && String(tfVal).trim() !== '';
+
+      if (!isOffice && !hasTf) {
+        errors.totalFloors = 'Total floors is required';
+      } else if (hasTf) {
+        const tFloors = Number(tfVal);
+        if (isNaN(tFloors) || tFloors < 1 || tFloors > 99) {
+          errors.totalFloors = 'Total floors must be between 1 and 99';
+        } else if (step3Data.floorNumber !== undefined && step3Data.floorNumber !== null) {
+          if (Number(step3Data.floorNumber) > tFloors) {
+            errors.floorNumber = 'Floor number cannot exceed total floors';
+          }
         }
       }
     }
@@ -365,7 +438,7 @@ export function validateState(state: ReturnType<typeof import('../store/property
   Object.assign(errors, mapErrors);
 
   // Step 3 details_a
-  const detailsAErrors = validateStepDetailsA(state.step3, state.step1.propertyType || 'flat');
+  const detailsAErrors = validateStepDetailsA(state.step3, state.step1.propertyType || 'flat', state.step1.listingCategory || 'resale');
   Object.assign(errors, detailsAErrors);
 
   // Step 3 details_b

@@ -6,10 +6,20 @@ export interface PropertyBrokerInfo {
 
 export interface PropertyDetailsInfo {
   bhk?: number | string;
+  minBhk?: number | string;
+  maxBhk?: number | string;
   carpetArea?: number | string;
+  minCarpetArea?: number | string;
+  maxCarpetArea?: number | string;
   builtUpArea?: number | string;
+  minBuiltUpArea?: number | string;
+  maxBuiltUpArea?: number | string;
   superBuiltUpArea?: number | string;
+  minSuperBuiltUpArea?: number | string;
+  maxSuperBuiltUpArea?: number | string;
   plotAreaSqFt?: number | string;
+  minPlotAreaSqFt?: number | string;
+  maxPlotAreaSqFt?: number | string;
   gatedLayout?: boolean;
   security?: string;
   bathrooms?: number | string;
@@ -19,9 +29,13 @@ export interface PropertyDetailsInfo {
   shopFloor?: number | string;
   cornerShop?: boolean;
   showroomArea?: number | string;
+  minShowroomArea?: number | string;
+  maxShowroomArea?: number | string;
   numberOfShowroomFloors?: number | string;
   parkingAvailable?: boolean;
   warehouseArea?: number | string;
+  minWarehouseArea?: number | string;
+  maxWarehouseArea?: number | string;
   warehouseHeight?: number | string;
   midc?: boolean;
   plotLength?: number | string;
@@ -33,6 +47,8 @@ export interface PropertyDetailsInfo {
   furnishing?: string;
   verified?: boolean;
   plotArea?: number | string;
+  minPlotArea?: number | string;
+  maxPlotArea?: number | string;
 }
 
 export interface PropertyPricingInfo {

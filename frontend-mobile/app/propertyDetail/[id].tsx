@@ -92,14 +92,23 @@ function getDynamicSpecs(type: string, details: any, area: string) {
   const specs: { label: string; value: string; icon: any }[] = [];
 
   if (type === "Flat/Apartment" || type === "Penthouse" || type === "Builder Floor") {
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : (details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A");
+    const areaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+      : (area && area !== "N/A" ? area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : "N/A"));
+
     specs.push({
       label: "Bedrooms",
-      value: details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A",
+      value: bedrooms,
       icon: Bed,
     });
     specs.push({
-      label: "Built-up Area",
-      value: area && area !== "N/A" ? area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : "N/A"),
+      label: details.minCarpetArea ? "Carpet Area" : "Built-up Area",
+      value: areaVal,
       icon: Layers,
     });
     specs.push({
@@ -113,14 +122,23 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Villa/Independent House") {
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : (details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A");
+    const plotAreaVal = (details.minPlotArea && details.maxPlotArea)
+      ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+      : (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.plotArea ? `${details.plotArea} sqft` : area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Bedrooms",
-      value: details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A",
+      value: bedrooms,
       icon: Bed,
     });
     specs.push({
       label: "Plot Area",
-      value: details.plotArea ? `${details.plotArea} sqft` : area !== "N/A" ? area : "N/A",
+      value: plotAreaVal,
       icon: Map,
     });
     specs.push({
@@ -134,6 +152,10 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Office Space") {
+    const carpetAreaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (area !== "N/A" ? area : (details.carpetArea ? `${details.carpetArea} sqft` : "N/A"));
+
     specs.push({
       label: "Cabins",
       value: details.cabinCount !== undefined ? String(details.cabinCount) : "N/A",
@@ -146,7 +168,7 @@ function getDynamicSpecs(type: string, details: any, area: string) {
     });
     specs.push({
       label: "Carpet Area",
-      value: area !== "N/A" ? area : (details.carpetArea ? `${details.carpetArea} sqft` : "N/A"),
+      value: carpetAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -155,6 +177,10 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Shop") {
+    const shopAreaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Shop Floor",
       value: details.shopFloor ?? "N/A",
@@ -162,7 +188,7 @@ function getDynamicSpecs(type: string, details: any, area: string) {
     });
     specs.push({
       label: "Area",
-      value: area !== "N/A" ? area : "N/A",
+      value: shopAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -176,9 +202,13 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Star,
     });
   } else if (type === "Showroom") {
+    const showroomAreaVal = (details.minShowroomArea && details.maxShowroomArea)
+      ? `${details.minShowroomArea} - ${details.maxShowroomArea} sqft`
+      : (details.showroomArea ? `${details.showroomArea} sqft` : area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Showroom Area",
-      value: details.showroomArea ? `${details.showroomArea} sqft` : area !== "N/A" ? area : "N/A",
+      value: showroomAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -197,9 +227,13 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Warehouse/Godown") {
+    const warehouseAreaVal = (details.minWarehouseArea && details.maxWarehouseArea)
+      ? `${details.minWarehouseArea} - ${details.maxWarehouseArea} sqft`
+      : (details.warehouseArea ? `${details.warehouseArea} sqft` : area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Warehouse Area",
-      value: details.warehouseArea ? `${details.warehouseArea} sqft` : area !== "N/A" ? area : "N/A",
+      value: warehouseAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -218,10 +252,14 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Car,
     });
   } else if (type === "Residential Plot" || type.toLowerCase().includes("plot")) {
+    const plotAreaVal = (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+      : (details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : area !== "N/A" ? area : "N/A");
     const dims = details.plotLength && details.plotWidth ? `${details.plotLength} × ${details.plotWidth} ft` : "N/A";
+
     specs.push({
       label: "Plot Area",
-      value: details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : area !== "N/A" ? area : "N/A",
+      value: plotAreaVal,
       icon: Map,
     });
     specs.push({

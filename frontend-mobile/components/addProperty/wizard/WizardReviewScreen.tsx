@@ -89,46 +89,82 @@ function getKeySpecs(type: PropertyType | null, step3: Record<string, any>): Spe
     case 'flat':
     case 'penthouse':
     case 'builder_floor':
-      if (step3.bhk !== undefined && step3.bhk !== null) specs.push({ label: 'BHK', value: `${step3.bhk} BHK`, icon: BedDouble });
-      if (step3.carpetArea) specs.push({ label: 'Carpet Area', value: `${step3.carpetArea} sq.ft`, icon: Maximize });
+      if (step3.minBhk !== undefined && step3.minBhk !== null && step3.maxBhk !== undefined && step3.maxBhk !== null) {
+        specs.push({ label: 'BHK', value: step3.minBhk === step3.maxBhk ? `${step3.minBhk} BHK` : `${step3.minBhk} - ${step3.maxBhk} BHK`, icon: BedDouble });
+      } else if (step3.bhk !== undefined && step3.bhk !== null) {
+        specs.push({ label: 'BHK', value: `${step3.bhk} BHK`, icon: BedDouble });
+      }
+      if (step3.minCarpetArea && step3.maxCarpetArea) {
+        specs.push({ label: 'Carpet Area', value: `${step3.minCarpetArea} - ${step3.maxCarpetArea} sq.ft`, icon: Maximize });
+      } else if (step3.carpetArea) {
+        specs.push({ label: 'Carpet Area', value: `${step3.carpetArea} sq.ft`, icon: Maximize });
+      }
       if (step3.floorNumber !== undefined && step3.floorNumber !== null)
         specs.push({ label: 'Floor', value: `${step3.floorNumber}${step3.totalFloors ? ` / ${step3.totalFloors}` : ''}`, icon: Building2 });
       if (step3.bathrooms !== undefined && step3.bathrooms !== null) specs.push({ label: 'Bathrooms', value: `${step3.bathrooms}`, icon: Bath });
       break;
     case 'villa':
-      if (step3.bhk !== undefined && step3.bhk !== null) specs.push({ label: 'BHK', value: `${step3.bhk} BHK`, icon: BedDouble });
-      if (step3.plotArea) specs.push({ label: 'Plot Area', value: `${step3.plotArea} sq.ft`, icon: Maximize });
+      if (step3.minBhk !== undefined && step3.minBhk !== null && step3.maxBhk !== undefined && step3.maxBhk !== null) {
+        specs.push({ label: 'BHK', value: step3.minBhk === step3.maxBhk ? `${step3.minBhk} BHK` : `${step3.minBhk} - ${step3.maxBhk} BHK`, icon: BedDouble });
+      } else if (step3.bhk !== undefined && step3.bhk !== null) {
+        specs.push({ label: 'BHK', value: `${step3.bhk} BHK`, icon: BedDouble });
+      }
+      if (step3.minPlotArea && step3.maxPlotArea) {
+        specs.push({ label: 'Plot Area', value: `${step3.minPlotArea} - ${step3.maxPlotArea} sq.ft`, icon: Maximize });
+      } else if (step3.plotArea) {
+        specs.push({ label: 'Plot Area', value: `${step3.plotArea} sq.ft`, icon: Maximize });
+      }
       if (step3.builtUpArea) specs.push({ label: 'Built-up', value: `${step3.builtUpArea} sq.ft`, icon: Layers });
       if (step3.bathrooms !== undefined && step3.bathrooms !== null) specs.push({ label: 'Bathrooms', value: `${step3.bathrooms}`, icon: Bath });
       break;
     case 'office':
-      if (step3.carpetArea) specs.push({ label: 'Carpet Area', value: `${step3.carpetArea} sq.ft`, icon: Maximize });
+      if (step3.minCarpetArea && step3.maxCarpetArea) {
+        specs.push({ label: 'Carpet Area', value: `${step3.minCarpetArea} - ${step3.maxCarpetArea} sq.ft`, icon: Maximize });
+      } else if (step3.carpetArea) {
+        specs.push({ label: 'Carpet Area', value: `${step3.carpetArea} sq.ft`, icon: Maximize });
+      }
       if (step3.floorNumber !== undefined && step3.floorNumber !== null)
         specs.push({ label: 'Floor', value: `${step3.floorNumber}`, icon: Building2 });
       if (step3.cabinCount) specs.push({ label: 'Cabins', value: `${step3.cabinCount}`, icon: Landmark });
       if (step3.washrooms) specs.push({ label: 'Washrooms', value: `${step3.washrooms}`, icon: Bath });
       break;
     case 'shop':
-      if (step3.carpetArea) specs.push({ label: 'Shop Area', value: `${step3.carpetArea} sq.ft`, icon: Maximize });
+      if (step3.minCarpetArea && step3.maxCarpetArea) {
+        specs.push({ label: 'Shop Area', value: `${step3.minCarpetArea} - ${step3.maxCarpetArea} sq.ft`, icon: Maximize });
+      } else if (step3.carpetArea) {
+        specs.push({ label: 'Shop Area', value: `${step3.carpetArea} sq.ft`, icon: Maximize });
+      }
       if (step3.shopFloor !== undefined && step3.shopFloor !== null)
         specs.push({ label: 'Floor', value: `${step3.shopFloor}`, icon: Building2 });
       if (step3.frontage) specs.push({ label: 'Frontage', value: `${step3.frontage} ft`, icon: Ruler });
       if (step3.ceilingHeight) specs.push({ label: 'Ceiling', value: `${step3.ceilingHeight} ft`, icon: Layers });
       break;
     case 'showroom':
-      if (step3.showroomArea) specs.push({ label: 'Area', value: `${step3.showroomArea} sq.ft`, icon: Maximize });
+      if (step3.minShowroomArea && step3.maxShowroomArea) {
+        specs.push({ label: 'Area', value: `${step3.minShowroomArea} - ${step3.maxShowroomArea} sq.ft`, icon: Maximize });
+      } else if (step3.showroomArea) {
+        specs.push({ label: 'Area', value: `${step3.showroomArea} sq.ft`, icon: Maximize });
+      }
       if (step3.numberOfFloors) specs.push({ label: 'Floors', value: `${step3.numberOfFloors}`, icon: Building2 });
       if (step3.frontage) specs.push({ label: 'Frontage', value: `${step3.frontage} ft`, icon: Ruler });
       specs.push({ label: 'Parking', value: step3.parkingAvailable ? 'Yes' : 'No', icon: Car });
       break;
     case 'warehouse':
-      if (step3.warehouseArea) specs.push({ label: 'Area', value: `${step3.warehouseArea} sq.ft`, icon: Maximize });
+      if (step3.minWarehouseArea && step3.maxWarehouseArea) {
+        specs.push({ label: 'Area', value: `${step3.minWarehouseArea} - ${step3.maxWarehouseArea} sq.ft`, icon: Maximize });
+      } else if (step3.warehouseArea) {
+        specs.push({ label: 'Area', value: `${step3.warehouseArea} sq.ft`, icon: Maximize });
+      }
       if (step3.warehouseHeight) specs.push({ label: 'Height', value: `${step3.warehouseHeight} ft`, icon: Layers });
       specs.push({ label: 'Truck Access', value: step3.truckAccess ? 'Yes' : 'No', icon: Car });
       if (step3.powerLoad) specs.push({ label: 'Power', value: `${step3.powerLoad} KVA`, icon: Landmark });
       break;
     case 'res_plot':
-      if (step3.plotAreaSqFt) specs.push({ label: 'Plot Area', value: `${step3.plotAreaSqFt} sq.ft`, icon: Maximize });
+      if (step3.minPlotAreaSqFt && step3.maxPlotAreaSqFt) {
+        specs.push({ label: 'Plot Area', value: `${step3.minPlotAreaSqFt} - ${step3.maxPlotAreaSqFt} sq.ft`, icon: Maximize });
+      } else if (step3.plotAreaSqFt) {
+        specs.push({ label: 'Plot Area', value: `${step3.plotAreaSqFt} sq.ft`, icon: Maximize });
+      }
       if (step3.plotLength && step3.plotWidth) specs.push({ label: 'Dimensions', value: `${step3.plotLength} × ${step3.plotWidth} ft`, icon: Ruler });
       if (step3.facing) specs.push({ label: 'Facing', value: step3.facing, icon: Compass });
       if (step3.roadWidth) specs.push({ label: 'Road Width', value: `${step3.roadWidth} ft`, icon: Navigation });

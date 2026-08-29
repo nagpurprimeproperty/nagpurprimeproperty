@@ -24,43 +24,102 @@ export function validateStep(stepIndex, form) {
       const isNew = lc === "New";
 
       if (["Flat/Apartment", "Builder Floor", "Penthouse"].includes(pt)) {
-        if (!form.bhk) errors.bhk = "BHK is required";
-        if (!form.bathrooms) errors.bathrooms = "Bathrooms is required";
-        if (!form.floorNumber && form.floorNumber !== 0) errors.floorNumber = "Floor Number is required";
-        if (!form.totalFloors) errors.totalFloors = "Total Floors is required";
-        if (!form.carpetArea) errors.carpetArea = "Carpet Area is required";
-        if (!form.furnishing) errors.furnishing = "Furnishing is required";
+        if (isNew) {
+          if (!form.minBhk && form.minBhk !== 0) errors.minBhk = "Min BHK is required";
+          if (!form.maxBhk && form.maxBhk !== 0) errors.maxBhk = "Max BHK is required";
+          if (form.minBhk && form.maxBhk && Number(form.minBhk) > Number(form.maxBhk)) {
+            errors.maxBhk = "Max BHK must be >= Min BHK";
+          }
+          if (!form.minCarpetArea) errors.minCarpetArea = "Min Carpet Area is required";
+          if (!form.maxCarpetArea) errors.maxCarpetArea = "Max Carpet Area is required";
+          if (form.minCarpetArea && form.maxCarpetArea && Number(form.minCarpetArea) > Number(form.maxCarpetArea)) {
+            errors.maxCarpetArea = "Max Carpet Area must be >= Min Carpet Area";
+          }
+        } else {
+          if (!form.bhk && form.bhk !== 0) errors.bhk = "BHK is required";
+          if (!form.bathrooms) errors.bathrooms = "Bathrooms is required";
+          if (!form.floorNumber && form.floorNumber !== 0) errors.floorNumber = "Floor Number is required";
+          if (!form.totalFloors) errors.totalFloors = "Total Floors is required";
+          if (!form.carpetArea) errors.carpetArea = "Carpet Area is required";
+          if (!form.furnishing) errors.furnishing = "Furnishing is required";
+        }
       }
       if (pt === "Villa/Independent House") {
-        if (!form.bhk) errors.bhk = "BHK is required";
-        if (!form.bathrooms) errors.bathrooms = "Bathrooms is required";
-        if (!form.numberOfFloors) errors.numberOfFloors = "Number of Floors is required";
-        if (!form.plotArea) errors.plotArea = "Plot Area is required";
-        if (!form.builtUpArea) errors.builtUpArea = "Built-up Area is required";
-        if (!form.furnishing) errors.furnishing = "Furnishing is required";
-        if (!form.parkingSlots && form.parkingSlots !== 0) errors.parkingSlots = "Parking Slots is required";
+        if (isNew) {
+          if (form.minBhk && form.maxBhk && Number(form.minBhk) > Number(form.maxBhk)) {
+            errors.maxBhk = "Max BHK must be >= Min BHK";
+          }
+        } else {
+          if (!form.bhk && form.bhk !== 0) errors.bhk = "BHK is required";
+          if (!form.bathrooms) errors.bathrooms = "Bathrooms is required";
+          if (!form.numberOfFloors) errors.numberOfFloors = "Number of Floors is required";
+          if (!form.plotArea) errors.plotArea = "Plot Area is required";
+          if (!form.builtUpArea) errors.builtUpArea = "Built-up Area is required";
+          if (!form.furnishing) errors.furnishing = "Furnishing is required";
+          if (!form.parkingSlots && form.parkingSlots !== 0) errors.parkingSlots = "Parking Slots is required";
+        }
       }
       if (pt === "Office Space") {
-        if (!form.carpetArea) errors.carpetArea = "Carpet Area is required";
-        if (!form.floorNumber && form.floorNumber !== 0) errors.floorNumber = "Floor Number is required";
-        if (!form.furnishing) errors.furnishing = "Furnishing is required";
-        if (!form.washrooms) errors.washrooms = "Washrooms is required";
+        if (isNew) {
+          if (!form.minCarpetArea) errors.minCarpetArea = "Min Carpet Area is required";
+          if (!form.maxCarpetArea) errors.maxCarpetArea = "Max Carpet Area is required";
+          if (form.minCarpetArea && form.maxCarpetArea && Number(form.minCarpetArea) > Number(form.maxCarpetArea)) {
+            errors.maxCarpetArea = "Max Carpet Area must be >= Min Carpet Area";
+          }
+        } else {
+          if (!form.carpetArea) errors.carpetArea = "Carpet Area is required";
+          if (!form.floorNumber && form.floorNumber !== 0) errors.floorNumber = "Floor Number is required";
+          if (!form.furnishing) errors.furnishing = "Furnishing is required";
+          if (!form.washrooms) errors.washrooms = "Washrooms is required";
+        }
       }
       if (pt === "Shop") {
-        if (!form.carpetArea) errors.carpetArea = "Carpet Area is required";
-        if (!form.shopFloor) errors.shopFloor = "Shop Floor is required";
+        if (isNew) {
+          if (!form.minCarpetArea) errors.minCarpetArea = "Min Carpet Area is required";
+          if (!form.maxCarpetArea) errors.maxCarpetArea = "Max Carpet Area is required";
+          if (form.minCarpetArea && form.maxCarpetArea && Number(form.minCarpetArea) > Number(form.maxCarpetArea)) {
+            errors.maxCarpetArea = "Max Carpet Area must be >= Min Carpet Area";
+          }
+        } else {
+          if (!form.carpetArea) errors.carpetArea = "Carpet Area is required";
+          if (!form.shopFloor) errors.shopFloor = "Shop Floor is required";
+        }
       }
       if (pt === "Showroom") {
-        if (!form.showroomArea) errors.showroomArea = "Showroom Area is required";
-        if (form.parkingAvailable !== true && form.parkingAvailable !== false) errors.parkingAvailable = "Parking Available is required";
+        if (isNew) {
+          if (!form.minShowroomArea) errors.minShowroomArea = "Min Showroom Area is required";
+          if (!form.maxShowroomArea) errors.maxShowroomArea = "Max Showroom Area is required";
+          if (form.minShowroomArea && form.maxShowroomArea && Number(form.minShowroomArea) > Number(form.maxShowroomArea)) {
+            errors.maxShowroomArea = "Max Showroom Area must be >= Min Showroom Area";
+          }
+        } else {
+          if (!form.showroomArea) errors.showroomArea = "Showroom Area is required";
+          if (form.parkingAvailable !== true && form.parkingAvailable !== false) errors.parkingAvailable = "Parking Available is required";
+        }
       }
       if (pt === "Warehouse/Godown") {
-        if (!form.warehouseArea) errors.warehouseArea = "Warehouse Area is required";
-        if (!form.warehouseHeight) errors.warehouseHeight = "Warehouse Height is required";
-        if (form.truckAccess !== true && form.truckAccess !== false) errors.truckAccess = "Truck Access is required";
+        if (isNew) {
+          if (!form.minWarehouseArea) errors.minWarehouseArea = "Min Warehouse Area is required";
+          if (!form.maxWarehouseArea) errors.maxWarehouseArea = "Max Warehouse Area is required";
+          if (form.minWarehouseArea && form.maxWarehouseArea && Number(form.minWarehouseArea) > Number(form.maxWarehouseArea)) {
+            errors.maxWarehouseArea = "Max Warehouse Area must be >= Min Warehouse Area";
+          }
+        } else {
+          if (!form.warehouseArea) errors.warehouseArea = "Warehouse Area is required";
+          if (!form.warehouseHeight) errors.warehouseHeight = "Warehouse Height is required";
+          if (form.truckAccess !== true && form.truckAccess !== false) errors.truckAccess = "Truck Access is required";
+        }
       }
       if (pt === "Residential Plot") {
-        if (!form.plotAreaSqFt) errors.plotAreaSqFt = "Plot Area is required";
+        if (isNew) {
+          if (!form.minPlotAreaSqFt) errors.minPlotAreaSqFt = "Min Plot Area is required";
+          if (!form.maxPlotAreaSqFt) errors.maxPlotAreaSqFt = "Max Plot Area is required";
+          if (form.minPlotAreaSqFt && form.maxPlotAreaSqFt && Number(form.minPlotAreaSqFt) > Number(form.maxPlotAreaSqFt)) {
+            errors.maxPlotAreaSqFt = "Max Plot Area must be >= Min Plot Area";
+          }
+        } else {
+          if (!form.plotAreaSqFt) errors.plotAreaSqFt = "Plot Area is required";
+        }
       }
       if (pt === "Agricultural Land") {
         if (!form.areaAcres) errors.areaAcres = "Area (Acres) is required";

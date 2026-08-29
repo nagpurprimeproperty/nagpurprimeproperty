@@ -38,17 +38,57 @@ function getPropertySpecs(p) {
   const type = p.propertyType || p.type || "";
 
   if (type === "Flat/Apartment" || type === "Penthouse" || type === "Builder Floor") {
-    const superArea = p.area && p.area !== "N/A" ? p.area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : p.sqft ? `${p.sqft} sqft` : "N/A");
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : p.bhk ? `${p.bhk} BHK` : "N/A";
+    const superArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+      : (details.minSqft && details.maxSqft)
+      ? `${details.minSqft} - ${details.maxSqft} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : details.superBuiltUpArea
+      ? `${details.superBuiltUpArea} sqft`
+      : details.builtUpArea
+      ? `${details.builtUpArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : p.bhk
+      ? `${p.bhk} BHK`
+      : "N/A";
     const furnishing = details.furnishing ?? "N/A";
     return [
-      { icon: Ruler, value: superArea, label: details.superBuiltUpArea ? "Super Area" : "Area" },
+      { icon: Ruler, value: superArea, label: details.minCarpetArea ? "Carpet Area" : details.superBuiltUpArea ? "Super Area" : "Area" },
       { icon: BedDouble, value: bedrooms, label: "Bedrooms" },
       { icon: Armchair, value: furnishing, label: "Furnishing" },
     ];
   } else if (type === "Villa/Independent House") {
-    const plotArea = details.plotArea ? `${details.plotArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : p.bhk ? `${p.bhk} BHK` : "N/A";
+    const plotArea = (details.minPlotArea && details.maxPlotArea)
+      ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+      : (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSqft && details.maxSqft)
+      ? `${details.minSqft} - ${details.maxSqft} sqft`
+      : details.plotArea
+      ? `${details.plotArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : p.bhk
+      ? `${p.bhk} BHK`
+      : "N/A";
     const furnishing = details.furnishing ?? "N/A";
     return [
       { icon: Ruler, value: plotArea, label: "Plot Area" },
@@ -56,7 +96,15 @@ function getPropertySpecs(p) {
       { icon: Armchair, value: furnishing, label: "Furnishing" },
     ];
   } else if (type === "Office Space") {
-    const carpetArea = details.carpetArea ? `${details.carpetArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const carpetArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const capacity = details.cabinCount !== undefined && details.cabinCount > 0 ? `${details.cabinCount} Cabins` : details.openDesks !== undefined ? `${details.openDesks} Seats` : "N/A";
     const power = details.dgBackup === true ? "DG Backup" : details.dgBackup === false ? "No Backup" : "N/A";
     return [
@@ -65,7 +113,15 @@ function getPropertySpecs(p) {
       { icon: Zap, value: power, label: "Power Backup" },
     ];
   } else if (type === "Shop") {
-    const shopArea = p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A";
+    const shopArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const floor = details.shopFloor ?? "N/A";
     const corner = details.cornerShop === true ? "Corner Shop" : "Regular";
     return [
@@ -74,7 +130,15 @@ function getPropertySpecs(p) {
       { icon: Compass, value: corner, label: "Position" },
     ];
   } else if (type === "Showroom") {
-    const showroomArea = details.showroomArea ? `${details.showroomArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const showroomArea = (details.minShowroomArea && details.maxShowroomArea)
+      ? `${details.minShowroomArea} - ${details.maxShowroomArea} sqft`
+      : details.showroomArea
+      ? `${details.showroomArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const floors = details.numberOfShowroomFloors ? `${details.numberOfShowroomFloors} Floors` : "N/A";
     const parking = details.parkingAvailable === true ? "Available" : "N/A";
     return [
@@ -83,7 +147,15 @@ function getPropertySpecs(p) {
       { icon: Car, value: parking, label: "Parking" },
     ];
   } else if (type === "Warehouse/Godown") {
-    const warehouseArea = details.warehouseArea ? `${details.warehouseArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const warehouseArea = (details.minWarehouseArea && details.maxWarehouseArea)
+      ? `${details.minWarehouseArea} - ${details.maxWarehouseArea} sqft`
+      : details.warehouseArea
+      ? `${details.warehouseArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const height = details.warehouseHeight ? `${details.warehouseHeight} ft` : "N/A";
     const midc = details.midc === true ? "MIDC Appr." : "Regular";
     return [
@@ -92,7 +164,15 @@ function getPropertySpecs(p) {
       { icon: ShieldCheck, value: midc, label: "Approval" },
     ];
   } else if (type === "Residential Plot" || type.toLowerCase().includes("plot")) {
-    const plotArea = details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const plotArea = (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+      : details.plotAreaSqFt
+      ? `${details.plotAreaSqFt} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const dims = details.plotLength && details.plotWidth ? `${details.plotLength}×${details.plotWidth} ft` : "N/A";
     const isGated = details.gatedLayout === true ? "Gated Layout" : "Open Layout";
     return [
