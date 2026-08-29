@@ -126,12 +126,30 @@ export const useUnlocked = create()(
   persist(
     (set, get) => ({
       propertyIds: [],
-      unlock: (propertyId) => {
+      contacts: {},
+      unlock: (propertyId, contact = null) => {
         if (!propertyId) return;
+        const pidStr = String(propertyId);
         const current = get().propertyIds || [];
+        const currentContacts = get().contacts || {};
         set({
-          propertyIds: Array.from(new Set([...current, String(propertyId)])),
+          propertyIds: Array.from(new Set([...current, pidStr])),
+          contacts: contact
+            ? { ...currentContacts, [pidStr]: { ...currentContacts[pidStr], ...contact } }
+            : currentContacts,
         });
+      },
+      saveContact: (propertyId, contact) => {
+        if (!propertyId || !contact) return;
+        const pidStr = String(propertyId);
+        const currentContacts = get().contacts || {};
+        set({
+          contacts: { ...currentContacts, [pidStr]: { ...currentContacts[pidStr], ...contact } },
+        });
+      },
+      getContact: (propertyId) => {
+        if (!propertyId) return null;
+        return (get().contacts || {})[String(propertyId)] || null;
       },
       isUnlocked: (propertyId) => {
         if (!propertyId) return false;

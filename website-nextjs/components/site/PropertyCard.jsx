@@ -215,15 +215,22 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
       { propertyId: pid, token },
       {
         onSuccess: (res) => {
-          if (pid) useUnlocked.getState().unlock(pid);
-          const rawMobile = res?.data?.brokerDetails?.mobile || p.broker?.mobile || p.broker?.phone || '';
+          const brokerDetails = res?.brokerDetails || res?.data?.brokerDetails;
+          const rawMobile = brokerDetails?.mobile || brokerDetails?.phone || p.broker?.mobile || p.broker?.phone || '';
+          if (pid) {
+            useUnlocked.getState().unlock(pid, {
+              phone: rawMobile,
+              whatsapp: rawMobile,
+              name: brokerDetails?.name || p.broker?.name,
+            });
+          }
           executeAction(rawMobile);
         },
         onError: (err) => {
           console.warn('Call enquiry mutation error:', err.message);
           const rawMobile = p.broker?.mobile || p.broker?.phone || '';
           if (rawMobile) {
-            if (pid) useUnlocked.getState().unlock(pid);
+            if (pid) useUnlocked.getState().unlock(pid, { phone: rawMobile });
             executeAction(rawMobile);
           } else {
             toast.error('Could not connect to broker. Please try again.');

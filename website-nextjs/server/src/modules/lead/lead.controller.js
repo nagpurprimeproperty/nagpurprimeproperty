@@ -37,17 +37,22 @@ export const createLead = async (req, res, next) => {
 
     const property = await propertyService.getProperty(propertyId, userId, userIp, session);
 
-    const existingLead = await leadService.getLeadByPropertyAndUser(propertyId, userId);
+    const brokerId = property.brokerId?._id || property.brokerId;
+    const brokerDetails = await userService.getUser(brokerId).catch(() => null);
+
     if (existingLead) {
       await session.abortTransaction();
-      return res.json({ success: true, message: 'Lead already exists for this property and user', data: existingLead });
+      return res.json({
+        success: true,
+        message: 'Lead already exists for this property and user',
+        data: { ...(existingLead._doc || existingLead), brokerDetails }
+      });
     }
 
-    const brokerId = property.brokerId?._id || property.brokerId;
     const lead = await leadService.createLead({ ...req.body, userId, propertyId, brokerId }, session);
 
     await session.commitTransaction();
-    res.json({ success: true, data: lead });
+    res.json({ success: true, data: { ...(lead._doc || lead), brokerDetails } });
   } catch (error) {
     if (session) await session.abortTransaction();
     next(error);

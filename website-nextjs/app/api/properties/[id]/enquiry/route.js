@@ -21,12 +21,17 @@ export async function POST(req, { params }) {
     const property = await propertyService.getProperty(id, userId, userIp);
     const existingLead = await leadService.getLeadByPropertyAndUser(id, userId);
 
+    const brokerId = property.brokerId?._id || property.brokerId;
+    const brokerDetails = await userService.getUser(brokerId).catch(() => null);
+
     if (existingLead) {
-      return NextResponse.json({ success: true, message: 'Lead already exists for this property and user', data: existingLead });
+      return NextResponse.json({
+        success: true,
+        message: 'Lead already exists for this property and user',
+        data: { ...(existingLead._doc || existingLead), brokerDetails }
+      });
     }
 
-    const brokerId = property.brokerId?._id || property.brokerId;
-    
     // Fetch full user details as fallback
     const fullUser = await userService.getUser(userId).catch(() => null);
 
@@ -48,7 +53,7 @@ export async function POST(req, { params }) {
 
     const lead = await leadService.createLead(leadPayload);
 
-    return NextResponse.json({ success: true, data: lead });
+    return NextResponse.json({ success: true, data: { ...(lead._doc || lead), brokerDetails } });
   } catch (err) {
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status: 500 });
   }

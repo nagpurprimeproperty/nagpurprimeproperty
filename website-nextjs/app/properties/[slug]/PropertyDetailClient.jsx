@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { useSubmitEnquiry, useSubmitCallEnquiry, useSubmitBrochureEnquiry } from '@/lib/hooks/useEnquiry'
 import { useSaveToggle } from '@/lib/hooks/useProperties'
+import { clientFetch } from '@/lib/fetcher'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getDetailsList } from '@/lib/property-details'
@@ -31,10 +32,36 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
   const saveToggleMutation = useSaveToggle()
   const submitEnquiry = useSubmitEnquiry()
   const submitCallEnquiry = useSubmitCallEnquiry()
+  const submitBrochureEnquiry = useSubmitBrochureEnquiry()
 
   useEffect(() => {
     pushViewed(pid);
   }, [pid, pushViewed]);
+
+  // Auto-hydrate broker contact details from backend if user is authenticated & already has a lead
+  useEffect(() => {
+    const { token } = getPersistedAuth();
+    if (!token || !pid) return;
+
+    clientFetch(`/api/properties/${pid}`, { auth: token })
+      .then((res) => {
+        const prop = res?.data || res;
+        const b = prop?.brokerId || prop?.broker;
+        const phone = b?.mobile || b?.phone || '';
+        if (phone) {
+          useUnlocked.getState().unlock(pid, {
+            phone,
+            whatsapp: phone,
+            name: b?.name,
+            agency: b?.agency || b?.city,
+            image: b?.avatar || b?.profileImage,
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Auto-fetch broker contact info error:', err.message);
+      });
+  }, [pid]);
 
   const handleSaveToggle = () => {
     // Read directly from localStorage — 100% reliable, no Zustand hydration involved
@@ -51,6 +78,9 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
     const { token, user } = getPersistedAuth();
     if (!token || !user) { useAuth.getState().openAuth(); return; }
 
+    const savedContact = useUnlocked.getState().getContact?.(pid);
+    const existingPhone = savedContact?.phone || broker?.phone || p.brokerId?.phone || p.brokerId?.mobile || '';
+
     const executeCall = (phoneNum) => {
       if (phoneNum) {
         const clean = phoneNum.replace(/\D/g, '');
@@ -61,21 +91,25 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       }
     };
 
-    const existingPhone = broker?.phone || p.brokerId?.phone || p.brokerId?.mobile || '';
-
     if (pid) {
       submitCallEnquiry.mutate(
         { propertyId: pid, token },
         {
           onSuccess: (res) => {
-            useUnlocked.getState().unlock(pid);
-            const serverPhone = res?.data?.brokerDetails?.mobile || existingPhone;
+            const brokerDetails = res?.brokerDetails || res?.data?.brokerDetails;
+            const serverPhone = brokerDetails?.mobile || brokerDetails?.phone || existingPhone;
+            useUnlocked.getState().unlock(pid, {
+              phone: serverPhone,
+              whatsapp: serverPhone,
+              name: brokerDetails?.name,
+              agency: brokerDetails?.agency || brokerDetails?.city,
+            });
             executeCall(serverPhone);
           },
           onError: (err) => {
             console.warn('Call enquiry error:', err.message);
             if (existingPhone) {
-              useUnlocked.getState().unlock(pid);
+              useUnlocked.getState().unlock(pid, { phone: existingPhone });
               executeCall(existingPhone);
             } else {
               toast.error('Could not connect to broker. Please try again.');
@@ -92,6 +126,9 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
     const { token, user } = getPersistedAuth();
     if (!token || !user) { useAuth.getState().openAuth(); return; }
 
+    const savedContact = useUnlocked.getState().getContact?.(pid);
+    const existingPhone = savedContact?.whatsapp || savedContact?.phone || broker?.whatsapp || broker?.phone || p.brokerId?.mobile || p.brokerId?.phone || '';
+
     const executeWhatsApp = (phoneNum) => {
       if (phoneNum) {
         const clean = phoneNum.replace(/\D/g, '');
@@ -103,21 +140,25 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       }
     };
 
-    const existingPhone = broker?.whatsapp || broker?.phone || p.brokerId?.mobile || p.brokerId?.phone || '';
-
     if (pid) {
       submitCallEnquiry.mutate(
         { propertyId: pid, token },
         {
           onSuccess: (res) => {
-            useUnlocked.getState().unlock(pid);
-            const serverPhone = res?.data?.brokerDetails?.mobile || existingPhone;
+            const brokerDetails = res?.brokerDetails || res?.data?.brokerDetails;
+            const serverPhone = brokerDetails?.mobile || brokerDetails?.phone || existingPhone;
+            useUnlocked.getState().unlock(pid, {
+              phone: serverPhone,
+              whatsapp: serverPhone,
+              name: brokerDetails?.name,
+              agency: brokerDetails?.agency || brokerDetails?.city,
+            });
             executeWhatsApp(serverPhone);
           },
           onError: (err) => {
             console.warn('WhatsApp enquiry error:', err.message);
             if (existingPhone) {
-              useUnlocked.getState().unlock(pid);
+              useUnlocked.getState().unlock(pid, { phone: existingPhone });
               executeWhatsApp(existingPhone);
             } else {
               toast.error('Could not connect to broker. Please try again.');
@@ -146,9 +187,8 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       propertyId: pid,
     };
 
-    // Optimistically update local store and unlock contact for this property
+    // Optimistically update local store
     useLeads.getState().add(leadDetails);
-    if (pid) useUnlocked.getState().unlock(pid);
 
     // Submit backend enquiry
     submitEnquiry.mutate(
@@ -158,8 +198,23 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
         token 
       },
       {
+        onSuccess: (res) => {
+          const brokerDetails = res?.brokerDetails || res?.data?.brokerDetails;
+          const phone = brokerDetails?.mobile || brokerDetails?.phone;
+          if (phone && pid) {
+            useUnlocked.getState().unlock(pid, {
+              phone,
+              whatsapp: phone,
+              name: brokerDetails?.name,
+              agency: brokerDetails?.agency || brokerDetails?.city,
+            });
+          } else if (pid) {
+            useUnlocked.getState().unlock(pid);
+          }
+        },
         onError: (err) => {
           console.warn('Schedule visit mutation error:', err.message);
+          if (pid) useUnlocked.getState().unlock(pid);
         },
       }
     );
@@ -168,8 +223,6 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       description: 'The broker will contact you shortly on your registered number.',
     });
   };
-
-  const submitBrochureEnquiry = useSubmitBrochureEnquiry();
 
   const handleDownloadBrochure = () => {
     const { token, user } = getPersistedAuth();
@@ -186,6 +239,17 @@ export default function PropertyDetailClient({ property: p, broker, similar }) {
       { propertyId: pid, token },
       {
         onSuccess: (res) => {
+          const brokerDetails = res?.brokerDetails || res?.data?.brokerDetails;
+          const serverPhone = brokerDetails?.mobile || brokerDetails?.phone;
+          if (serverPhone && pid) {
+            useUnlocked.getState().unlock(pid, {
+              phone: serverPhone,
+              whatsapp: serverPhone,
+              name: brokerDetails?.name,
+            });
+          } else if (pid) {
+            useUnlocked.getState().unlock(pid);
+          }
           toast.success('Brochure unlocked! Lead sent to broker.', { id: 'brochure-toast' });
           const targetUrl = res?.brochureUrl || brochureUrl;
           if (targetUrl) window.open(targetUrl, '_blank');
