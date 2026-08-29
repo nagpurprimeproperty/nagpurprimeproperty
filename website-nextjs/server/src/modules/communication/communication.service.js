@@ -208,6 +208,8 @@ const communicationService = {
       err.cause = error;
       throw err;
     }
+  },
+
   /**
    * Send push notification via Firebase or Expo Push.
    */

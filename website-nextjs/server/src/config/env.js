@@ -1,44 +1,50 @@
-import fs from 'fs';
-import path from 'path';
-
 // Search and populate process.env from root .env files if not already set by runtime
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
-const searchPaths = [
-  path.resolve(process.cwd(), envFile),
-  path.resolve(process.cwd(), '..', envFile),
-  path.resolve(process.cwd(), '.env.production'),
-  path.resolve(process.cwd(), '..', '.env.production'),
-  path.resolve(process.cwd(), '.env'),
-  path.resolve(process.cwd(), '..', '.env'),
-  path.resolve(process.cwd(), 'server', '.env.production'),
-];
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' || process.env.NEXT_PHASE === 'phase-export';
 
-for (const p of searchPaths) {
-  if (fs.existsSync(p)) {
-    try {
-      const content = fs.readFileSync(p, 'utf8');
-      const lines = content.split('\n');
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
-        const eqIdx = trimmed.indexOf('=');
-        if (eqIdx === -1) continue;
-        const key = trimmed.slice(0, eqIdx).trim();
-        let val = trimmed.slice(eqIdx + 1).trim();
-        if (val.startsWith('"') && val.endsWith('"')) {
-          val = val.slice(1, -1);
-        } else if (val.startsWith("'") && val.endsWith("'")) {
-          val = val.slice(1, -1);
-        }
-        if (process.env[key] === undefined || process.env[key] === '') {
-          process.env[key] = val;
+if (!isBuildPhase) {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+    const searchPaths = [
+      path.resolve(process.cwd(), envFile),
+      path.resolve(process.cwd(), '..', envFile),
+      path.resolve(process.cwd(), '.env.production'),
+      path.resolve(process.cwd(), '..', '.env.production'),
+      path.resolve(process.cwd(), '.env'),
+      path.resolve(process.cwd(), '..', '.env'),
+    ];
+
+    for (const p of searchPaths) {
+      if (fs.existsSync(p)) {
+        try {
+          const content = fs.readFileSync(p, 'utf8');
+          const lines = content.split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#')) continue;
+            const eqIdx = trimmed.indexOf('=');
+            if (eqIdx === -1) continue;
+            const key = trimmed.slice(0, eqIdx).trim();
+            let val = trimmed.slice(eqIdx + 1).trim();
+            if (val.startsWith('"') && val.endsWith('"')) {
+              val = val.slice(1, -1);
+            } else if (val.startsWith("'") && val.endsWith("'")) {
+              val = val.slice(1, -1);
+            }
+            if (process.env[key] === undefined || process.env[key] === '') {
+              process.env[key] = val;
+            }
+          }
+          console.log(`[Config] Loaded environment variables from: ${p}`);
+          break;
+        } catch (e) {
+          console.warn(`[Config] Could not read env file ${p}:`, e.message);
         }
       }
-      console.log(`[Config] Loaded environment variables from: ${p}`);
-      break;
-    } catch (e) {
-      console.warn(`[Config] Could not read env file ${p}:`, e.message);
     }
+  } catch (err) {
+    // Non-fatal if dynamic import or fs is unavailable
   }
 }
 
