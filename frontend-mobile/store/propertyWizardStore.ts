@@ -414,7 +414,27 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
     ];
     for (const f of numFields) {
       if (f in details) {
-        details[f] = parseNum(details[f]);
+        const parsed = parseNum(details[f]);
+        if (parsed === undefined) {
+          delete details[f];
+        } else {
+          details[f] = parsed;
+        }
+      }
+    }
+
+    // Strip fields that belong exclusively to the other category branch for res_plot.
+    // Without this, stale step3 data from a previous session (or category switch)
+    // leaks into the payload and the backend receives e.g. plotAreaSqFt=undefined
+    // for a new-project listing, which it serialises as NaN.
+    if (s.step1.propertyType === 'res_plot') {
+      if (s.step1.listingCategory === 'new') {
+        // new-project res_plot only uses minPlotAreaSqFt / maxPlotAreaSqFt
+        delete details.plotAreaSqFt;
+      } else {
+        // resale/rental res_plot only uses plotAreaSqFt
+        delete details.minPlotAreaSqFt;
+        delete details.maxPlotAreaSqFt;
       }
     }
 
@@ -522,7 +542,12 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
     ];
     for (const f of pricingNumFields) {
       if (f in pricing) {
-        pricing[f] = parseNum(pricing[f]);
+        const parsed = parseNum(pricing[f]);
+        if (parsed === undefined) {
+          delete pricing[f];
+        } else {
+          pricing[f] = parsed;
+        }
       }
     }
 
