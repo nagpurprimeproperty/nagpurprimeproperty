@@ -166,7 +166,7 @@ const NA_ORDER_STATUS_OPTIONS_MESSAGE = `NA order status must be one of: ${NA_OR
 const WATER_SOURCE_OPTIONS = ['Well', 'Borewell', 'Canal', 'River', 'None'];
 const WATER_SOURCE_OPTIONS_MESSAGE = `Water source must be one of: ${WATER_SOURCE_OPTIONS.join(', ')}`;
 
-const APPROVED_BY_OPTIONS = ['NIT', 'NMC', 'NMRD-RL', 'MHADA', 'Private Layout'];
+const APPROVED_BY_OPTIONS = ['NIT', 'NMC', 'NMRDA-RL', 'MHADA', 'Private Layout'];
 const APPROVED_BY_OPTIONS_MESSAGE = `Approved by must be one of: ${APPROVED_BY_OPTIONS.join(', ')}`;
 
 const ZONE_TYPES = ['Residential', 'Mixed Use', 'Commercial', 'Industrial'];

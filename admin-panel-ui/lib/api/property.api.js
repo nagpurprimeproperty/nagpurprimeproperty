@@ -49,7 +49,7 @@ export const IRRIGATION_TYPES = ["Drip", "Sprinkler", "Canal", "Flood", "None"];
 export const SOIL_TYPES = ["Black", "Red", "Alluvial", "Mixed"];
 export const NA_ORDER_STATUS_OPTIONS = ["NA Order Received", "Applied", "Not Applied"];
 export const WATER_SOURCE_OPTIONS = ["Well", "Borewell", "Canal", "River", "None"];
-export const APPROVED_BY_OPTIONS = ["NIT", "NMC", "NMRD-RL", "MHADA", "Private Layout"];
+export const APPROVED_BY_OPTIONS = ["NIT", "NMC", "NMRDA-RL", "MHADA", "Private Layout"];
 export const ZONE_TYPES = ["Residential", "Mixed Use", "Commercial", "Industrial"];
 export const CONSTRUCTION_STATUS_OPTIONS = [
     "Pre-launch", "Under Construction", "Ready to Move", "Ready", "Partially Ready", "Under Development",
