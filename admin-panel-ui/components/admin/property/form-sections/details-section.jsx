@@ -145,9 +145,6 @@ function NewProjectCoreFields({ form, set, errors, disabled, hideUnits = false }
           </Field>
         </>
       )}
-      <Field label="Approved Banks">
-        <Input value={form.approvedBanks} onChange={(e) => set("approvedBanks", e.target.value)} placeholder="HDFC, SBI, ICICI" maxLength={200} disabled={disabled} />
-      </Field>
       <Sel label="CC/OC Status" value={form.ccOcReceived} onChange={(v) => set("ccOcReceived", v)} options={CC_OC_OPTIONS} disabled={disabled} />
     </>
   );
@@ -740,6 +737,20 @@ export function DetailsSection({ form, set, errors = {}, disabled }) {
               </div>
             )}
           </div>
+          {lc !== "Rental" && form.isBankFinanceAvailable && (
+            <div className="mt-4">
+              <Field label="Approved / Available Banks">
+                <Input
+                  value={form.approvedBanks}
+                  onChange={(e) => set("approvedBanks", e.target.value)}
+                  placeholder="e.g. HDFC, SBI, ICICI, Axis Bank"
+                  maxLength={200}
+                  disabled={disabled}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Enter the names of banks that have approved or are available for financing this property (comma-separated).</p>
+              </Field>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

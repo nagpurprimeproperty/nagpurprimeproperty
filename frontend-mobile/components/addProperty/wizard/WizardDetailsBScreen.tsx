@@ -764,7 +764,6 @@ export default function WizardDetailsBScreen() {
             ) : type === 'warehouse' ? (
               <>
                 {renderTextInput('towerWing', 'Tower / Wing', 'e.g. Tower A')}
-                {renderTextInput('approvedBanks', 'Approved Banks', 'e.g. HDFC, SBI, ICICI')}
                 {renderCardSelector('ccOcReceived', 'CC/OC Status', ['CC Received', 'OC Received', 'Both', 'None', 'Applied'])}
                 {step1.listingCategory === 'new' && renderMultiSelect('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRD-RL', 'MHADA', 'Private Layout'])}
               </>
@@ -773,7 +772,6 @@ export default function WizardDetailsBScreen() {
                 {renderTextInput('totalUnitsInProject', 'Total Units in Project', 'e.g. 120', 'numeric')}
                 {renderTextInput('unitsAvailable', 'Units Available', 'e.g. 45', 'numeric')}
                 {renderTextInput('towerWing', 'Tower / Wing', 'e.g. Tower A')}
-                {renderTextInput('approvedBanks', 'Approved Banks', 'e.g. HDFC, SBI, ICICI')}
                 {renderCardSelector('ccOcReceived', 'CC/OC Status', ['CC Received', 'OC Received', 'Both', 'None', 'Applied'])}
               </>
             )}
@@ -838,6 +836,31 @@ export default function WizardDetailsBScreen() {
             {step1.listingCategory !== 'rental' && (
               <View className="mb-4">
                 {renderToggleRow('isBankFinanceAvailable', 'Bank Finance Available', 'Check if bank loans are available for this property')}
+                {step3.isBankFinanceAvailable === true && (
+                  <View className="mb-6 mt-1">
+                    <Text className="text-slate-500 text-[12px] font-black uppercase tracking-wider mb-3 text-[#6B6B6B]">
+                      Approved / Available Banks{' '}
+                      <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>(Optional)</Text>
+                    </Text>
+                    <TextInput
+                      placeholder="e.g. HDFC, SBI, ICICI, Axis Bank"
+                      value={step3.approvedBanks || ''}
+                      onChangeText={(val: string) => handleSelectValue('approvedBanks', val)}
+                      placeholderTextColor={colors.textPlaceholder}
+                      style={{
+                        height: 54,
+                        backgroundColor: '#FFFFFF',
+                        borderColor: '#EBE4DB',
+                        borderWidth: 1,
+                        borderRadius: 16,
+                      }}
+                      className="px-5 text-slate-800 text-sm font-semibold"
+                    />
+                    <Text className="text-slate-400 text-[11px] mt-1.5 ml-1">
+                      Enter bank names separated by commas
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
           </View>
