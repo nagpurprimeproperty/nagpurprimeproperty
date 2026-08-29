@@ -40,7 +40,10 @@ const leadService = {
       console.log(`[Lead Processing] 📥 New lead triggered for broker ${brokerId} | Property: "${propTitle}" | Buyer: "${customerName}" (${phone})`);
 
       const broker = await userService.getUser(brokerId).catch(() => null);
-      const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId);
+      const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId).catch((err) => {
+        console.error('[Lead Processing] ⚠️ Subscription fetch error:', err.message);
+        return null;
+      });
 
       const isUnlimited = !!(subscription?.limits?.isLeadAccessUnlimited ?? subscription?.planId?.limits?.isLeadAccessUnlimited);
       const leadAccessCount = Number(subscription?.limits?.leadAccessCount ?? subscription?.planId?.limits?.leadAccessCount ?? 0);
@@ -53,7 +56,7 @@ const leadService = {
       const maskPhone = (p) => (p && p.length >= 4 ? `***${p.slice(-4)}` : '***');
 
       // Deduct quota and send WhatsApp notification if quota available
-      if (hasQuotaLeft) {
+      if (hasQuotaLeft && subscription?._id) {
         leadPayload.isOpened = true;
 
         // Deduct 1 lead quota from broker subscription
@@ -125,9 +128,13 @@ const leadService = {
       // Resolve FCM Token (check broker object or fallback direct DB query)
       let brokerFcmToken = broker?.fcmToken;
       if (!brokerFcmToken) {
-        const User = (await import('../user/user.model.js')).default;
-        const u = await User.findById(brokerId).select('fcmToken').lean();
-        brokerFcmToken = u?.fcmToken;
+        try {
+          const User = (await import('../user/user.model.js')).default;
+          const u = await User.findById(brokerId).select('fcmToken').lean();
+          brokerFcmToken = u?.fcmToken;
+        } catch (tokErr) {
+          console.warn('[Lead Processing] ⚠️ Could not fetch fallback user token:', tokErr.message);
+        }
       }
 
       if (brokerFcmToken) {

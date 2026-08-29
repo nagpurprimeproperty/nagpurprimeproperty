@@ -1,4 +1,5 @@
 import PurchasedSubscription from './purchaseSubscription.model.js';
+import Plan from './subscription.model.js';
 import Transaction from './transaction.model.js';
 import mongoose from 'mongoose';
 

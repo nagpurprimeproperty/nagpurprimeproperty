@@ -766,7 +766,7 @@ export default function WizardDetailsBScreen() {
                 {renderTextInput('towerWing', 'Tower / Wing', 'e.g. Tower A')}
                 {renderTextInput('approvedBanks', 'Approved Banks', 'e.g. HDFC, SBI, ICICI')}
                 {renderCardSelector('ccOcReceived', 'CC/OC Status', ['CC Received', 'OC Received', 'Both', 'None', 'Applied'])}
-                {step1.listingCategory === 'new' && renderMultiSelect('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRD-RL', 'MHADA', 'Private Layout'])}
+                {step1.listingCategory === 'new' && renderMultiSelect('approvedBy', 'Approved By Layout Authorities', ['NIT', 'NMC', 'NMRDA-RL', 'MHADA', 'Private Layout'])}
               </>
             ) : (
               <>
