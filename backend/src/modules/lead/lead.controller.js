@@ -36,12 +36,20 @@ export const createLead = async (req, res, next) => {
     const userIp = req?.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
 
     const property = await propertyService.getProperty(propertyId, userId, userIp, session);
+    if (!property) {
+      if (session) await session.abortTransaction();
+      return res.status(404).json({ success: false, message: 'Property not found' });
+    }
 
+    const realPropertyId = property._id;
     const brokerId = property.brokerId?._id || property.brokerId;
     const brokerDetails = await userService.getUser(brokerId).catch(() => null);
 
+    const existingLead = await leadService.getLeadByPropertyAndUser(realPropertyId, userId);
+
     if (existingLead) {
       await session.abortTransaction();
+      console.log(`[Backend Lead] ℹ️ Lead already exists for user ${userId} and property ${realPropertyId}`);
       return res.json({
         success: true,
         message: 'Lead already exists for this property and user',
@@ -49,12 +57,14 @@ export const createLead = async (req, res, next) => {
       });
     }
 
-    const lead = await leadService.createLead({ ...req.body, userId, propertyId, brokerId }, session);
+    console.log(`[Backend Lead] 🚀 Creating enquiry for property "${property.title}" (${realPropertyId}), Broker: ${brokerId}, User: ${userId}`);
+    const lead = await leadService.createLead({ ...req.body, userId, propertyId: realPropertyId, brokerId }, session);
 
     await session.commitTransaction();
     res.json({ success: true, data: { ...(lead._doc || lead), brokerDetails } });
   } catch (error) {
     if (session) await session.abortTransaction();
+    console.error('[Backend Lead] ❌ Error in createLead controller:', error.message);
     next(error);
   } finally {
     if (session) session.endSession();

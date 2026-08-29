@@ -208,6 +208,138 @@ const communicationService = {
       err.cause = error;
       throw err;
     }
+  /**
+   * Send push notification via Firebase or Expo Push.
+   */
+  sendPush: async ({ fcmToken, title, body, data = {}, metadata = {} }) => {
+    if (!fcmToken) {
+      console.warn('[Push Service] ⚠️ Push skipped — no fcmToken provided');
+      return { success: false, message: 'No token' };
+    }
+
+    console.log(`[Push Service] 🚀 Initiating push notification: "${title}" -> ${fcmToken.slice(0, 30)}...`);
+
+    const log = await CommunicationLog.create({
+      type: 'push',
+      recipient: fcmToken,
+      subject: title,
+      body,
+      status: 'pending',
+      metadata: { ...metadata, data },
+    });
+
+    try {
+      const isExpoToken =
+        typeof fcmToken === 'string' &&
+        (fcmToken.startsWith('ExponentPushToken[') || fcmToken.startsWith('ExpoPushToken['));
+
+      if (isExpoToken) {
+        console.log(`[Push Service] 📤 Sending via Expo Push API...`);
+        const res = await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            {
+              to: fcmToken,
+              sound: 'default',
+              title,
+              body,
+              data: Object.keys(data).reduce((acc, key) => {
+                acc[key] = String(data[key]);
+                return acc;
+              }, {}),
+              priority: 'high',
+              _displayInForeground: true,
+            },
+          ]),
+        });
+        const respData = await res.json();
+        console.log(`[Push Service] 📬 Expo API Response:`, JSON.stringify(respData));
+        log.status = 'sent';
+        log.sentAt = new Date();
+        log.metadata = { ...log.metadata, apiResponse: respData };
+        await log.save();
+        return { success: true, logId: log._id };
+      }
+
+      console.log(`[Push Service] 📤 Sending via Firebase Admin SDK (FCM)...`);
+      const { getMessaging } = await import('../../config/firebase.js');
+      const messaging = getMessaging();
+      const response = await messaging.send({
+        token: fcmToken,
+        notification: { title, body },
+        data: Object.keys(data).reduce((acc, key) => {
+          acc[key] = String(data[key]);
+          return acc;
+        }, {}),
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'default',
+            sound: 'default'
+          }
+        },
+        apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
+      });
+      console.log(`[Push Service] ✅ FCM push delivered successfully. Msg ID: ${response}`);
+      log.status = 'sent';
+      log.sentAt = new Date();
+      log.metadata = { ...log.metadata, messageId: response };
+      await log.save();
+      return { success: true, logId: log._id, messageId: response };
+    } catch (error) {
+      console.error('[Push Service] ❌ Push notification failed:', error.message);
+      log.status = 'failed';
+      log.failedAt = new Date();
+      log.errorMessage = error?.message ? String(error.message).slice(0, 500) : 'Push notification service failure';
+      await log.save();
+      const err = new Error('Failed to send push notification');
+      err.status = 500;
+      err.cause = error;
+      throw err;
+    }
+  },
+
+  /**
+   * List communication logs with pagination.
+   */
+  listLogs: async ({ type, status, page = 1, limit = 20 } = {}) => {
+    const filter = {};
+    if (type) filter.type = type;
+    if (status) filter.status = status;
+
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const safePage = Math.max(Number(page) || 1, 1);
+    const skip = (safePage - 1) * safeLimit;
+
+    const [data, total] = await Promise.all([
+      CommunicationLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean(),
+      CommunicationLog.countDocuments(filter),
+    ]);
+
+    return { data, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) || 1 };
+  },
+
+  /**
+   * Get a single log by ID.
+   */
+  getLogById: async (id) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      const err = new Error('Invalid log id');
+      err.status = 400;
+      throw err;
+    }
+    const log = await CommunicationLog.findById(id).lean();
+    if (!log) {
+      const err = new Error('Log not found');
+      err.status = 404;
+      throw err;
+    }
+    return log;
   },
 };
 

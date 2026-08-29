@@ -23,7 +23,7 @@ const userRepository = {
   /**
    * Find user by ID
    */
-  findById: (id) => User.findOne({ _id: id, isActive: true ,isDeleted: false}).select('-fcmToken -__v'),
+  findById: (id) => User.findOne({ _id: id, isActive: true ,isDeleted: false}).select('-__v'),
 
   /**
    * Find all users with server-side filtering and pagination
@@ -39,7 +39,7 @@ const userRepository = {
    * Update a user by ID
    */
   updateById: (id, update) =>
-    User.findOneAndUpdate({ _id: id, isActive: true, isDeleted: false }, { $set: update }, { new: true, runValidators: true }).select('-fcmToken -__v'),
+    User.findOneAndUpdate({ _id: id, isActive: true, isDeleted: false }, { $set: update }, { new: true, runValidators: true }).select('-__v'),
 
   /**
    * Check if user exists by filter
