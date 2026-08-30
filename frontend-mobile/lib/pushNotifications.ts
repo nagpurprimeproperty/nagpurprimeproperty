@@ -206,21 +206,51 @@ export const getPlatformPushTokens = async (): Promise<{
       });
     }
 
-    // ── Step 3: Get NATIVE device token (no EAS project ID needed) ──────────
-    // getDevicePushTokenAsync returns the raw platform token:
-    //   Android → { type: 'android', data: '<FCM_TOKEN>'  }
-    //   iOS     → { type: 'ios',     data: '<APNS_TOKEN>' }
-    const tokenData = await Notifications.getDevicePushTokenAsync();
-
-    if (__DEV__) {
-      console.log('[PushNotifications] Device token type:', tokenData.type);
-      console.log('[PushNotifications] Device token data:', tokenData.data);
-    }
-
+    // ── Step 3: Get token based on platform ─────────────────────────────────
     if (Platform.OS === 'android') {
+      // Android: getDevicePushTokenAsync returns raw FCM registration token
+      const tokenData = await Notifications.getDevicePushTokenAsync();
+      if (__DEV__) {
+        console.log('[PushNotifications] Device token type:', tokenData.type);
+        console.log('[PushNotifications] Device token data:', tokenData.data);
+      }
       return { fcmToken: tokenData.data ?? null, appleToken: null };
     } else {
-      return { fcmToken: null, appleToken: tokenData.data ?? null };
+      // iOS: getDevicePushTokenAsync returns raw APNs token.
+      // Backend uses Expo Push API to deliver to iOS (APNs), which requires an ExponentPushToken.
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        (Constants as any).easConfig?.projectId ??
+        '24483faf-3d08-49c3-a8f5-0a96eac1b0cb';
+
+      let expoToken: string | null = null;
+      try {
+        const expoTokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+        expoToken = expoTokenData?.data ?? null;
+        if (__DEV__) {
+          console.log('[PushNotifications] iOS Expo Push Token:', expoToken);
+        }
+      } catch (expoErr: any) {
+        if (__DEV__) {
+          console.warn('[PushNotifications] Failed to get iOS Expo Push Token:', expoErr?.message ?? expoErr);
+        }
+      }
+
+      let apnsToken: string | null = null;
+      try {
+        const rawTokenData = await Notifications.getDevicePushTokenAsync();
+        apnsToken = rawTokenData?.data ?? null;
+        if (__DEV__) {
+          console.log('[PushNotifications] iOS APNs Device token:', apnsToken);
+        }
+      } catch (_) {}
+
+      // Prefer Expo Push Token so backend can deliver via Expo's APNs gateway
+      const pushToken = expoToken || apnsToken || null;
+      return {
+        fcmToken: pushToken,
+        appleToken: apnsToken ?? expoToken ?? null,
+      };
     }
   } catch (err: any) {
     if (__DEV__) {

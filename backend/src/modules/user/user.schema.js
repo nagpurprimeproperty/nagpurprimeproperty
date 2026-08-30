@@ -49,6 +49,9 @@ const userBaseSchema = z.object({
     .max(MAX_ADDRESS_LENGTH, MAX_ADDRESS_LENGTH_MESSAGE)
     .trim()
     .optional(),
+  fcmToken: z.string().nullable().optional(),
+  appleToken: z.string().nullable().optional(),
+  pushToken: z.string().nullable().optional(),
   avatar: z.string().optional(),
 });
 
@@ -72,6 +75,8 @@ export const verifyOTPSchema = z.object({
     .regex(MOBILE_REGEX, MOBILE_REGEX_MESSAGE),
   otp: z.string({ required_error: 'OTP is required' }).length(4, 'OTP must be 4 digits'),
   fcmToken: z.string().nullable().optional(),
+  appleToken: z.string().nullable().optional(),
+  pushToken: z.string().nullable().optional(),
 });
 
 export const resendOTPSchema = z.object({
