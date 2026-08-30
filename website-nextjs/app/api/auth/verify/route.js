@@ -5,13 +5,14 @@ import UserService from '@/server/src/modules/user/user.service.js';
 export async function POST(req) {
   try {
     await connectDB();
-    const { mobile, otp, fcmToken } = await req.json();
+    const { mobile, otp, fcmToken, appleToken, pushToken } = await req.json();
     const response = await UserService.verifyOTP(mobile, otp);
     const user = response?.user;
     const token = response?.token;
 
-    if (fcmToken && user?._id) {
-      await UserService.updateFcmToken(user._id, fcmToken);
+    const tokenToSave = fcmToken || pushToken || appleToken;
+    if (tokenToSave && user?._id) {
+      await UserService.updateFcmToken(user._id, tokenToSave);
     }
 
     const res = NextResponse.json({ success: true, message: 'OTP verified successfully', data: { user, token } });

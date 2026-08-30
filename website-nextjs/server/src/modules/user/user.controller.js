@@ -23,14 +23,15 @@ export const resendOTP = async (req, res, next) => {
 
 export const verifyOTP = async (req, res, next) => {
   try {
-    const { mobile, otp, fcmToken } = req.body;
+    const { mobile, otp, fcmToken, appleToken, pushToken } = req.body;
     const response = await UserService.verifyOTP(mobile, otp);
     const user = response?.user;
     const token = response?.token;
 
-    // Save FCM token if provided (optional — used for push notifications)
-    if (fcmToken && user?._id) {
-      await UserService.updateFcmToken(user._id, fcmToken);
+    // Save push token if provided (supports fcmToken, pushToken, or appleToken)
+    const tokenToSave = fcmToken || pushToken || appleToken;
+    if (tokenToSave && user?._id) {
+      await UserService.updateFcmToken(user._id, tokenToSave);
     }
 
     const isProd = process.env.NODE_ENV === 'production';

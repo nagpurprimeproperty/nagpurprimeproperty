@@ -1,5 +1,6 @@
 import Lead from '../lead/leads.model.js';
 import mongoose from 'mongoose';
+import { formatEnquiredDateIST } from '../../utils/timezone.js';
 
 const formatPriceLabel = (value, isMonthly = false) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return value;
@@ -21,27 +22,7 @@ const formatPriceLabel = (value, isMonthly = false) => {
   return isMonthly ? `${label}/month` : label;
 };
 
-const formatEnquiredDate = (value) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = months[date.getMonth()];
-  const year = date.getFullYear();
-  const hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  const isToday = date.toDateString() === new Date().toDateString();
-
-  const formattedDate = `${day} ${month} ${year}`;
-  const relativeLabel = isToday ? 'TODAY' : date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-  const formattedTime = `${hour12}:${minutes} ${period}`;
-
-  return `${formattedDate} , ${relativeLabel} , ${formattedTime}`;
-};
+const formatEnquiredDate = formatEnquiredDateIST;
 const leadRepository = {
   /**
    * Find lead by ID
