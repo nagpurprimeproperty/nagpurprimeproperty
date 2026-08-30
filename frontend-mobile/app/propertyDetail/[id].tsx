@@ -1455,9 +1455,30 @@ export default function PropertyDetailsScreen() {
 
           <View className="flex-row items-start justify-between mb-6">
             <View>
-              <Text className="text-[32px] font-black text-orange-500 tracking-tight">
-                ₹{property.price}
+              <Text className="text-[32px] font-black text-orange-500 tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
+                {(() => {
+                  const isNew = String((property as any).listingCategory ?? "").toLowerCase() === "new";
+                  // For new projects always show startingPrice (or totalPrice) in the header
+                  if (isNew) {
+                    const sp = pricing.startingPrice;
+                    if (sp !== undefined && sp !== null) {
+                      return `₹${Number(sp).toLocaleString("en-IN")}`;
+                    }
+                  }
+                  const p = property.price?.toString() ?? "N/A";
+                  if (p === "N/A") return "Price on Request";
+                  if (p.includes("–")) {
+                    const [lo, hi] = p.split("–").map((s) => s.trim());
+                    return `₹${lo} – ₹${hi}`;
+                  }
+                  return `₹${p}`;
+                })()}
               </Text>
+              {/* "onwards" for new project listings */}
+              {String((property as any).listingCategory ?? "").toLowerCase() === "new" &&
+                property.price?.toString() !== "N/A" && (
+                <Text className="text-[13px] font-semibold text-orange-400 mt-0.5">onwards</Text>
+              )}
               {Boolean(property.pricePerSqft) && (
                 <Text className="text-[13px] font-medium text-slate-400 mt-0.5">
                   ~ ₹{property.pricePerSqft}/sqft
@@ -1611,10 +1632,56 @@ export default function PropertyDetailsScreen() {
                   </>
                 ) : (
                   <>
-                    <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
-                      <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Price</Text>
-                      <Text className="text-sm font-black text-slate-900">₹{pricing.totalPrice ?? pricing.startingPrice ?? "N/A"}</Text>
-                    </View>
+                    {/* Price rows — range + starting price for new projects, total price for resale */}
+                    {(() => {
+                      const isNew = String((property as any).listingCategory ?? "").toLowerCase() === "new";
+
+                      // Format a raw "min-max" priceRange string into "₹X – ₹Y"
+                      const formatRange = (raw: string) => {
+                        const parts = raw.split("-");
+                        if (parts.length === 2) {
+                          const min = Number(parts[0]);
+                          const max = Number(parts[1]);
+                          if (!isNaN(min) && !isNaN(max)) {
+                            return `₹${min.toLocaleString("en-IN")} – ₹${max.toLocaleString("en-IN")}`;
+                          }
+                        }
+                        return `₹${raw}`;
+                      };
+
+                      if (isNew && pricing.priceRange) {
+                        return (
+                          <>
+                            <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
+                              <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Price Range</Text>
+                              <Text className="text-sm font-black text-slate-900">{formatRange(pricing.priceRange)}</Text>
+                            </View>
+                            {pricing.startingPrice !== undefined && pricing.startingPrice !== null && (
+                              <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
+                                <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Starting Price</Text>
+                                <Text className="text-sm font-black text-orange-500">
+                                  ₹{Number(pricing.startingPrice).toLocaleString("en-IN")} onwards
+                                </Text>
+                              </View>
+                            )}
+                          </>
+                        );
+                      }
+
+                      // Resale / rental
+                      return (
+                        <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
+                          <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Price</Text>
+                          <Text className="text-sm font-black text-slate-900">
+                            {pricing.totalPrice
+                              ? `₹${pricing.totalPrice}`
+                              : pricing.startingPrice
+                                ? `₹${Number(pricing.startingPrice).toLocaleString("en-IN")}`
+                                : "N/A"}
+                          </Text>
+                        </View>
+                      );
+                    })()}
                     {pricing.pricePerSqft !== undefined && (
                       <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
                         <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Price per SqFt</Text>

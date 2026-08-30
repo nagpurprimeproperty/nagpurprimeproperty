@@ -291,7 +291,40 @@ export const normalizePropertyDetail = (item: PropertyApiDetail) => {
     image,
     title: item.title ?? "Untitled Property",
     address: normalizedLocation,
-    price: item.totalPrice ?? "N/A",
+    price: (() => {
+      const pricingObj = (item.pricing as Record<string, unknown>) ?? {};
+      const pr = pricingObj.priceRange;
+      const isNewListing = String(item.listingCategory ?? "").toLowerCase() === "new";
+
+      // For new project listings, priceRange is the canonical price — always prefer it
+      if (isNewListing && pr && typeof pr === "string") {
+        const parts = pr.split("-");
+        if (parts.length === 2) {
+          const min = Number(parts[0]);
+          const max = Number(parts[1]);
+          if (!isNaN(min) && !isNaN(max)) {
+            // "–" (en-dash) is the range marker detected by the UI
+            return `${min.toLocaleString("en-IN")} – ${max.toLocaleString("en-IN")}`;
+          }
+        }
+        return pr;
+      }
+
+      // For resale/rental: use totalPrice or fall back to priceRange
+      if (item.totalPrice) return item.totalPrice;
+      if (pr && typeof pr === "string") {
+        const parts = pr.split("-");
+        if (parts.length === 2) {
+          const min = Number(parts[0]);
+          const max = Number(parts[1]);
+          if (!isNaN(min) && !isNaN(max)) {
+            return `${min.toLocaleString("en-IN")} – ${max.toLocaleString("en-IN")}`;
+          }
+        }
+        return pr;
+      }
+      return "N/A";
+    })(),
     pricePerSqft: typeof item.pricing === "object" && item.pricing
       ? String((item.pricing as Record<string, unknown>).pricePerSqft ?? "")
       : "",
