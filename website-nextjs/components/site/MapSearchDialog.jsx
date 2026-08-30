@@ -294,6 +294,7 @@ export function MapSearchDialog({
           center: markerPos,
           zoom: currentArea ? 14 : 12,
           mapId: 'DEMO_MAP_ID',
+          mapTypeId: 'hybrid',
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,

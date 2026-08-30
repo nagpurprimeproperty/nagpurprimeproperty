@@ -54,8 +54,8 @@ export function useAuthGuard() {
                 try {
                     activeToken = await doRefresh();
                 } catch {
-                    logout();
-                    router.replace("/login");
+                    await logout();
+                    window.location.href = "/login";
                     return;
                 }
             }

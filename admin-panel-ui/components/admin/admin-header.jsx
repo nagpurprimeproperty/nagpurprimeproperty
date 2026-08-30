@@ -34,6 +34,7 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
   const clearProfile = useAdminProfileStore((s) => s.clearProfile);
   const profile    = useAdminProfile();
   const { canRead } = usePermission("notifications");
+  const { canRead: canReadSettings } = usePermission("settings");
 
   const notifListParams = useMemo(() => ({ limit: 6 }), []);
   const { data: notifData }  = useNotifications(notifListParams);
@@ -141,11 +142,11 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
     );
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearProfile();
-    logout();
+    await logout();
     toast({ title: "Logged out", description: "You have been logged out of the admin panel" });
-    router.replace("/login");
+    window.location.href = "/login";
   };
 
   const initials  = profile ? `${profile.firstName[0] ?? ""}${profile.lastName[0] ?? ""}`.toUpperCase() : "AU";
@@ -316,12 +317,14 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
                 My Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/settings" className="cursor-pointer rounded-md">
-                <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
+            {canReadSettings && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin/settings" className="cursor-pointer rounded-md">
+                  <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuSeparator className="my-1" />
 

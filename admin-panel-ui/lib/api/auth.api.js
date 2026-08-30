@@ -18,4 +18,9 @@ export const authApi = {
      * Resets password using the token from the email link
      */
     resetPassword: (payload) => apiClient.post("/v1/admin/auth/reset-password", payload),
+    /**
+     * POST /api/v1/admin/auth/logout
+     * Clears httpOnly refresh token cookie on backend
+     */
+    logout: () => apiClient.post("/v1/admin/auth/logout"),
 };

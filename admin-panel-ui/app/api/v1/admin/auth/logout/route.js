@@ -13,6 +13,7 @@ export async function POST() {
     sameSite: 'strict',
     path: '/api/v1/admin/auth/refresh',
     maxAge: 0, // Expire immediately
+    expires: new Date(0),
   });
   return res;
 }

@@ -33,9 +33,17 @@ export const useAuthStore = create()((set) => ({
             set({ isLoading: false });
         }
     },
-    logout: () => {
-        set({ token: null });
-        usePermissionStore.getState().clearPermissions();
+    logout: async () => {
+        try {
+            await fetch('/api/v1/admin/auth/logout', { method: 'POST', credentials: 'include' });
+        }
+        catch {
+            // Ignore error during logout API call
+        }
+        finally {
+            set({ token: null });
+            usePermissionStore.getState().clearPermissions();
+        }
     },
     forgotPassword: async (payload) => {
         set({ isLoading: true });
