@@ -13,7 +13,20 @@ import { getOrSet, invalidateCache } from '../../utils/cache.js';
 
 async function getActiveSubscription(brokerId) {
   if (!brokerId) return null;
-  return Subscription.findOne({ userId: brokerId, status: 'Active' }).sort({ createdAt: -1 });
+  const now = new Date();
+  let sub = await Subscription.findOne({ userId: brokerId, status: 'Active' }).sort({ createdAt: -1 });
+
+  if (sub && !sub.isDurationUnlimited && sub.endDate && sub.endDate <= now) {
+    try {
+      const purchasePlanService = (await import('../subscription/purchasePlan.service.js')).default;
+      sub = await purchasePlanService.handleExpiredSubscription(sub);
+    } catch (err) {
+      console.error('[Subscription] Failed to auto-expire in getActiveSubscription:', err.message);
+      return null;
+    }
+  }
+
+  return sub;
 }
 
 async function incrementUsage(subscriptionId, field, delta = 1) {

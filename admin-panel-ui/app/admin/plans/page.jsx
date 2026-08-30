@@ -23,10 +23,12 @@ import { PlanStats } from "@/components/admin/plan/plan-stats";
 import { PlanGrid } from "@/components/admin/plan/plan-grid";
 import { PlanFormDialog } from "@/components/admin/plan/plan-form-dialog";
 import { PlanDeleteDialog } from "@/components/admin/plan/plan-delete-dialog";
+import { ServerPagination } from "@/components/admin/common/server-pagination";
 export default function PlansPage() {
     const { canWrite, canDelete } = usePermission("plans");
     // ── Filter state ────────────────────────────────────────────────────────────
     const [filterStatus, setFilterStatus] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
     // ── Dialog state ────────────────────────────────────────────────────────────
     const [formOpen, setFormOpen] = useState(false);
     const [editingPlan, setEditingPlan] = useState(null);
@@ -34,10 +36,12 @@ export default function PlansPage() {
     // ── Data ────────────────────────────────────────────────────────────────────
     const planParams = useMemo(() => ({
         isActive: filterStatus,
-        limit: 50,
-    }), [filterStatus]);
+        page: currentPage,
+        limit: 10,
+    }), [filterStatus, currentPage]);
     const { data, isLoading, isFetching, refetch } = usePlanList(planParams);
     const plans = data?.data ?? [];
+    const pagination = data?.pagination;
     // ── Mutations ────────────────────────────────────────────────────────────────
     const toggleMutation = useTogglePlanStatus();
     const deleteMutation = useDeletePlan();
@@ -86,7 +90,13 @@ export default function PlansPage() {
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select
+            value={filterStatus}
+            onValueChange={(val) => {
+              setFilterStatus(val);
+              setCurrentPage(1);
+            }}
+          >
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Status"/>
             </SelectTrigger>
@@ -100,6 +110,19 @@ export default function PlansPage() {
 
         {/* Plan grid */}
         <PlanGrid plans={plans} isLoading={isLoading} isFiltered={filterStatus !== "all"} canWrite={canWrite} canDelete={canDelete} onEdit={openEdit} onDelete={setDeletingPlan} onToggle={(plan) => toggleMutation.mutate(plan)} onCreate={openCreate}/>
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <ServerPagination
+            className="pt-2"
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            itemsPerPage={pagination.limit}
+            onPageChange={setCurrentPage}
+            countSuffix=" plans"
+          />
+        )}
 
         {/* Create / Edit form dialog */}
         <PlanFormDialog open={formOpen} onOpenChange={closeForm} plan={editingPlan}/>

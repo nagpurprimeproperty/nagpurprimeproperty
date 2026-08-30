@@ -39,11 +39,23 @@ const leadService = {
 
       console.log(`[Lead Processing] 📥 New lead triggered for broker ${brokerId} | Property: "${propTitle}" | Buyer: "${customerName}" (${phone})`);
 
-      const broker = await userService.getUser(brokerId).catch(() => null);
-      const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId).catch((err) => {
+      let subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId).catch((err) => {
         console.error('[Lead Processing] ⚠️ Subscription fetch error:', err.message);
         return null;
       });
+
+      if (!subscription) {
+        const rawSub = await purchasePlanRepository.findRawActiveByUser(brokerId).catch(() => null);
+        if (rawSub && !rawSub.isDurationUnlimited && rawSub.endDate && rawSub.endDate <= new Date()) {
+          try {
+            const purchasePlanService = (await import('../subscription/purchasePlan.service.js')).default;
+            await purchasePlanService.handleExpiredSubscription(rawSub);
+            subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId).catch(() => null);
+          } catch (expireErr) {
+            console.error('[Lead Processing] ⚠️ Error handling expired subscription:', expireErr.message);
+          }
+        }
+      }
 
       const isUnlimited = !!(subscription?.limits?.isLeadAccessUnlimited ?? subscription?.planId?.limits?.isLeadAccessUnlimited);
       const leadAccessCount = Number(subscription?.limits?.leadAccessCount ?? subscription?.planId?.limits?.leadAccessCount ?? 0);
@@ -173,7 +185,19 @@ const leadService = {
    * Get a single lead by ID
    */
   getLead: async (id, brokerId) => {
-    const subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId);
+    let subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId);
+    if (!subscription) {
+      const rawSub = await purchasePlanRepository.findRawActiveByUser(brokerId).catch(() => null);
+      if (rawSub && !rawSub.isDurationUnlimited && rawSub.endDate && rawSub.endDate <= new Date()) {
+        try {
+          const purchasePlanService = (await import('../subscription/purchasePlan.service.js')).default;
+          await purchasePlanService.handleExpiredSubscription(rawSub);
+          subscription = await purchasePlanRepository.getSubscriptionByUserId(brokerId).catch(() => null);
+        } catch (expireErr) {
+          console.error('[Lead Processing] ⚠️ Error handling expired subscription in getLead:', expireErr.message);
+        }
+      }
+    }
     const lead = await leadRepository.findById(id, brokerId);
   
     if (!lead) throw { status: 404, message: 'Lead not found' };
