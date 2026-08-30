@@ -15,7 +15,7 @@ export interface UploadMediaResponse {
  */
 export async function uploadFile(
   uri: string,
-  options?: { mimeType?: string; filename?: string }
+  options?: { mimeType?: string; filename?: string; signal?: AbortSignal }
 ): Promise<string> {
   if (!uri) return '';
   if (uri.startsWith('http://') || uri.startsWith('https://')) {
@@ -59,6 +59,7 @@ export async function uploadFile(
     method: 'POST',
     body: formData,
     headers,
+    signal: options?.signal,
   });
 
   if (!response.ok) {
