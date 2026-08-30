@@ -6,6 +6,7 @@
  */
 import axios from 'axios';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { usePermissionStore } from '@/lib/store/permission-store';
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 // ─── Shared axios instance ────────────────────────────────────────────────────
 export const axiosInstance = axios.create({
@@ -92,6 +93,7 @@ function clearAuth() {
     if (typeof window === 'undefined')
         return;
     useAuthStore.setState({ token: null });
+    usePermissionStore.getState().clearPermissions();
     // Clear the httpOnly refresh-token cookie via the server logout endpoint
     fetch('/api/v1/admin/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     window.location.href = '/login';

@@ -1,7 +1,11 @@
 "use client"
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { usePermissionStore } from "@/lib/store/permission-store";
+import { Unauthorized } from "@/components/utils/permission-gate";
+import { Spinner } from "@/components/ui/spinner";
 import { StatCard } from "@/components/admin/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,8 +50,8 @@ function DonutChartSkeleton() {
       </div>
     </div>);
 }
-// ─── Main Page ─────────────────────────────────────────────────────────────────
-export default function DashboardPage() {
+
+function DashboardContent() {
     const userStats = useUserStats();
     const propertyStats = usePropertyStats();
     const revenueStats = useRevenueStats();
@@ -314,3 +318,37 @@ export default function DashboardPage() {
       </div>
     </div>);
 }
+
+export default function DashboardPage() {
+    const router = useRouter();
+    const isAdmin = usePermissionStore((s) => s.isAdmin);
+    const canRead = usePermissionStore((s) => s.canRead);
+    const permissionsInitialized = usePermissionStore((s) => s.permissionsInitialized);
+    const getDefaultRoute = usePermissionStore((s) => s.getDefaultRoute);
+
+    const hasAccess = isAdmin() || canRead("dashboard");
+
+    useEffect(() => {
+        if (permissionsInitialized && !hasAccess) {
+            const target = getDefaultRoute();
+            if (target && target !== "/admin") {
+                router.replace(target);
+            }
+        }
+    }, [permissionsInitialized, hasAccess, getDefaultRoute, router]);
+
+    if (!permissionsInitialized) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Spinner />
+            </div>
+        );
+    }
+
+    if (!hasAccess) {
+        return <Unauthorized />;
+    }
+
+    return <DashboardContent />;
+}
+

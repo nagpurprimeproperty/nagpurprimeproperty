@@ -13,6 +13,36 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export const MODULE_ROUTES = [
+    { module: 'dashboard', href: '/admin' },
+    { module: 'sub-admin', href: '/admin/sub-admin' },
+    { module: 'users', href: '/admin/users' },
+    { module: 'leads', href: '/admin/leads' },
+    { module: 'properties', href: '/admin/properties' },
+    { module: 'areas', href: '/admin/areas' },
+    { module: 'blogs', href: '/admin/blogs' },
+    { module: 'keywords', href: '/admin/keywords' },
+    { module: 'revenue', href: '/admin/revenue' },
+    { module: 'analytics', href: '/admin/analytics' },
+    { module: 'plans', href: '/admin/plans' },
+    { module: 'notifications', href: '/admin/notifications' },
+    { module: 'settings', href: '/admin/settings' },
+];
+
+export function getDefaultRouteForUser(role, permissions) {
+    if (role === 'admin') return '/admin';
+    if (role === 'sub-admin') {
+        if (!permissions) return '/admin/profile';
+        for (const item of MODULE_ROUTES) {
+            if (permissions[item.module]?.read === true) {
+                return item.href;
+            }
+        }
+        return '/admin/profile';
+    }
+    return '/admin';
+}
+
 export const usePermissionStore = create()(
     persist(
         (set, get) => ({
@@ -41,6 +71,10 @@ export const usePermissionStore = create()(
             canWrite: (module) => get().can(module, 'write'),
             canDelete: (module) => get().can(module, 'delete'),
             isAdmin: () => get().role === 'admin',
+            getDefaultRoute: () => {
+                const { role, permissions } = get();
+                return getDefaultRouteForUser(role, permissions);
+            },
         }),
         {
             name: 'permission-store',

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore, useIsAuthenticated, useAuthLoading } from "@/lib/store/auth-store";
+import { usePermissionStore } from "@/lib/store/permission-store";
 const loginSchema = z.object({
     email: z.string().email("Enter a valid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
@@ -22,14 +23,16 @@ export default function LoginPage() {
     const login = useAuthStore((s) => s.login);
     const isAuthenticated = useIsAuthenticated();
     const isLoading = useAuthLoading();
+    const permissionsInitialized = usePermissionStore((s) => s.permissionsInitialized);
     const [showPassword, setShowPassword] = useState(false);
     const [apiError, setApiError] = useState("");
-    // Already logged in → redirect to admin
+    // Already logged in → redirect to their default accessible route
     useEffect(() => {
         if (isAuthenticated) {
-            router.replace("/admin");
+            const targetRoute = usePermissionStore.getState().getDefaultRoute();
+            router.replace(targetRoute || "/admin");
         }
-    }, [isAuthenticated, router]);
+    }, [isAuthenticated, permissionsInitialized, router]);
     const { register, handleSubmit, formState: { errors }, } = useForm({
         resolver: zodResolver(loginSchema),
         defaultValues: { email: "", password: "" },
@@ -38,7 +41,8 @@ export default function LoginPage() {
         setApiError("");
         const result = await login(data);
         if (result.success) {
-            router.replace("/admin");
+            const targetRoute = usePermissionStore.getState().getDefaultRoute();
+            router.replace(targetRoute || "/admin");
         }
         else {
             setApiError(result.error ?? "Invalid email or password");
