@@ -170,6 +170,44 @@ export const normalizePropertyItem = (item: PropertyApiItem) => {
       : Number(item.recommendationScore ?? 0);
   const isRecommended = Boolean(item.isRecommended || recommendationScore > 0);
 
+  // Derive area string — prefer sqft/area from the root, then fall back to
+  // range/single fields inside details (common for project/new listings).
+  const details = (item.details as Record<string, unknown>) || {};
+  const resolveArea = (): string => {
+    if (item.sqft) {
+      return item.propertyType === "Agricultural Land"
+        ? `${item.sqft} Acres`
+        : `${item.sqft} sqft`;
+    }
+    if (item.area) return String(item.area);
+
+    // Range fields (project listings)
+    if (details.minCarpetArea && details.maxCarpetArea)
+      return `${details.minCarpetArea} – ${details.maxCarpetArea} sqft`;
+    if (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      return `${details.minSuperBuiltUpArea} – ${details.maxSuperBuiltUpArea} sqft`;
+    if (details.minPlotArea && details.maxPlotArea)
+      return `${details.minPlotArea} – ${details.maxPlotArea} sqft`;
+    if (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      return `${details.minPlotAreaSqFt} – ${details.maxPlotAreaSqFt} sqft`;
+    if (details.minWarehouseArea && details.maxWarehouseArea)
+      return `${details.minWarehouseArea} – ${details.maxWarehouseArea} sqft`;
+    if (details.minShowroomArea && details.maxShowroomArea)
+      return `${details.minShowroomArea} – ${details.maxShowroomArea} sqft`;
+
+    // Single-value fields
+    if (details.superBuiltUpArea) return `${details.superBuiltUpArea} sqft`;
+    if (details.builtUpArea) return `${details.builtUpArea} sqft`;
+    if (details.carpetArea) return `${details.carpetArea} sqft`;
+    if (details.plotArea) return `${details.plotArea} sqft`;
+    if (details.plotAreaSqFt) return `${details.plotAreaSqFt} sqft`;
+    if (details.areaAcres) return `${details.areaAcres} Acres`;
+    if (details.warehouseArea) return `${details.warehouseArea} sqft`;
+    if (details.showroomArea) return `${details.showroomArea} sqft`;
+
+    return "";
+  };
+
   return {
     ...item,
     id: item.id ?? item._id ?? "",
@@ -179,13 +217,7 @@ export const normalizePropertyItem = (item: PropertyApiItem) => {
     image,
     images: photos.length > 0 ? photos : image ? [image] : [],
     bedrooms: item.bhk ?? item.bedrooms ?? 0,
-    area: item.sqft
-      ? item.propertyType === "Agricultural Land"
-        ? `${item.sqft} Acres`
-        : `${item.sqft} sqft`
-      : item.area
-        ? String(item.area)
-        : "",
+    area: resolveArea(),
     featured: Boolean(item.featured),
     badge: item.featured
       ? "Featured"
@@ -197,6 +229,7 @@ export const normalizePropertyItem = (item: PropertyApiItem) => {
     recommendationScore,
   };
 };
+
 
 export const normalizePropertyDetail = (item: PropertyApiDetail) => {
   const normalizedLocation =
