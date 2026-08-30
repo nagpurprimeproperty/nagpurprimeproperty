@@ -41,6 +41,7 @@ export function MapPreview({
       map = new google.maps.Map(mapRef.current, {
         center: NAGPUR_CENTER,
         zoom: 12,
+        mapTypeId: 'hybrid',
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
