@@ -3,8 +3,8 @@ import Property from '../../modules/property/property.model.js';
 import User from '../user/user.model.js';
 import { safeRegexFilter } from '../../utils/query-sanitizer.js';
 import SavedProperty from './savedProperty.model.js';
-import Lead from '../lead/leads.model.js';
 import { getOrSet } from '../../utils/cache.js';
+import { toISTISOString } from '../../utils/timezone.js';
 
 const formatPriceLabel = (value, isMonthly = false) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return value;
@@ -40,7 +40,7 @@ const cleanNulls = (value) => {
   }
 
   if (isDate(value)) {
-    return value.toISOString();
+    return toISTISOString(value);
   }
 
   if (isObjectIdLike(value)) {

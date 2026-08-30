@@ -475,6 +475,7 @@ handleWebhook: async (rawBody, razorpaySignature) => {
     const user = await userRepository.findById(userId);
     const invoiceNo = subscription.invoiceNumber || `INV-${subscription._id.toString().slice(-8).toUpperCase()}`;
     const dateStr = new Date(subscription.createdAt || subscription.startDate).toLocaleDateString('en-IN', {
+      timeZone: 'Asia/Kolkata',
       day: '2-digit', month: 'short', year: 'numeric'
     });
 

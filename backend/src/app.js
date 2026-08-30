@@ -9,6 +9,10 @@ import whatsappRouter from './modules/communication/whatsapp.routes.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 import env from './config/env.js';
 import cookieParser from 'cookie-parser';
+import { initTimezone } from './utils/timezone.js';
+
+// Initialize Indian Time Zone (Asia/Kolkata, UTC+05:30)
+initTimezone();
 
 const app = express();
 
