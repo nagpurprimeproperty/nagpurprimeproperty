@@ -1,6 +1,7 @@
 import connectDB from '@/server/src/config/db.js';
 import StaticPage from '@/server/src/modules/static-page/static-page.model.js';
 import { notFound } from 'next/navigation';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 export const revalidate = 60; // ISR - revalidate every 60 seconds
 
@@ -35,7 +36,7 @@ export default async function TermsAndConditionsPage() {
       </div>
       <div 
         className="rich-text mt-8 text-foreground/90 leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: page.content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }}
       />
     </div>
   );

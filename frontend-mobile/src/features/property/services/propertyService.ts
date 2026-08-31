@@ -27,6 +27,7 @@ export type PropertyApiItem = {
   photos?: string[];
   image?: string;
   video?: string;
+  brochure?: string;
   isSaved?: boolean;
   bhk?: number | string;
   recommendationScore?: number;
@@ -135,6 +136,23 @@ export const createCallEnquiry = async (id: string): Promise<CallEnquiryResponse
   return response.data;
 };
 
+export type BrochureEnquiryResponse = {
+  success: boolean;
+  message?: string;
+  brochureUrl?: string;
+  data?: {
+    brochureUrl?: string;
+    [key: string]: unknown;
+  };
+};
+
+export const createBrochureLead = async (id: string): Promise<BrochureEnquiryResponse> => {
+  const response = await apiClient.post<BrochureEnquiryResponse>(
+    `/properties/${id}/brochure-lead`,
+  );
+  return response.data;
+};
+
 export const normalizePropertyItem = (item: PropertyApiItem) => {
   const normalizedLocation =
     typeof item.location === "string"
@@ -152,6 +170,44 @@ export const normalizePropertyItem = (item: PropertyApiItem) => {
       : Number(item.recommendationScore ?? 0);
   const isRecommended = Boolean(item.isRecommended || recommendationScore > 0);
 
+  // Derive area string — prefer sqft/area from the root, then fall back to
+  // range/single fields inside details (common for project/new listings).
+  const details = (item.details as Record<string, unknown>) || {};
+  const resolveArea = (): string => {
+    if (item.sqft) {
+      return item.propertyType === "Agricultural Land"
+        ? `${item.sqft} Acres`
+        : `${item.sqft} sqft`;
+    }
+    if (item.area) return String(item.area);
+
+    // Range fields (project listings)
+    if (details.minCarpetArea && details.maxCarpetArea)
+      return `${details.minCarpetArea} – ${details.maxCarpetArea} sqft`;
+    if (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      return `${details.minSuperBuiltUpArea} – ${details.maxSuperBuiltUpArea} sqft`;
+    if (details.minPlotArea && details.maxPlotArea)
+      return `${details.minPlotArea} – ${details.maxPlotArea} sqft`;
+    if (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      return `${details.minPlotAreaSqFt} – ${details.maxPlotAreaSqFt} sqft`;
+    if (details.minWarehouseArea && details.maxWarehouseArea)
+      return `${details.minWarehouseArea} – ${details.maxWarehouseArea} sqft`;
+    if (details.minShowroomArea && details.maxShowroomArea)
+      return `${details.minShowroomArea} – ${details.maxShowroomArea} sqft`;
+
+    // Single-value fields
+    if (details.superBuiltUpArea) return `${details.superBuiltUpArea} sqft`;
+    if (details.builtUpArea) return `${details.builtUpArea} sqft`;
+    if (details.carpetArea) return `${details.carpetArea} sqft`;
+    if (details.plotArea) return `${details.plotArea} sqft`;
+    if (details.plotAreaSqFt) return `${details.plotAreaSqFt} sqft`;
+    if (details.areaAcres) return `${details.areaAcres} Acres`;
+    if (details.warehouseArea) return `${details.warehouseArea} sqft`;
+    if (details.showroomArea) return `${details.showroomArea} sqft`;
+
+    return "";
+  };
+
   return {
     ...item,
     id: item.id ?? item._id ?? "",
@@ -161,13 +217,7 @@ export const normalizePropertyItem = (item: PropertyApiItem) => {
     image,
     images: photos.length > 0 ? photos : image ? [image] : [],
     bedrooms: item.bhk ?? item.bedrooms ?? 0,
-    area: item.sqft
-      ? item.propertyType === "Agricultural Land"
-        ? `${item.sqft} Acres`
-        : `${item.sqft} sqft`
-      : item.area
-        ? String(item.area)
-        : "",
+    area: resolveArea(),
     featured: Boolean(item.featured),
     badge: item.featured
       ? "Featured"
@@ -179,6 +229,7 @@ export const normalizePropertyItem = (item: PropertyApiItem) => {
     recommendationScore,
   };
 };
+
 
 export const normalizePropertyDetail = (item: PropertyApiDetail) => {
   const normalizedLocation =
@@ -240,7 +291,40 @@ export const normalizePropertyDetail = (item: PropertyApiDetail) => {
     image,
     title: item.title ?? "Untitled Property",
     address: normalizedLocation,
-    price: item.totalPrice ?? "N/A",
+    price: (() => {
+      const pricingObj = (item.pricing as Record<string, unknown>) ?? {};
+      const pr = pricingObj.priceRange;
+      const isNewListing = String(item.listingCategory ?? "").toLowerCase() === "new";
+
+      // For new project listings, priceRange is the canonical price — always prefer it
+      if (isNewListing && pr && typeof pr === "string") {
+        const parts = pr.split("-");
+        if (parts.length === 2) {
+          const min = Number(parts[0]);
+          const max = Number(parts[1]);
+          if (!isNaN(min) && !isNaN(max)) {
+            // "–" (en-dash) is the range marker detected by the UI
+            return `${min.toLocaleString("en-IN")} – ${max.toLocaleString("en-IN")}`;
+          }
+        }
+        return pr;
+      }
+
+      // For resale/rental: use totalPrice or fall back to priceRange
+      if (item.totalPrice) return item.totalPrice;
+      if (pr && typeof pr === "string") {
+        const parts = pr.split("-");
+        if (parts.length === 2) {
+          const min = Number(parts[0]);
+          const max = Number(parts[1]);
+          if (!isNaN(min) && !isNaN(max)) {
+            return `${min.toLocaleString("en-IN")} – ${max.toLocaleString("en-IN")}`;
+          }
+        }
+        return pr;
+      }
+      return "N/A";
+    })(),
     pricePerSqft: typeof item.pricing === "object" && item.pricing
       ? String((item.pricing as Record<string, unknown>).pricePerSqft ?? "")
       : "",
@@ -279,6 +363,7 @@ export const normalizePropertyDetail = (item: PropertyApiDetail) => {
       phoneFull: (item.brokerId?.phoneFull ?? item.brokerId?.phone ?? item.brokerId?.mobile ?? "") as string,
     },
     isSaved: Boolean(item.isSaved),
+    brochure: (item.brochure as string) || null,
   };
 };
 

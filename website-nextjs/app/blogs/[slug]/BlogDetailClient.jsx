@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, Clock, Share2, Mail, Globe } from 'lucide-react'
 import { toast } from 'sonner'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 function ensureHeadingHierarchy(html) {
   if (!html) return '';
@@ -150,7 +151,7 @@ export default function BlogDetailClient({ blog: b, related }) {
                   {/* Section body → rendered as HTML */}
                   <div
                     className={`rich-text${i === 0 ? ' rich-text-dropcap' : ''}`}
-                    dangerouslySetInnerHTML={{ __html: ensureHeadingHierarchy(s.body) }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(ensureHeadingHierarchy(s.body)) }}
                   />
                 </section>
               ))

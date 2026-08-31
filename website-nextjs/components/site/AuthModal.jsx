@@ -79,14 +79,10 @@ export function AuthModal() {
       return
     }
     try {
-      const otpVal = await sendOTPMutation.mutateAsync({ mobile, name: name.trim() })
+      await sendOTPMutation.mutateAsync({ mobile, name: name.trim() })
       setStep('otp')
       setResendIn(60)
-      if (typeof otpVal === 'string') {
-        toast.success(`OTP sent to your mobile number. OTP: ${otpVal}`)
-      } else {
-        toast.success('OTP sent to your mobile number')
-      }
+      toast.success('OTP sent to your mobile number')
       setTimeout(() => otpRefs.current[0]?.focus(), 80)
     } catch (err) {
       toast.error(err.message || 'Failed to send OTP. Please try again.')
@@ -95,14 +91,10 @@ export function AuthModal() {
 
   const resendOtp = async () => {
     try {
-      const otpVal = await resendOTPMutation.mutateAsync({ mobile })
+      await resendOTPMutation.mutateAsync({ mobile })
       setResendIn(60)
       setOtp(['', '', '', ''])
-      if (typeof otpVal === 'string') {
-        toast.success(`OTP resent to your mobile number. OTP: ${otpVal}`)
-      } else {
-        toast.success('OTP resent to your mobile number')
-      }
+      toast.success('OTP resent to your mobile number')
       setTimeout(() => otpRefs.current[0]?.focus(), 80)
     } catch (err) {
       toast.error(err.message || 'Failed to resend OTP. Please try again.')

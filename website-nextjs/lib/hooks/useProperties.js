@@ -15,15 +15,15 @@ export function useProperties(filters = {}, options = {}) {
       const res = await fetch(`/api/properties${qs ? `?${qs}` : ''}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-        throw new Error(err.message || `Request failed: ${res.status}`);
+        throw new Error(err?.message || `Request failed: ${res.status}`);
       }
       const json = await res.json();
       return {
-        data: json.data || [],
-        total: json.total || 0,
-        page: json.page || 1,
-        limit: json.limit || 6,
-        totalPages: json.totalPages || 1,
+        data: Array.isArray(json?.data) ? json.data : [],
+        total: Number(json?.total) || 0,
+        page: Number(json?.page) || 1,
+        limit: Number(json?.limit) || 6,
+        totalPages: Number(json?.totalPages) || 1,
       };
     },
     staleTime: 5 * 60 * 1000,

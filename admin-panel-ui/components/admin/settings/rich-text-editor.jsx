@@ -49,8 +49,14 @@ export function RichTextEditor({ value, onChange, disabled = false, placeholder 
     const handleLink = (e) => {
         e.preventDefault();
         const url = prompt("Enter URL:", "https://");
-        if (url)
-            document.execCommand("createLink", false, url);
+        if (url) {
+            const trimmed = url.trim();
+            if (/^(https?:\/\/|\/|mailto:|tel:)/i.test(trimmed)) {
+                document.execCommand("createLink", false, trimmed);
+            } else {
+                alert("Invalid URL protocol. Only https://, http://, mailto:, and relative paths are permitted.");
+            }
+        }
     };
     const tools = [
         { icon: Bold, label: "Bold", command: "bold" },

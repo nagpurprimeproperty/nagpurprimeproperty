@@ -9,7 +9,8 @@ export interface LoginPayload {
 export interface VerifyOtpPayload {
   mobile: string;
   otp: string;
-  fcmToken?: string | null;
+  fcmToken?: string | null;    // Android — native FCM registration token
+  appleToken?: string | null;  // iOS     — native APNs device token
 }
 
 export interface AuthApiResponse<T> {
@@ -22,7 +23,7 @@ export interface AuthApiResponse<T> {
 export interface LoginResponse {
   success: boolean;
   message: string;
-  data: string;
+  data?: unknown;
 }
 
 export interface VerifyOtpResponse {
@@ -38,7 +39,7 @@ export interface LogoutResponse {
 }
 
 export const login = async (payload: LoginPayload) => {
-  const response = await apiClient.post<AuthApiResponse<string>>(
+  const response = await apiClient.post<AuthApiResponse<unknown>>(
     "/auth/login",
     payload,
   );
@@ -53,11 +54,11 @@ export interface ResendOtpPayload {
 export interface ResendOtpResponse {
   success: boolean;
   message: string;
-  data?: string;
+  data?: unknown;
 }
 
 export const resendOTP = async (payload: ResendOtpPayload) => {
-  const response = await apiClient.post<AuthApiResponse<string>>(
+  const response = await apiClient.post<AuthApiResponse<unknown>>(
     "/auth/resend-otp",
     payload,
   );
@@ -82,7 +83,7 @@ export const logout = async () => {
 export interface RequestDeletionResponse {
   success: boolean;
   message: string;
-  data?: { otp: string };
+  data?: unknown;
 }
 
 export interface ConfirmDeletionResponse {

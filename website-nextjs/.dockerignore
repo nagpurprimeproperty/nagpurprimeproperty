@@ -5,9 +5,17 @@ node_modules
 .next
 out
 
-# Environment files (inject at runtime, never bake into image)
+# Environment files & secrets (inject at runtime, never bake into image)
+.env
 .env.*
 !.env.example
+!.env.*.example
+*.pem
+*.key
+*.crt
+serviceAccountKey.json
+firebase-*.json
+**/*.script.js
 
 # Version control
 .git

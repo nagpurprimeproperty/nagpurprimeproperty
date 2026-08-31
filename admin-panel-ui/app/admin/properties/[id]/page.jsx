@@ -257,12 +257,24 @@ export default function PropertyDetailPage({ params }) {
             {/* Quick stat tiles */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
               <StatTile icon={Building2} label="Type" value={property.propertyType}/>
-              {details.bhk != null && <StatTile icon={Bed} label="BHK" value={String(details.bhk)}/>}
+              {(details.minBhk != null && details.maxBhk != null) ? (
+                <StatTile icon={Bed} label="BHK" value={details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`} />
+              ) : details.bhk != null ? (
+                <StatTile icon={Bed} label="BHK" value={`${details.bhk} BHK`} />
+              ) : null}
               {details.bathrooms != null && <StatTile icon={Bath} label="Bathrooms" value={String(details.bathrooms)}/>}
-              {(details.carpetArea ?? details.plotAreaSqFt ?? details.areaAcres) != null && (<StatTile icon={Maximize} label="Area" value={details.carpetArea ? `${details.carpetArea} sq.ft`
-                : details.plotAreaSqFt ? `${details.plotAreaSqFt} sq.ft`
-                    : details.areaAcres ? `${details.areaAcres} acres`
-                        : "—"}/>)}
+              {(details.minCarpetArea != null && details.maxCarpetArea != null) ? (
+                <StatTile icon={Maximize} label="Area" value={`${details.minCarpetArea} - ${details.maxCarpetArea} sq.ft`} />
+              ) : (details.minPlotAreaSqFt != null && details.maxPlotAreaSqFt != null) ? (
+                <StatTile icon={Maximize} label="Plot Area" value={`${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sq.ft`} />
+              ) : (details.carpetArea ?? details.plotAreaSqFt ?? details.areaAcres ?? details.showroomArea ?? details.warehouseArea) != null ? (
+                <StatTile icon={Maximize} label="Area" value={details.carpetArea ? `${details.carpetArea} sq.ft`
+                  : details.plotAreaSqFt ? `${details.plotAreaSqFt} sq.ft`
+                  : details.areaAcres ? `${details.areaAcres} acres`
+                  : details.showroomArea ? `${details.showroomArea} sq.ft`
+                  : details.warehouseArea ? `${details.warehouseArea} sq.ft`
+                  : "—"}/>
+              ) : null}
               {details.floorNumber != null && <StatTile icon={Layers} label="Floor" value={`${details.floorNumber}/${details.totalFloors ?? "?"}`}/>}
               {details.furnishing && <StatTile icon={Home} label="Furnishing" value={details.furnishing}/>}
               {pricing.possessionTimeline && <StatTile icon={Clock} label="Possession" value={pricing.possessionTimeline}/>}

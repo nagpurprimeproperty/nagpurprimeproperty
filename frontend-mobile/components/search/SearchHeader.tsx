@@ -58,6 +58,12 @@ const SearchHeaderBase = ({
     { label: "Commercial", value: "Commercial", icon: "briefcase-outline" as const },
   ], []);
 
+  const listingCategories = useMemo(() => [
+    { label: "Resale",      value: "Resale", icon: "refresh-circle-outline" as const },
+    { label: "Rental",      value: "Rental", icon: "key-outline" as const },
+    { label: "New Project", value: "New",    icon: "sparkles-outline" as const },
+  ], []);
+
   const activeChips = useMemo(() => {
     const chips: { id: string; label: string; clear: () => void }[] = [];
 
@@ -135,6 +141,15 @@ const SearchHeaderBase = ({
     });
   }, [filters, onFiltersChange]);
 
+  const handleListingCategoryPress = useCallback((val: string) => {
+    // Toggle: tap active chip → reset to "All"
+    const next = filters.listingCategory === val ? "All" : val;
+    onFiltersChange({
+      ...filters,
+      listingCategory: next,
+    });
+  }, [filters, onFiltersChange]);
+
   const handleClearAll = useCallback(() => {
     onFiltersChange({
       listingCategory: "All",
@@ -192,13 +207,14 @@ const SearchHeaderBase = ({
         />
       </View>
 
-      {/* Category Chips Row */}
+      {/* Property Type + Listing Category — single compact row */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8, alignItems: "center" }}
       >
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+          {/* Property Type chips */}
           {categories.map((cat) => {
             const isSelected = filters.propertyType === cat.value;
             return (
@@ -215,14 +231,43 @@ const SearchHeaderBase = ({
               >
                 <Ionicons
                   name={cat.icon}
-                  size={14}
+                  size={13}
                   color={isSelected ? "white" : "#64748B"}
                 />
                 <Text
-                  style={[
-                    styles.categoryText,
-                    { color: isSelected ? "white" : "#64748B" },
-                  ]}
+                  style={[styles.categoryText, { color: isSelected ? "white" : "#64748B" }]}
+                >
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+
+          {/* Thin vertical divider */}
+          <View style={{ width: 1.5, height: 24, backgroundColor: "#E2E8F0", marginHorizontal: 2 }} />
+
+          {/* Listing Category chips */}
+          {listingCategories.map((cat) => {
+            const isSelected = filters.listingCategory === cat.value;
+            return (
+              <TouchableOpacity
+                key={cat.value}
+                onPress={() => handleListingCategoryPress(cat.value)}
+                activeOpacity={0.8}
+                style={[
+                  styles.categoryChip,
+                  isSelected
+                    ? { backgroundColor: "#16A34A", borderColor: "#16A34A" }
+                    : { backgroundColor: "white", borderColor: "#E2E8F0" },
+                ]}
+              >
+                <Ionicons
+                  name={cat.icon}
+                  size={13}
+                  color={isSelected ? "white" : "#64748B"}
+                />
+                <Text
+                  style={[styles.categoryText, { color: isSelected ? "white" : "#64748B" }]}
                 >
                   {cat.label}
                 </Text>

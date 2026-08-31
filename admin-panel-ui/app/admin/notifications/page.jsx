@@ -22,6 +22,7 @@ import { usePermission } from "@/hooks/use-permissions";
 import { useNotifications, useNotificationStats, useCreateNotification, useDeleteNotification, useMarkAsRead, useMarkAllAsRead, } from "@/hooks/use-notification-queries";
 import { AdminPageHeader } from "@/components/admin/common/admin-page-header";
 import { AdminStatGrid } from "@/components/admin/common/admin-stat-grid";
+import { ServerPagination } from "@/components/admin/common/server-pagination";
 import { NotificationListCard, NotificationListSkeleton, } from "@/components/admin/notifications/notification-list-primitives";
 const createSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters").max(200),
@@ -32,10 +33,13 @@ const createSchema = z.object({
 export default function NotificationsPage() {
     const { toast } = useToast();
     const { canWrite, canDelete } = usePermission("notifications");
-    const listParams = useMemo(() => ({ limit: 50 }), []);
+    const [currentPage, setCurrentPage] = useState(1);
+    const listParams = useMemo(() => ({ page: currentPage, limit: 10 }), [currentPage]);
     const notificationsQuery = useNotifications(listParams);
     const statsQuery = useNotificationStats();
-    const { data: notifications = [], isLoading } = notificationsQuery;
+    const notifications = notificationsQuery.data?.data ?? [];
+    const pagination = notificationsQuery.data?.pagination;
+    const { isLoading } = notificationsQuery;
     const { data: stats } = statsQuery;
     const isHeaderRefreshing = notificationsQuery.isFetching || statsQuery.isFetching;
     const handleRefreshNotifications = () => {
@@ -187,6 +191,17 @@ export default function NotificationsPage() {
                 <NotificationListSkeleton />
               </div>) : notifications.length > 0 ? (<div className="space-y-4">
                 {notifications.map((n) => (<NotificationListCard key={n._id} notification={n} canDelete={canDelete} onView={handleViewNotification} onDeleteRequest={openDeleteConfirm} onMarkAsRead={handleMarkAsRead}/>))}
+                {pagination && pagination.totalPages > 1 && (
+                  <ServerPagination
+                    className="pt-4"
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    totalItems={pagination.total}
+                    itemsPerPage={pagination.limit}
+                    onPageChange={setCurrentPage}
+                    countSuffix=" notifications"
+                  />
+                )}
               </div>) : (<div className="py-8 text-center text-muted-foreground">No notifications yet.</div>)}
           </CardContent>
         </Card>

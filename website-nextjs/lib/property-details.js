@@ -17,15 +17,27 @@ export function getDetailsList(p) {
   const highlights = []
   
   // BHK / Bedrooms
-  const bhkVal = details.bhk || p.bhk
+  const bhkVal = (details.minBhk != null && details.maxBhk != null)
+    ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+    : details.bhk || p.bhk
   if (bhkVal) {
-    highlights.push({ icon: Bed, label: 'Bedrooms', value: `${bhkVal} BHK` })
+    highlights.push({ icon: Bed, label: 'Bedrooms', value: bhkVal.toString().includes('BHK') ? bhkVal : `${bhkVal} BHK` })
   }
 
   // Size / Area
-  const areaVal = details.superBuiltUpArea || details.builtUpArea || details.carpetArea || details.plotArea || details.plotAreaSqFt || p.sqft || p.area
+  const areaVal = (details.minCarpetArea && details.maxCarpetArea)
+    ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+    : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+    ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+    : (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+    ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+    : (details.minPlotArea && details.maxPlotArea)
+    ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+    : (details.minSqft && details.maxSqft)
+    ? `${details.minSqft} - ${details.maxSqft} sqft`
+    : details.superBuiltUpArea || details.builtUpArea || details.carpetArea || details.plotArea || details.plotAreaSqFt || p.sqft || p.area
   if (areaVal) {
-    const areaLabel = details.superBuiltUpArea ? 'Super Area' : (details.builtUpArea ? 'Built-up Area' : (details.plotArea || details.plotAreaSqFt ? 'Plot Area' : 'Area'))
+    const areaLabel = details.minCarpetArea ? 'Carpet Area' : details.superBuiltUpArea ? 'Super Area' : (details.builtUpArea ? 'Built-up Area' : (details.plotArea || details.plotAreaSqFt ? 'Plot Area' : 'Area'))
     highlights.push({ icon: Maximize, label: areaLabel, value: typeof areaVal === 'number' ? `${areaVal} sqft` : areaVal })
   }
 
@@ -67,6 +79,24 @@ export function getDetailsList(p) {
   const specsTable = []
 
   // Add details properties
+  if (details.minCarpetArea && details.maxCarpetArea) {
+    specsTable.push({ label: 'Carpet Area Range', value: `${details.minCarpetArea} - ${details.maxCarpetArea} sqft` })
+  } else if (details.carpetArea) {
+    specsTable.push({ label: 'Carpet Area', value: `${details.carpetArea} sqft` })
+  }
+  if (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea) {
+    specsTable.push({ label: 'Super Built-up Area Range', value: `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft` })
+  } else if (details.superBuiltUpArea) {
+    specsTable.push({ label: 'Super Built-up Area', value: `${details.superBuiltUpArea} sqft` })
+  }
+  if (details.builtUpArea) specsTable.push({ label: 'Built-up Area', value: `${details.builtUpArea} sqft` })
+  if (details.minPlotAreaSqFt && details.maxPlotAreaSqFt) {
+    specsTable.push({ label: 'Plot Area Range', value: `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft` })
+  } else if (details.plotAreaSqFt) {
+    specsTable.push({ label: 'Plot Area', value: `${details.plotAreaSqFt} sqft` })
+  } else if (details.plotArea) {
+    specsTable.push({ label: 'Plot Area', value: `${details.plotArea} sqft` })
+  }
   if (details.bathrooms) specsTable.push({ label: 'Bathrooms', value: details.bathrooms })
   if (details.balconies) specsTable.push({ label: 'Balconies', value: details.balconies })
   if (details.floorNumber !== undefined && details.floorNumber !== null) {

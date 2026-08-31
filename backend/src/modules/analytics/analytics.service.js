@@ -133,11 +133,11 @@ const analyticsService = {
       const [leadAgg, userAgg] = await Promise.all([
         Lead.aggregate([
           { $match: { createdAt: { $gte: dateFrom } } },
-          { $group: { _id: { $dateToString: { format: groupFormat, date: '$createdAt' } }, count: { $sum: 1 } } },
+          { $group: { _id: { $dateToString: { format: groupFormat, date: '$createdAt', timezone: '+05:30' } }, count: { $sum: 1 } } },
         ]),
         User.aggregate([
           { $match: { createdAt: { $gte: dateFrom } } },
-          { $group: { _id: { $dateToString: { format: groupFormat, date: '$createdAt' } }, count: { $sum: 1 } } },
+          { $group: { _id: { $dateToString: { format: groupFormat, date: '$createdAt', timezone: '+05:30' } }, count: { $sum: 1 } } },
         ]),
       ]);
 
@@ -224,12 +224,12 @@ const analyticsService = {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         monthLabels.push({
           key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-          label: d.toLocaleString('en', { month: 'short' }),
+          label: d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short' }),
         });
       }
 
       // 3 aggregations in parallel — each groups by YYYY-MM in a single scan
-      const groupByMonth = { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+      const groupByMonth = { $dateToString: { format: '%Y-%m', date: '$createdAt', timezone: '+05:30' } };
 
       const [userAgg, activeUserAgg, propertyAgg] = await Promise.all([
         User.aggregate([

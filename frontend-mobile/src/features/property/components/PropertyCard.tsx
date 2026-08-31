@@ -155,9 +155,21 @@ function getSearchListSpecs(item: PropertyCardItem) {
 
   const isResidential = type === "Flat/Apartment" || type === "Villa/Independent House" || type === "Builder Floor" || type === "Penthouse";
   if (isResidential) {
-    const areaLabel = type === "Villa/Independent House" ? "Built-up Area" : (details.superBuiltUpArea ? "Super Area" : "Built-up Area");
-    const areaVal = details.builtUpArea ? `${details.builtUpArea} sqft` : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : (item.sqft ? `${item.sqft} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A")));
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : (item.bedrooms ? `${item.bedrooms} BHK` : "N/A");
+    const areaLabel = (details.minCarpetArea && details.maxCarpetArea) ? "Carpet Area" : (type === "Villa/Independent House" ? "Built-up Area" : (details.superBuiltUpArea ? "Super Area" : "Built-up Area"));
+    const areaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+      : (details.minPlotArea && details.maxPlotArea)
+      ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+      : details.builtUpArea
+      ? `${details.builtUpArea} sqft`
+      : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : (item.sqft ? `${item.sqft} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A")));
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : (item.bedrooms ? `${item.bedrooms} BHK` : "N/A");
     const bathrooms = details.bathrooms ? String(details.bathrooms) : (item.bathrooms ? String(item.bathrooms) : "N/A");
     return [
       { icon: "crop-outline" as const, value: areaVal, label: areaLabel },
@@ -166,7 +178,13 @@ function getSearchListSpecs(item: PropertyCardItem) {
     ];
   }
 
-  const areaVal = item.sqft ? `${item.sqft} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A");
+  const areaVal = (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+    ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+    : (details.minCarpetArea && details.maxCarpetArea)
+    ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+    : item.sqft
+    ? `${item.sqft} sqft`
+    : (item.area && item.area !== "N/A" ? item.area : "N/A");
   const subType = type || "Property";
   const security = details.gatedLayout === true || details.dgBackup === true ? "Secure" : "Standard";
   return [
@@ -181,17 +199,41 @@ function getVerticalSpecs(item: PropertyCardItem) {
   const type = item.propertyType || item.type || "";
 
   if (type === "Flat/Apartment" || type === "Penthouse" || type === "Builder Floor") {
-    const superArea = item.area && item.area !== "N/A" ? item.area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : "N/A");
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : item.bedrooms ? `${item.bedrooms} BHK` : "N/A";
+    const superArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+      : item.area && item.area !== "N/A"
+      ? item.area
+      : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : "N/A");
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : item.bedrooms
+      ? `${item.bedrooms} BHK`
+      : "N/A";
     const furnishing = details.furnishing ?? "N/A";
     return [
-      { icon: "crop-outline" as const, value: superArea, label: details.superBuiltUpArea ? "Super Area" : "Area" },
+      { icon: "crop-outline" as const, value: superArea, label: details.minCarpetArea ? "Carpet Area" : details.superBuiltUpArea ? "Super Area" : "Area" },
       { icon: "bed-outline" as const, value: bedrooms, label: "Bedrooms" },
       { icon: "grid-outline" as const, value: furnishing, label: "Furnishing" },
     ];
   } else if (type === "Villa/Independent House") {
-    const plotArea = details.plotArea ? `${details.plotArea} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A");
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : item.bedrooms ? `${item.bedrooms} BHK` : "N/A";
+    const plotArea = (details.minPlotArea && details.maxPlotArea)
+      ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+      : (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : details.plotArea
+      ? `${details.plotArea} sqft`
+      : (item.area && item.area !== "N/A" ? item.area : "N/A");
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : item.bedrooms
+      ? `${item.bedrooms} BHK`
+      : "N/A";
     const furnishing = details.furnishing ?? "N/A";
     return [
       { icon: "crop-outline" as const, value: plotArea, label: "Plot Area" },
@@ -199,7 +241,11 @@ function getVerticalSpecs(item: PropertyCardItem) {
       { icon: "grid-outline" as const, value: furnishing, label: "Furnishing" },
     ];
   } else if (type === "Office Space") {
-    const carpetArea = details.carpetArea ? `${details.carpetArea} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A");
+    const carpetArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : (item.area && item.area !== "N/A" ? item.area : "N/A");
     const capacity = details.cabinCount !== undefined && details.cabinCount > 0 ? `${details.cabinCount} Cabins` : details.openDesks !== undefined ? `${details.openDesks} Seats` : "N/A";
     const power = details.dgBackup === true ? "DG Backup" : details.dgBackup === false ? "No Backup" : "N/A";
     return [
@@ -208,7 +254,11 @@ function getVerticalSpecs(item: PropertyCardItem) {
       { icon: "flash-outline" as const, value: power, label: "Power Backup" },
     ];
   } else if (type === "Shop") {
-    const shopArea = item.area && item.area !== "N/A" ? item.area : "N/A";
+    const shopArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : item.area && item.area !== "N/A"
+      ? item.area
+      : "N/A";
     const floor = details.shopFloor ?? "N/A";
     const corner = details.cornerShop === true ? "Corner Shop" : "Regular";
     return [
@@ -217,7 +267,11 @@ function getVerticalSpecs(item: PropertyCardItem) {
       { icon: "compass-outline" as const, value: corner, label: "Position" },
     ];
   } else if (type === "Showroom") {
-    const showroomArea = details.showroomArea ? `${details.showroomArea} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A");
+    const showroomArea = (details.minShowroomArea && details.maxShowroomArea)
+      ? `${details.minShowroomArea} - ${details.maxShowroomArea} sqft`
+      : details.showroomArea
+      ? `${details.showroomArea} sqft`
+      : (item.area && item.area !== "N/A" ? item.area : "N/A");
     const floors = details.numberOfShowroomFloors ? `${details.numberOfShowroomFloors} Floors` : "N/A";
     const parking = details.parkingAvailable === true ? "Available" : "N/A";
     return [
@@ -226,7 +280,11 @@ function getVerticalSpecs(item: PropertyCardItem) {
       { icon: "car-outline" as const, value: parking, label: "Customer Parking" },
     ];
   } else if (type === "Warehouse/Godown") {
-    const warehouseArea = details.warehouseArea ? `${details.warehouseArea} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A");
+    const warehouseArea = (details.minWarehouseArea && details.maxWarehouseArea)
+      ? `${details.minWarehouseArea} - ${details.maxWarehouseArea} sqft`
+      : details.warehouseArea
+      ? `${details.warehouseArea} sqft`
+      : (item.area && item.area !== "N/A" ? item.area : "N/A");
     const height = details.warehouseHeight ? `${details.warehouseHeight} ft` : "N/A";
     const midc = details.midc === true ? "MIDC Approved" : "Regular";
     return [
@@ -235,13 +293,17 @@ function getVerticalSpecs(item: PropertyCardItem) {
       { icon: "shield-checkmark-outline" as const, value: midc, label: "Approval" },
     ];
   } else if (type === "Residential Plot" || type.toLowerCase().includes("plot")) {
-    const plotArea = details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : (item.area && item.area !== "N/A" ? item.area : "N/A");
-    const dims = details.plotLength && details.plotWidth ? `${details.plotLength} × ${details.plotWidth} ft` : "N/A";
+    const plotArea = (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+      : details.plotAreaSqFt
+      ? `${details.plotAreaSqFt} sqft`
+      : (item.area && item.area !== "N/A" ? item.area : "N/A");
+    const dims = details.plotLength && details.plotWidth ? `${details.plotLength}×${details.plotWidth} ft` : "N/A";
     const isGated = details.gatedLayout === true ? "Gated Layout" : "Open Layout";
     return [
       { icon: "crop-outline" as const, value: plotArea, label: "Plot Area" },
-      { icon: "git-commit-outline" as const, value: dims, label: "Dimensions" },
-      { icon: "shield-checkmark-outline" as const, value: isGated, label: "Security" },
+      { icon: "compass-outline" as const, value: dims, label: "Dimensions" },
+      { icon: "shield-checkmark-outline" as const, value: isGated, label: "Layout" },
     ];
   } else if (type === "Agricultural Land" || type.toLowerCase().includes("land")) {
     const landArea = details.areaAcres ? `${details.areaAcres} Acres` : (item.area && item.area !== "N/A" ? item.area : "N/A");
@@ -338,11 +400,18 @@ const HorizontalCard = React.memo(function HorizontalCard({
   const images = useMemo(() => resolveImages(item), [item.images, item.image]);
 
   const badgesContent = useMemo(() => {
+    const details = item.details || {};
     const type = item.propertyType || item.type || "";
     const isResidential = type === "Flat/Apartment" || type === "Villa/Independent House" || type === "Builder Floor" || type === "Penthouse";
-    const showBhkBadge = isResidential && (Number(item.bedrooms) > 0 || Number(item.details?.bhk) > 0);
+    const showBhkBadge = isResidential && ((details.minBhk != null && details.maxBhk != null) || Number(item.bedrooms) > 0 || Number(details.bhk) > 0);
     const showTypeBadge = !isResidential && Boolean(type);
-    const displayBhk = item.bedrooms ? `${item.bedrooms} BHK` : item.details?.bhk ? `${item.details.bhk} BHK` : "";
+    const displayBhk = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : item.bedrooms
+      ? `${item.bedrooms} BHK`
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : "";
 
     if (!showBhkBadge && !showTypeBadge && !item.area) return null;
 
@@ -376,9 +445,16 @@ const HorizontalCard = React.memo(function HorizontalCard({
             </Text>
           </View>
         )}
+        {Boolean(item.listingCategory) && (
+          <View style={{ backgroundColor: "#DBEAFE", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+            <Text style={{ color: "#1D4ED8", fontSize: 8, fontWeight: "800" }}>
+              {item.listingCategory!.toUpperCase()}
+            </Text>
+          </View>
+        )}
       </View>
     );
-  }, [item.propertyType, item.type, item.bedrooms, item.details, item.area, colors]);
+  }, [item.propertyType, item.type, item.bedrooms, item.details, item.area, item.listingCategory, colors]);
 
   return (
     <View
@@ -543,9 +619,18 @@ const SearchListCard = React.memo(function SearchListCard({
       >
         {/* Row 1: Category & Heart */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: "#F97316", fontSize: 9, fontWeight: "900", textTransform: "uppercase" }}>
-            {item.type || "Property"}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text style={{ color: "#F97316", fontSize: 9, fontWeight: "900", textTransform: "uppercase" }}>
+              {item.type || "Property"}
+            </Text>
+            {Boolean(item.listingCategory) && (
+              <View style={{ backgroundColor: "#DBEAFE", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: "#1D4ED8", fontSize: 8, fontWeight: "800" }}>
+                  {item.listingCategory!.toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
           <TouchableOpacity onPress={onLike} style={{ padding: 4 }} activeOpacity={0.7}>
             <Ionicons
               name={liked ? "heart" : "heart-outline"}
@@ -792,9 +877,18 @@ const VerticalCard = React.memo(function VerticalCard({
         {/* Row 1 & 2 layout: Type, Title (Left) | Price, Negotiable (Right) */}
         <View className="flex-row justify-between items-start">
           <View className="flex-1 mr-3">
-            <Text className="text-orange-500 font-extrabold text-xs uppercase tracking-wider">
-              {item.type}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-orange-500 font-extrabold text-xs uppercase tracking-wider">
+                {item.type}
+              </Text>
+              {Boolean(item.listingCategory) && (
+                <View style={{ backgroundColor: "#DBEAFE", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                  <Text style={{ color: "#1D4ED8", fontSize: 9, fontWeight: "800" }}>
+                    {item.listingCategory!.toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text
               className="text-slate-900 font-black text-xl mt-1.5 leading-tight"
               numberOfLines={2}
@@ -1041,7 +1135,7 @@ const PropertyCard = ({
   const handleShare = useCallback(() => {
     const locStr = getLocationString(item.location);
     Share.share({
-      message: `Check out this property on Nagpur Prime Property: ${item.title} at ${locStr}. Price: ₹${item.price}. More details: https://nagpurprimeproperty.com/propertyDetail/${propertyId}`,
+      message: `Check out this property on Nagpur Prime Property: ${item.title} at ${locStr}. Price: ₹${item.price}. More details: https://nagpurprimeproperty.com/properties/${propertyId}`,
     }).catch((error) => {
       if (__DEV__) {
         console.log("Error sharing:", error);

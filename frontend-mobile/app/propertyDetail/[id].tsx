@@ -5,6 +5,7 @@ import {
   useTogglePropertySave,
   useCreatePropertyEnquiry,
   useCreateCallEnquiry,
+  useCreateBrochureLead,
   useDeleteMyProperty,
 } from "@/features/property";
 import { useAuthStore } from "@/features/auth";
@@ -16,7 +17,7 @@ import ConfirmationOverlay from "@/shared/components/ui/ConfirmationOverlay";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
 import {
   ArrowLeft,
@@ -29,6 +30,7 @@ import {
   Layers,
   Lock,
   MapPin,
+  Maximize2,
   MessageCircle,
   Pause,
   Phone,
@@ -42,6 +44,7 @@ import {
   Map,
   Briefcase,
   Zap,
+  FileText,
   CircleDollarSign,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -89,14 +92,23 @@ function getDynamicSpecs(type: string, details: any, area: string) {
   const specs: { label: string; value: string; icon: any }[] = [];
 
   if (type === "Flat/Apartment" || type === "Penthouse" || type === "Builder Floor") {
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : (details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A");
+    const areaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+      : (area && area !== "N/A" ? area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : "N/A"));
+
     specs.push({
       label: "Bedrooms",
-      value: details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A",
+      value: bedrooms,
       icon: Bed,
     });
     specs.push({
-      label: "Built-up Area",
-      value: area && area !== "N/A" ? area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : "N/A"),
+      label: details.minCarpetArea ? "Carpet Area" : "Built-up Area",
+      value: areaVal,
       icon: Layers,
     });
     specs.push({
@@ -110,14 +122,23 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Villa/Independent House") {
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : (details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A");
+    const plotAreaVal = (details.minPlotArea && details.maxPlotArea)
+      ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+      : (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.plotArea ? `${details.plotArea} sqft` : area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Bedrooms",
-      value: details.bhk !== undefined && details.bhk !== null ? `${details.bhk} BHK` : "N/A",
+      value: bedrooms,
       icon: Bed,
     });
     specs.push({
       label: "Plot Area",
-      value: details.plotArea ? `${details.plotArea} sqft` : area !== "N/A" ? area : "N/A",
+      value: plotAreaVal,
       icon: Map,
     });
     specs.push({
@@ -131,6 +152,10 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Office Space") {
+    const carpetAreaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (area !== "N/A" ? area : (details.carpetArea ? `${details.carpetArea} sqft` : "N/A"));
+
     specs.push({
       label: "Cabins",
       value: details.cabinCount !== undefined ? String(details.cabinCount) : "N/A",
@@ -143,7 +168,7 @@ function getDynamicSpecs(type: string, details: any, area: string) {
     });
     specs.push({
       label: "Carpet Area",
-      value: area !== "N/A" ? area : (details.carpetArea ? `${details.carpetArea} sqft` : "N/A"),
+      value: carpetAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -152,6 +177,10 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Shop") {
+    const shopAreaVal = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Shop Floor",
       value: details.shopFloor ?? "N/A",
@@ -159,7 +188,7 @@ function getDynamicSpecs(type: string, details: any, area: string) {
     });
     specs.push({
       label: "Area",
-      value: area !== "N/A" ? area : "N/A",
+      value: shopAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -173,9 +202,13 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Star,
     });
   } else if (type === "Showroom") {
+    const showroomAreaVal = (details.minShowroomArea && details.maxShowroomArea)
+      ? `${details.minShowroomArea} - ${details.maxShowroomArea} sqft`
+      : (details.showroomArea ? `${details.showroomArea} sqft` : area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Showroom Area",
-      value: details.showroomArea ? `${details.showroomArea} sqft` : area !== "N/A" ? area : "N/A",
+      value: showroomAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -194,9 +227,13 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Sofa,
     });
   } else if (type === "Warehouse/Godown") {
+    const warehouseAreaVal = (details.minWarehouseArea && details.maxWarehouseArea)
+      ? `${details.minWarehouseArea} - ${details.maxWarehouseArea} sqft`
+      : (details.warehouseArea ? `${details.warehouseArea} sqft` : area !== "N/A" ? area : "N/A");
+
     specs.push({
       label: "Warehouse Area",
-      value: details.warehouseArea ? `${details.warehouseArea} sqft` : area !== "N/A" ? area : "N/A",
+      value: warehouseAreaVal,
       icon: Layers,
     });
     specs.push({
@@ -215,10 +252,14 @@ function getDynamicSpecs(type: string, details: any, area: string) {
       icon: Car,
     });
   } else if (type === "Residential Plot" || type.toLowerCase().includes("plot")) {
+    const plotAreaVal = (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+      : (details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : area !== "N/A" ? area : "N/A");
     const dims = details.plotLength && details.plotWidth ? `${details.plotLength} × ${details.plotWidth} ft` : "N/A";
+
     specs.push({
       label: "Plot Area",
-      value: details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : area !== "N/A" ? area : "N/A",
+      value: plotAreaVal,
       icon: Map,
     });
     specs.push({
@@ -490,7 +531,7 @@ function InnerVideoPlayer({
   );
 }
 
-function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolean }) {
+function VideoSlide({ videoUrl, isActive, fullscreenTrigger }: { videoUrl: string; isActive: boolean; fullscreenTrigger: number }) {
   const [isPlayerMounted, setIsPlayerMounted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -521,6 +562,13 @@ function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolea
     setIsPlayerMounted(false);
     setIsFullscreen(true);
   };
+
+  // External trigger: parent increments this to request fullscreen open
+  useEffect(() => {
+    if (fullscreenTrigger > 0) {
+      openFullscreen();
+    }
+  }, [fullscreenTrigger]);
 
   if (!safeUri) return null;
 
@@ -560,25 +608,6 @@ function VideoSlide({ videoUrl, isActive }: { videoUrl: string; isActive: boolea
               <Play size={28} color="white" fill="white" />
             )}
           </TouchableOpacity>
-          <View
-            style={{
-              position: "absolute",
-              bottom: 12,
-              left: 40,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 10,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Play size={10} color="white" fill="white" />
-            <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
-              Tap for Fullscreen
-            </Text>
-          </View>
         </View>
       </Pressable>
 
@@ -685,22 +714,137 @@ function FullscreenVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClos
   );
 }
 
+// ─── Fullscreen Image Viewer ────────────────────────────────────────────────────
+function FullscreenImageViewer({
+  images,
+  initialIndex,
+  onClose,
+}: {
+  images: string[];
+  initialIndex: number;
+  onClose: () => void;
+}) {
+  const { width: W, height: H } = Dimensions.get('window');
+  const flatRef = React.useRef<FlatList>(null);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Scroll to initial index on mount (deferred to avoid layout race)
+  useEffect(() => {
+    if (initialIndex > 0) {
+      const timer = setTimeout(() => {
+        flatRef.current?.scrollToIndex({ index: initialIndex, animated: false });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const onScrollEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / W);
+    setCurrentIndex(idx);
+  }, [W]);
+
+  const renderImage = useCallback(({ item }: { item: string }) => (
+    <View style={{ width: W, height: H, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <Image
+        source={{ uri: item }}
+        style={{ width: W, height: H }}
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        transition={100}
+      />
+    </View>
+  ), [W, H]);
+
+  return (
+    <Modal
+      visible={true}
+      transparent={false}
+      animationType="fade"
+      onRequestClose={onClose}
+      supportedOrientations={['portrait', 'landscape']}
+      statusBarTranslucent
+    >
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        <StatusBar hidden />
+
+        <FlatList
+          ref={flatRef}
+          data={images}
+          keyExtractor={(_, i) => i.toString()}
+          horizontal
+          pagingEnabled
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onScrollEnd}
+          scrollEventThrottle={16}
+          initialScrollIndex={initialIndex}
+          getItemLayout={(_, index) => ({ length: W, offset: W * index, index })}
+          removeClippedSubviews={Platform.OS === 'android'}
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          renderItem={renderImage}
+        />
+
+        {/* Close button */}
+        <TouchableOpacity
+          onPress={onClose}
+          activeOpacity={0.8}
+          style={{
+            position: 'absolute',
+            top: Platform.OS === 'android' ? 36 : 52,
+            right: 16,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 20,
+          }}
+        >
+          <Ionicons name="close" size={22} color="#FFF" />
+        </TouchableOpacity>
+
+        {/* Counter — e.g. "3 / 7" */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: Platform.OS === 'android' ? 24 : 44,
+            alignSelf: 'center',
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            paddingHorizontal: 14,
+            paddingVertical: 5,
+            borderRadius: 20,
+          }}
+        >
+          <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>
+            {currentIndex + 1} / {images.length}
+          </Text>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function TopBadge({
   label,
   variant,
 }: {
   label: string;
-  variant: "featured" | "type" | "verified";
+  variant: "featured" | "type" | "verified" | "listing";
 }) {
   const bg = {
     featured: "bg-orange-500",
     type: "bg-orange-100",
     verified: "bg-emerald-100",
+    listing: "bg-blue-100",
   };
   const text = {
     featured: "text-white",
     type: "text-orange-700",
     verified: "text-emerald-700",
+    listing: "text-blue-700",
   };
 
   return (
@@ -878,6 +1022,8 @@ export default function PropertyDetailsScreen() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [unlockedPhone, setUnlockedPhone] = useState<string | null>(null);
   const [isPhoneUnlocked, setIsPhoneUnlocked] = useState(false);
+  // Fullscreen image viewer: null = closed, number = index of tapped image
+  const [fullscreenImageIndex, setFullscreenImageIndex] = useState<number | null>(null);
 
   const user = useAuthStore((s) => s.user);
 
@@ -885,6 +1031,20 @@ export default function PropertyDetailsScreen() {
     id,
     isAuthHydrated,
   );
+
+  // Refetch the property detail every time this screen comes into focus.
+  // This is the defense-in-depth layer that ensures fresh data is always
+  // shown after the owner edits the property and navigates back — even in
+  // edge cases where the React Query cache invalidation fired while this
+  // screen had no active observer (e.g. it was hidden behind the edit wizard).
+  useFocusEffect(
+    useCallback(() => {
+      if (id && isAuthHydrated) {
+        refetch();
+      }
+    }, [id, isAuthHydrated, refetch])
+  );
+
   const { data: similarProperties = [] } = useSimilarProperties(
     id,
     { limit: 4 },
@@ -894,25 +1054,36 @@ export default function PropertyDetailsScreen() {
   const { mutateAsync: createEnquiry } = useCreatePropertyEnquiry(id);
   const { mutateAsync: createCallEnquiry } = useCreateCallEnquiry();
 
+  // Counter incremented to externally trigger VideoSlide fullscreen open
+  const [videoFullscreenTrigger, setVideoFullscreenTrigger] = useState(0);
+
   const renderHeroItem = useCallback(({ item, index }: { item: string; index: number }) => {
     if (item === VIDEO_SLIDE_KEY) {
       return (
         <VideoSlide
           videoUrl={property?.video || DUMMY_VIDEO_URI}
           isActive={activeSlide === index}
+          fullscreenTrigger={videoFullscreenTrigger}
         />
       );
     }
+    // Image slide — tap anywhere opens fullscreen viewer
     return (
-      <Image
-        source={{ uri: item }}
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onPress={() => setFullscreenImageIndex(index)}
         style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        transition={200}
-      />
+      >
+        <Image
+          source={{ uri: item }}
+          style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
+        />
+      </TouchableOpacity>
     );
-  }, [property?.video, activeSlide]);
+  }, [property?.video, activeSlide, videoFullscreenTrigger]);
 
   const heroKeyExtractor = useCallback((_: any, index: number) => index.toString(), []);
 
@@ -1079,9 +1250,36 @@ export default function PropertyDetailsScreen() {
     }
   };
 
+  const createBrochureLeadMutation = useCreateBrochureLead();
+
+  const handleDownloadBrochure = async () => {
+    if (!isAuthenticated) {
+      openAuth("viewContact");
+      return;
+    }
+
+    const brochureUrl = property?.brochure;
+    if (!brochureUrl) {
+      Alert.alert("Brochure", "No brochure available for this property.");
+      return;
+    }
+
+    try {
+      const res = await createBrochureLeadMutation.mutateAsync(id);
+      const targetUrl = res?.brochureUrl || (typeof res?.data === 'object' && res?.data?.brochureUrl) || brochureUrl;
+      if (targetUrl) {
+        Linking.openURL(targetUrl).catch(() => {
+          Alert.alert("Brochure", "Unable to open brochure file.");
+        });
+      }
+    } catch (e: any) {
+      Alert.alert("Brochure Error", e?.message || "Could not access brochure.");
+    }
+  };
+
   const handleShare = () => {
     Share.share({
-      message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/propertyDetail/${id}`,
+      message: `Check out this property on Nagpur Prime Property: ${property?.title} at ${property?.address}. Price: ₹${property?.price}. More details: https://nagpurprimeproperty.com/properties/${id}`,
     }).catch((error) => {
       if (__DEV__) {
         console.log("Error sharing:", error);
@@ -1109,6 +1307,15 @@ export default function PropertyDetailsScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <StatusBar barStyle="dark-content" />
+
+      {/* Fullscreen image viewer — rendered at root level so it overlays everything */}
+      {fullscreenImageIndex !== null && (
+        <FullscreenImageViewer
+          images={(property?.images ?? []) as string[]}
+          initialIndex={fullscreenImageIndex}
+          onClose={() => setFullscreenImageIndex(null)}
+        />
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -1194,6 +1401,32 @@ export default function PropertyDetailsScreen() {
               );
             })}
           </View>
+
+          {/* ── Fixed fullscreen button — stays bottom-right regardless of swipe ── */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              if (slides[activeSlide] === VIDEO_SLIDE_KEY) {
+                setVideoFullscreenTrigger((n) => n + 1);
+              } else {
+                setFullscreenImageIndex(activeSlide);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              bottom: 12,
+              right: 12,
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              backgroundColor: 'rgba(0,0,0,0.52)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+            }}
+          >
+            <Maximize2 size={16} color="#FFFFFF" strokeWidth={2.5} />
+          </TouchableOpacity>
         </View>
 
         <View className="px-5 pt-5">
@@ -1204,6 +1437,9 @@ export default function PropertyDetailsScreen() {
             <TopBadge label={property.type} variant="type" />
             {property.verified && (
               <TopBadge label="Verified" variant="verified" />
+            )}
+            {Boolean((property as any).listingCategory) && (
+              <TopBadge label={(property as any).listingCategory} variant="listing" />
             )}
           </View>
 
@@ -1219,9 +1455,30 @@ export default function PropertyDetailsScreen() {
 
           <View className="flex-row items-start justify-between mb-6">
             <View>
-              <Text className="text-[32px] font-black text-orange-500 tracking-tight">
-                ₹{property.price}
+              <Text className="text-[32px] font-black text-orange-500 tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
+                {(() => {
+                  const isNew = String((property as any).listingCategory ?? "").toLowerCase() === "new";
+                  // For new projects always show startingPrice (or totalPrice) in the header
+                  if (isNew) {
+                    const sp = pricing.startingPrice;
+                    if (sp !== undefined && sp !== null) {
+                      return `₹${Number(sp).toLocaleString("en-IN")}`;
+                    }
+                  }
+                  const p = property.price?.toString() ?? "N/A";
+                  if (p === "N/A") return "Price on Request";
+                  if (p.includes("–")) {
+                    const [lo, hi] = p.split("–").map((s) => s.trim());
+                    return `₹${lo} – ₹${hi}`;
+                  }
+                  return `₹${p}`;
+                })()}
               </Text>
+              {/* "onwards" for new project listings */}
+              {String((property as any).listingCategory ?? "").toLowerCase() === "new" &&
+                property.price?.toString() !== "N/A" && (
+                <Text className="text-[13px] font-semibold text-orange-400 mt-0.5">onwards</Text>
+              )}
               {Boolean(property.pricePerSqft) && (
                 <Text className="text-[13px] font-medium text-slate-400 mt-0.5">
                   ~ ₹{property.pricePerSqft}/sqft
@@ -1375,10 +1632,56 @@ export default function PropertyDetailsScreen() {
                   </>
                 ) : (
                   <>
-                    <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
-                      <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Price</Text>
-                      <Text className="text-sm font-black text-slate-900">₹{pricing.totalPrice ?? pricing.startingPrice ?? "N/A"}</Text>
-                    </View>
+                    {/* Price rows — range + starting price for new projects, total price for resale */}
+                    {(() => {
+                      const isNew = String((property as any).listingCategory ?? "").toLowerCase() === "new";
+
+                      // Format a raw "min-max" priceRange string into "₹X – ₹Y"
+                      const formatRange = (raw: string) => {
+                        const parts = raw.split("-");
+                        if (parts.length === 2) {
+                          const min = Number(parts[0]);
+                          const max = Number(parts[1]);
+                          if (!isNaN(min) && !isNaN(max)) {
+                            return `₹${min.toLocaleString("en-IN")} – ₹${max.toLocaleString("en-IN")}`;
+                          }
+                        }
+                        return `₹${raw}`;
+                      };
+
+                      if (isNew && pricing.priceRange) {
+                        return (
+                          <>
+                            <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
+                              <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Price Range</Text>
+                              <Text className="text-sm font-black text-slate-900">{formatRange(pricing.priceRange)}</Text>
+                            </View>
+                            {pricing.startingPrice !== undefined && pricing.startingPrice !== null && (
+                              <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
+                                <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Starting Price</Text>
+                                <Text className="text-sm font-black text-orange-500">
+                                  ₹{Number(pricing.startingPrice).toLocaleString("en-IN")} onwards
+                                </Text>
+                              </View>
+                            )}
+                          </>
+                        );
+                      }
+
+                      // Resale / rental
+                      return (
+                        <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
+                          <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Price</Text>
+                          <Text className="text-sm font-black text-slate-900">
+                            {pricing.totalPrice
+                              ? `₹${pricing.totalPrice}`
+                              : pricing.startingPrice
+                                ? `₹${Number(pricing.startingPrice).toLocaleString("en-IN")}`
+                                : "N/A"}
+                          </Text>
+                        </View>
+                      );
+                    })()}
                     {pricing.pricePerSqft !== undefined && (
                       <View className="flex-row items-center justify-between pb-3.5 border-b border-slate-100">
                         <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Price per SqFt</Text>
@@ -1633,9 +1936,11 @@ export default function PropertyDetailsScreen() {
                     <Text className="text-[17px] font-black text-slate-900">
                       {property.broker.name}
                     </Text>
-                    <Text className="text-[13px] font-medium text-slate-500 mt-0.5">
-                      {property.broker.experience}
-                    </Text>
+                    {Boolean((property as any).propertyListedBy) && (
+                      <Text className="text-[13px] font-medium text-slate-500 mt-0.5">
+                        {(property as any).propertyListedBy}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
@@ -1739,6 +2044,22 @@ export default function PropertyDetailsScreen() {
             <Text className="text-[14px] font-bold text-slate-900">Share</Text>
           </TouchableOpacity>
 
+          {Boolean(property?.brochure) && (
+            <TouchableOpacity
+              onPress={() => {
+                if (property?.brochure) {
+                  Linking.openURL(property.brochure as string).catch(() => {
+                    Alert.alert('Brochure', 'Unable to open brochure file.');
+                  });
+                }
+              }}
+              activeOpacity={0.85}
+              className="w-12 h-12 bg-blue-50 border border-blue-200 rounded-2xl items-center justify-center"
+            >
+              <FileText size={18} color="#3B82F6" />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             onPress={() => setDeleteConfirmVisible(true)}
             activeOpacity={0.85}
@@ -1773,6 +2094,17 @@ export default function PropertyDetailsScreen() {
           >
             <Text className="text-[14px] font-bold text-white">WhatsApp</Text>
           </TouchableOpacity>
+
+          {Boolean(property?.brochure) && (
+            <TouchableOpacity
+              onPress={handleDownloadBrochure}
+              activeOpacity={0.85}
+              className="flex-1 flex-row items-center justify-center py-3.5 bg-orange-50 border border-orange-200 rounded-2xl"
+            >
+              <FileText size={18} color="#F97316" />
+              <Text className="text-[14px] font-bold text-orange-600 ml-1.5">Brochure</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

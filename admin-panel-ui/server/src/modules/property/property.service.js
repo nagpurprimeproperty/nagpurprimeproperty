@@ -7,7 +7,15 @@ import User from '../../models/user.model.js';
 
 async function getActiveSubscription(brokerId) {
   if (!brokerId) return null;
-  return Subscription.findOne({ userId: brokerId, status: 'Active' }).sort({ createdAt: -1 });
+  return Subscription.findOne({
+    userId: brokerId,
+    status: 'Active',
+    $or: [
+      { isDurationUnlimited: true },
+      { endDate: null },
+      { endDate: { $gt: new Date() } }
+    ]
+  }).sort({ createdAt: -1 });
 }
 
 async function incrementUsage(subscriptionId, field, delta = 1) {

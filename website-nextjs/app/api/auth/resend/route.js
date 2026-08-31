@@ -10,10 +10,8 @@ export async function POST(req) {
     if (!mobile) {
       return NextResponse.json({ success: false, message: 'Mobile number is required' }, { status: 400 });
     }
-    const otp = await UserService.resendOTP(mobile);
-    const isStaticTestUser = mobile === '9999999999' || mobile === '1234567890';
-    const showOTP = env.NODE_ENV !== 'production' || isStaticTestUser || !env.WHATSAPP_ENABLED;
-    return NextResponse.json({ success: true, message: 'OTP resent successfully', data: showOTP ? otp : undefined });
+    await UserService.resendOTP(mobile);
+    return NextResponse.json({ success: true, message: 'OTP resent successfully' });
   } catch (err) {
     return NextResponse.json({ success: false, message: err.message || 'Internal error' }, { status: err.status || 500 });
   }

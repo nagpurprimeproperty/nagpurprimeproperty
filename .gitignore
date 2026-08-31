@@ -28,6 +28,9 @@
 **/.env.local
 **/.env.local.temp
 # Note: google-services.json and GoogleService-Info.plist are tracked so EAS Build includes them in the upload archive.
+
+# Local diagnostic/utility scripts (may contain credentials — never commit)
+**/*.script.js
 # OS files
 .DS_Store
 Thumbs.db

@@ -1,19 +1,8 @@
 import Lead from '../lead/leads.model.js';
 import mongoose from 'mongoose';
+import { formatLeadDateIST } from '../../utils/timezone.js';
 
-
-function formatLeadDate(dateStr) {
-  const date = new Date(dateStr);
-  const now = new Date();
-
-  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
-  const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-  if (diffDays === 0) return `TODAY ${time}`;
-  if (diffDays === 1) return `YESTERDAY`;
-  return `${diffDays} DAYS AGO`;
-}
+const formatLeadDate = formatLeadDateIST;
 
 const formatPriceLabel = (value, isMonthly = false) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return value;

@@ -1,4 +1,5 @@
 import PurchasedSubscription from './purchaseSubscription.model.js';
+import Plan from './subscription.model.js';
 import Transaction from './transaction.model.js';
 import mongoose from 'mongoose';
 
@@ -13,9 +14,20 @@ const purchasePlanRepository = {
   },
 
   findActiveByUser: (userId) =>
-    PurchasedSubscription.findOne({ userId, status: 'Active' })
+    PurchasedSubscription.findOne({
+      userId,
+      status: 'Active',
+      $or: [
+        { isDurationUnlimited: true },
+        { endDate: null },
+        { endDate: { $gt: new Date() } }
+      ]
+    })
       .populate('planId', 'name price limits description features')
       .lean(),
+
+  findRawActiveByUser: (userId) =>
+    PurchasedSubscription.findOne({ userId, status: 'Active' }).sort({ createdAt: -1 }),
 
   findSubscriptionById: (id) =>
     PurchasedSubscription.findById(id).populate('planId').lean(),
@@ -96,7 +108,15 @@ const purchasePlanRepository = {
     Transaction.findByIdAndUpdate(id, { $set: update }, { new: true }),
 
   getSubscriptionByUserId: (userId) =>
-    PurchasedSubscription.findOne({ userId, status: 'Active' }).populate('planId').lean(),
+    PurchasedSubscription.findOne({
+      userId,
+      status: 'Active',
+      $or: [
+        { isDurationUnlimited: true },
+        { endDate: null },
+        { endDate: { $gt: new Date() } }
+      ]
+    }).populate('planId').lean(),
 
   markAsLeadOpened: async (id) =>
     PurchasedSubscription.findByIdAndUpdate(id, { $inc: { 'usage.leadsUnlocked': 1 } }, { new: true }),

@@ -52,32 +52,48 @@ const possessionTimelineField: FieldDef = {
 const commonFlatFields = (category: ListingCategory): FieldSection[] => [
   {
     title: 'Size & Layout',
-    fields: [
-      { key: 'bhk',          label: 'BHK',          type: 'stepper', required: true,  min: 0, max: 8  },
-      { key: 'bathrooms',    label: 'Bathrooms',    type: 'stepper', required: true,  min: 0, max: 15 },
-      { key: 'balconies',    label: 'Balconies',    type: 'stepper', required: false, min: 0, max: 10 },
-      { key: 'floorNumber',  label: 'Floor Number', type: 'stepper', required: true,  min: 0, max: 99, hint: '0 = Ground' },
-      { key: 'totalFloors',  label: 'Total Floors', type: 'stepper', required: true,  min: 1, max: 99 },
-    ],
+    fields: category === 'new'
+      ? [
+          { key: 'minBhk',       label: 'Min BHK',      type: 'stepper', required: true,  min: 0, max: 8  },
+          { key: 'maxBhk',       label: 'Max BHK',      type: 'stepper', required: true,  min: 0, max: 8  },
+          { key: 'bathrooms',    label: 'Bathrooms',    type: 'stepper', required: false, min: 0, max: 15 },
+          { key: 'balconies',    label: 'Balconies',    type: 'stepper', required: false, min: 0, max: 10 },
+          { key: 'floorNumber',  label: 'Floor Number', type: 'stepper', required: false, min: 0, max: 99, hint: '0 = Ground' },
+          { key: 'totalFloors',  label: 'Total Floors', type: 'stepper', required: false, min: 1, max: 99 },
+        ]
+      : [
+          { key: 'bhk',          label: 'BHK',          type: 'stepper', required: true,  min: 0, max: 8  },
+          { key: 'bathrooms',    label: 'Bathrooms',    type: 'stepper', required: true,  min: 0, max: 15 },
+          { key: 'balconies',    label: 'Balconies',    type: 'stepper', required: false, min: 0, max: 10 },
+          { key: 'floorNumber',  label: 'Floor Number', type: 'stepper', required: true,  min: 0, max: 99, hint: '0 = Ground' },
+          { key: 'totalFloors',  label: 'Total Floors', type: 'stepper', required: true,  min: 1, max: 99 },
+        ],
   },
   {
     title: 'Area Details',
-    fields: [
-      { key: 'carpetArea',      label: 'Carpet Area (sq.ft)',        type: 'number', required: true,  placeholder: 'Net usable area' },
-      { key: 'builtUpArea',     label: 'Built-up Area (sq.ft)',      type: 'number', required: false, placeholder: 'Including walls & balcony' },
-      { key: 'superBuiltUpArea',label: 'Super Built-up Area (sq.ft)',type: 'number', required: false, placeholder: 'Including common areas' },
-    ],
+    fields: category === 'new'
+      ? [
+          { key: 'minCarpetArea',       label: 'Min Carpet Area (sq.ft)',        type: 'number', required: true,  placeholder: 'Min usable area' },
+          { key: 'maxCarpetArea',       label: 'Max Carpet Area (sq.ft)',        type: 'number', required: true,  placeholder: 'Max usable area' },
+          { key: 'minSuperBuiltUpArea', label: 'Min Super Built-up Area (sq.ft)',type: 'number', required: false, placeholder: 'Min common area' },
+          { key: 'maxSuperBuiltUpArea', label: 'Max Super Built-up Area (sq.ft)',type: 'number', required: false, placeholder: 'Max common area' },
+        ]
+      : [
+          { key: 'carpetArea',      label: 'Carpet Area (sq.ft)',        type: 'number', required: true,  placeholder: 'Net usable area' },
+          { key: 'builtUpArea',     label: 'Built-up Area (sq.ft)',      type: 'number', required: false, placeholder: 'Including walls & balcony' },
+          { key: 'superBuiltUpArea',label: 'Super Built-up Area (sq.ft)',type: 'number', required: false, placeholder: 'Including common areas' },
+        ],
   },
   {
     title: 'Property Info',
     fields: [
-      { key: 'furnishing',        label: 'Furnishing',          type: 'select', required: true,  options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished', 'Bare Shell', 'Warm Shell'] },
+      { key: 'furnishing',        label: 'Furnishing',          type: 'select', required: category !== 'new',  options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished', 'Bare Shell', 'Warm Shell'] },
       { key: 'facing',            label: 'Facing',              type: 'select', required: false, options: ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'] },
       { key: 'ageOfProperty',     label: 'Age of Property',     type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
       { key: 'floorType',         label: 'Floor Type',          type: 'select', required: false, options: ['Marble', 'Vitrified', 'Wooden', 'Granite', 'Ceramic'] },
       { key: 'waterSupply',       label: 'Water Supply',        type: 'select', required: false, options: ['Municipal', 'Borewell', 'Both'] },
       { key: 'electricityStatus', label: 'Electricity Status',  type: 'select', required: false, options: ['Metered', 'Non-metered', 'Pre-paid'] },
-      { key: 'ownershipType',     label: 'Ownership Type',      type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Co-operative Society', 'Power of Attorney'] },
+      { key: 'ownershipType',     label: 'Ownership Type',      type: 'select', required: category !== 'new',  options: ['Freehold', 'Leasehold', 'Co-operative Society', 'Power of Attorney'] },
       readyToMoveField,
       possessionTimelineField,
       ...(category === 'rental'
@@ -174,26 +190,42 @@ function getStep3FieldsInternal(
       return [
         {
           title: 'Size & Layout',
-          fields: [
-            { key: 'bhk',            label: 'BHK',             type: 'stepper', required: true,  min: 1, max: 8  },
-            { key: 'bathrooms',      label: 'Bathrooms',       type: 'stepper', required: true,  min: 1, max: 15 },
-            { key: 'numberOfFloors', label: 'Number of Floors',type: 'text',    required: true,  placeholder: 'e.g. G+1, G+2' },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minBhk',            label: 'Min BHK',         type: 'stepper', required: false, min: 1, max: 8  },
+                { key: 'maxBhk',            label: 'Max BHK',         type: 'stepper', required: false, min: 1, max: 8  },
+                { key: 'bathrooms',         label: 'Bathrooms',       type: 'stepper', required: false, min: 1, max: 15 },
+                { key: 'numberOfFloors',    label: 'Number of Floors',type: 'text',    required: false, placeholder: 'e.g. G+1, G+2' },
+              ]
+            : [
+                { key: 'bhk',            label: 'BHK',             type: 'stepper', required: true,  min: 1, max: 8  },
+                { key: 'bathrooms',      label: 'Bathrooms',       type: 'stepper', required: true,  min: 1, max: 15 },
+                { key: 'numberOfFloors', label: 'Number of Floors',type: 'text',    required: true,  placeholder: 'e.g. G+1, G+2' },
+              ],
         },
         {
           title: 'Area Details',
-          fields: [
-            { key: 'plotArea',    label: 'Plot Area (sq.ft)',    type: 'number', required: true  },
-            { key: 'builtUpArea', label: 'Built-up Area (sq.ft)',type: 'number', required: true  },
-            { key: 'carpetArea',  label: 'Carpet Area (sq.ft)',  type: 'number', required: false },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minPlotArea',    label: 'Min Plot Area (sq.ft)',    type: 'number', required: false },
+                { key: 'maxPlotArea',    label: 'Max Plot Area (sq.ft)',    type: 'number', required: false },
+                { key: 'minBuiltUpArea', label: 'Min Built-up Area (sq.ft)',type: 'number', required: false },
+                { key: 'maxBuiltUpArea', label: 'Max Built-up Area (sq.ft)',type: 'number', required: false },
+                { key: 'minCarpetArea',  label: 'Min Carpet Area (sq.ft)',  type: 'number', required: false },
+                { key: 'maxCarpetArea',  label: 'Max Carpet Area (sq.ft)',  type: 'number', required: false },
+              ]
+            : [
+                { key: 'plotArea',    label: 'Plot Area (sq.ft)',    type: 'number', required: true  },
+                { key: 'builtUpArea', label: 'Built-up Area (sq.ft)',type: 'number', required: true  },
+                { key: 'carpetArea',  label: 'Carpet Area (sq.ft)',  type: 'number', required: false },
+              ],
         },
         {
           title: 'Property Info',
           fields: [
-            { key: 'furnishing',     label: 'Furnishing',          type: 'select', required: true,  options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished'] },
+            { key: 'furnishing',     label: 'Furnishing',          type: 'select', required: category !== 'new',  options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished'] },
             { key: 'facing',         label: 'Facing',              type: 'select', required: false, options: ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'] },
-            { key: 'parkingSlots',   label: 'Parking Slots',       type: 'stepper',required: true,  min: 0, max: 10 },
+            { key: 'parkingSlots',   label: 'Parking Slots',       type: 'stepper',required: category !== 'new',  min: 0, max: 10 },
             { key: 'gardenLawn',     label: 'Garden / Lawn',       type: 'toggle', required: false },
             { key: 'cornerProperty', label: 'Corner Property',     type: 'toggle', required: false },
             { key: 'gatedSociety',   label: 'Gated Society',       type: 'toggle', required: false },
@@ -204,7 +236,7 @@ function getStep3FieldsInternal(
             { key: 'ageOfProperty',  label: 'Age of Property',      type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
             { key: 'petFriendly',    label: 'Pet Friendly',         type: 'toggle', required: false },
             { key: 'nonVegAllowed',  label: 'Non-Veg Allowed',      type: 'toggle', required: false },
-            { key: 'ownershipType',  label: 'Ownership Type',       type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+            { key: 'ownershipType',  label: 'Ownership Type',       type: 'select', required: category !== 'new',  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
             readyToMoveField,
             possessionTimelineField,
           ],
@@ -217,19 +249,28 @@ function getStep3FieldsInternal(
       return [
         {
           title: 'Area & Floor',
-          fields: [
-            { key: 'carpetArea',       label: 'Carpet Area (sq.ft)',        type: 'number', required: true  },
-            { key: 'builtUpArea',      label: 'Built-up Area (sq.ft)',      type: 'number', required: false },
-            { key: 'superBuiltUpArea', label: 'Super Built-up Area (sq.ft)',type: 'number', required: false },
-            { key: 'floorNumber',      label: 'Floor Number',               type: 'stepper',required: true, min: 0, max: 99 },
-            { key: 'totalFloors',      label: 'Total Floors',               type: 'stepper',required: true, min: 1, max: 99 },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minCarpetArea',       label: 'Min Carpet Area (sq.ft)',        type: 'number', required: true  },
+                { key: 'maxCarpetArea',       label: 'Max Carpet Area (sq.ft)',        type: 'number', required: true  },
+                { key: 'minSuperBuiltUpArea', label: 'Min Super Built-up Area (sq.ft)',type: 'number', required: false },
+                { key: 'maxSuperBuiltUpArea', label: 'Max Super Built-up Area (sq.ft)',type: 'number', required: false },
+                { key: 'floorNumber',         label: 'Floor Number',               type: 'stepper',required: false, min: 0, max: 99 },
+                { key: 'totalFloors',         label: 'Total Floors',               type: 'stepper',required: false, min: 1, max: 99 },
+              ]
+            : [
+                { key: 'carpetArea',       label: 'Carpet Area (sq.ft)',        type: 'number', required: true  },
+                { key: 'builtUpArea',      label: 'Built-up Area (sq.ft)',      type: 'number', required: false },
+                { key: 'superBuiltUpArea', label: 'Super Built-up Area (sq.ft)',type: 'number', required: false },
+                { key: 'floorNumber',      label: 'Floor Number',               type: 'stepper',required: true, min: 0, max: 99 },
+                { key: 'totalFloors',      label: 'Total Floors',               type: 'stepper',required: true, min: 1, max: 99 },
+              ],
         },
         {
           title: 'Office Details',
           fields: [
-            { key: 'furnishing',       label: 'Furnishing',      type: 'select', required: true,  options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished', 'Bare Shell', 'Warm Shell'] },
-            { key: 'washrooms',        label: 'Washrooms',        type: 'stepper',required: true, min: 0, max: 20 },
+            { key: 'furnishing',       label: 'Furnishing',      type: 'select', required: category !== 'new',  options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished', 'Bare Shell', 'Warm Shell'] },
+            { key: 'washrooms',        label: 'Washrooms',        type: 'stepper',required: category !== 'new', min: 0, max: 20 },
             { key: 'cabinCount',       label: 'Cabin Count',      type: 'number', required: false },
             { key: 'openDesks',        label: 'Open Desks',       type: 'number', required: false },
             { key: 'pantryCafeteria',  label: 'Pantry / Cafeteria',type: 'toggle',required: false },
@@ -240,7 +281,7 @@ function getStep3FieldsInternal(
             { key: 'fireSafety',       label: 'Fire Safety',       type: 'toggle',required: false },
             { key: 'dgBackup',         label: 'DG Backup',         type: 'toggle',required: false },
             { key: 'ageOfProperty',    label: 'Age of Property',   type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
-            { key: 'ownershipType',    label: 'Ownership Type',    type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+            { key: 'ownershipType',    label: 'Ownership Type',    type: 'select', required: category !== 'new',  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
           ],
         },
       ];
@@ -250,11 +291,17 @@ function getStep3FieldsInternal(
       return [
         {
           title: 'Area Details',
-          fields: [
-            { key: 'carpetArea',  label: 'Carpet Area (sq.ft)', type: 'number', required: true  },
-            { key: 'builtUpArea', label: 'Built-up Area (sq.ft)',type: 'number', required: false },
-            { key: 'shopFloor',   label: 'Shop Floor',           type: 'stepper',required: true, min: 0, max: 20 },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minCarpetArea', label: 'Min Carpet Area (sq.ft)', type: 'number', required: true  },
+                { key: 'maxCarpetArea', label: 'Max Carpet Area (sq.ft)', type: 'number', required: true  },
+                { key: 'shopFloor',     label: 'Shop Floor',           type: 'stepper',required: false, min: 0, max: 20 },
+              ]
+            : [
+                { key: 'carpetArea',  label: 'Carpet Area (sq.ft)', type: 'number', required: true  },
+                { key: 'builtUpArea', label: 'Built-up Area (sq.ft)',type: 'number', required: false },
+                { key: 'shopFloor',   label: 'Shop Floor',           type: 'stepper',required: true, min: 0, max: 20 },
+              ],
         },
         {
           title: 'Shop Details',
@@ -269,7 +316,7 @@ function getStep3FieldsInternal(
             { key: 'footfallRating',label: 'Footfall Rating',     type: 'select', required: false, options: ['Low', 'Medium', 'High', 'Very High'] },
             { key: 'suitableFor',   label: 'Suitable For',        type: 'multi_select', required: false, options: ['Retail', 'Food & Beverage', 'Medical', 'Electronics', 'Clothing', 'Salon', 'Pharmacy', 'Bakery', 'Footwear', 'Other'] },
             { key: 'ageOfProperty', label: 'Age of Property',     type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
-            { key: 'ownershipType', label: 'Ownership Type',      type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+            { key: 'ownershipType', label: 'Ownership Type',      type: 'select', required: category !== 'new',  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
           ],
         },
       ];
@@ -279,18 +326,32 @@ function getStep3FieldsInternal(
       return [
         {
           title: 'Showroom Details',
-          fields: [
-            { key: 'showroomArea',    label: 'Showroom Area (sq.ft)', type: 'number', required: true  },
-            { key: 'numberOfFloors',  label: 'Number of Floors',      type: 'number', required: false },
-            { key: 'frontage',        label: 'Frontage (ft)',          type: 'number', required: false },
-            { key: 'ceilingHeight',   label: 'Ceiling Height (ft)',    type: 'number', required: false },
-            { key: 'glassFront',      label: 'Glass Front',            type: 'toggle', required: false },
-            { key: 'parkingAvailable',label: 'Parking Available',      type: 'toggle', required: true  },
-            { key: 'acInstalled',     label: 'AC Installed',           type: 'toggle', required: false },
-            { key: 'mainRoadFacing',  label: 'Main Road Facing',       type: 'toggle', required: false },
-            { key: 'ageOfProperty',   label: 'Age of Property',        type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
-            { key: 'ownershipType',   label: 'Ownership Type',         type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minShowroomArea', label: 'Min Showroom Area (sq.ft)', type: 'number', required: true  },
+                { key: 'maxShowroomArea', label: 'Max Showroom Area (sq.ft)', type: 'number', required: true  },
+                { key: 'numberOfFloors',  label: 'Number of Floors',          type: 'number', required: false },
+                { key: 'frontage',        label: 'Frontage (ft)',             type: 'number', required: false },
+                { key: 'ceilingHeight',   label: 'Ceiling Height (ft)',       type: 'number', required: false },
+                { key: 'glassFront',      label: 'Glass Front',               type: 'toggle', required: false },
+                { key: 'parkingAvailable',label: 'Parking Available',         type: 'toggle', required: false },
+                { key: 'acInstalled',     label: 'AC Installed',              type: 'toggle', required: false },
+                { key: 'mainRoadFacing',  label: 'Main Road Facing',          type: 'toggle', required: false },
+                { key: 'ageOfProperty',   label: 'Age of Property',           type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
+                { key: 'ownershipType',   label: 'Ownership Type',            type: 'select', required: false, options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+              ]
+            : [
+                { key: 'showroomArea',    label: 'Showroom Area (sq.ft)', type: 'number', required: true  },
+                { key: 'numberOfFloors',  label: 'Number of Floors',      type: 'number', required: false },
+                { key: 'frontage',        label: 'Frontage (ft)',          type: 'number', required: false },
+                { key: 'ceilingHeight',   label: 'Ceiling Height (ft)',    type: 'number', required: false },
+                { key: 'glassFront',      label: 'Glass Front',            type: 'toggle', required: false },
+                { key: 'parkingAvailable',label: 'Parking Available',      type: 'toggle', required: true  },
+                { key: 'acInstalled',     label: 'AC Installed',           type: 'toggle', required: false },
+                { key: 'mainRoadFacing',  label: 'Main Road Facing',       type: 'toggle', required: false },
+                { key: 'ageOfProperty',   label: 'Age of Property',        type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
+                { key: 'ownershipType',   label: 'Ownership Type',         type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+              ],
         },
       ];
 
@@ -299,20 +360,36 @@ function getStep3FieldsInternal(
       return [
         {
           title: 'Warehouse Details',
-          fields: [
-            { key: 'warehouseArea',    label: 'Warehouse Area (sq.ft)',   type: 'number', required: true  },
-            { key: 'warehouseHeight',  label: 'Warehouse Height (ft)',    type: 'number', required: true  },
-            { key: 'truckAccess',      label: 'Truck Access',             type: 'toggle', required: true  },
-            { key: 'numberOfDocks',    label: 'Number of Loading Docks',  type: 'number', required: false },
-            { key: 'floorLoadCapacity',label: 'Floor Load Capacity',      type: 'number', required: false, hint: 'in kg/sq.ft' },
-            { key: 'openYardArea',     label: 'Open Yard Area (sq.ft)',   type: 'number', required: false },
-            { key: 'powerLoad',        label: 'Power Load (KVA)',         type: 'number', required: false },
-            { key: 'waterSupply',      label: 'Water Supply',             type: 'toggle', required: false },
-            { key: 'officeSpaceInside',label: 'Office Space Inside',      type: 'toggle', required: false },
-            { key: 'midc',             label: 'MIDC / Industrial Zone',   type: 'toggle', required: false },
-            { key: 'ageOfProperty',    label: 'Age of Property',          type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
-            { key: 'ownershipType',    label: 'Ownership Type',           type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minWarehouseArea', label: 'Min Warehouse Area (sq.ft)',   type: 'number', required: true  },
+                { key: 'maxWarehouseArea', label: 'Max Warehouse Area (sq.ft)',   type: 'number', required: true  },
+                { key: 'warehouseHeight',  label: 'Warehouse Height (ft)',        type: 'number', required: false },
+                { key: 'truckAccess',      label: 'Truck Access',                 type: 'toggle', required: false },
+                { key: 'numberOfDocks',    label: 'Number of Loading Docks',      type: 'number', required: false },
+                { key: 'floorLoadCapacity',label: 'Floor Load Capacity',          type: 'number', required: false, hint: 'in kg/sq.ft' },
+                { key: 'openYardArea',     label: 'Open Yard Area (sq.ft)',       type: 'number', required: false },
+                { key: 'powerLoad',        label: 'Power Load (KVA)',             type: 'number', required: false },
+                { key: 'waterSupply',      label: 'Water Supply',                 type: 'toggle', required: false },
+                { key: 'officeSpaceInside',label: 'Office Space Inside',          type: 'toggle', required: false },
+                { key: 'midc',             label: 'MIDC / Industrial Zone',       type: 'toggle', required: false },
+                { key: 'ageOfProperty',    label: 'Age of Property',              type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
+                { key: 'ownershipType',    label: 'Ownership Type',               type: 'select', required: false, options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+              ]
+            : [
+                { key: 'warehouseArea',    label: 'Warehouse Area (sq.ft)',   type: 'number', required: true  },
+                { key: 'warehouseHeight',  label: 'Warehouse Height (ft)',    type: 'number', required: true  },
+                { key: 'truckAccess',      label: 'Truck Access',             type: 'toggle', required: true  },
+                { key: 'numberOfDocks',    label: 'Number of Loading Docks',  type: 'number', required: false },
+                { key: 'floorLoadCapacity',label: 'Floor Load Capacity',      type: 'number', required: false, hint: 'in kg/sq.ft' },
+                { key: 'openYardArea',     label: 'Open Yard Area (sq.ft)',   type: 'number', required: false },
+                { key: 'powerLoad',        label: 'Power Load (KVA)',         type: 'number', required: false },
+                { key: 'waterSupply',      label: 'Water Supply',             type: 'toggle', required: false },
+                { key: 'officeSpaceInside',label: 'Office Space Inside',      type: 'toggle', required: false },
+                { key: 'midc',             label: 'MIDC / Industrial Zone',   type: 'toggle', required: false },
+                { key: 'ageOfProperty',    label: 'Age of Property',          type: 'select', required: false, options: ['New', '1–3 Years', '3–5 Years', '5–10 Years', '10+ Years'] },
+                { key: 'ownershipType',    label: 'Ownership Type',           type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+              ],
         },
       ];
 
@@ -321,21 +398,37 @@ function getStep3FieldsInternal(
       return [
         {
           title: 'Plot Details',
-          fields: [
-            { key: 'plotAreaSqFt', label: 'Plot Area (sq.ft)',  type: 'number', required: true  },
-            { key: 'plotAreaSqm',  label: 'Plot Area (sq.m)',   type: 'area_auto', required: false, autoCalcFrom: 'plotAreaSqFt', autoCalcLabel: '× 0.0929' },
-            { key: 'plotLength',   label: 'Length (ft)',         type: 'number', required: false },
-            { key: 'plotWidth',    label: 'Width (ft)',          type: 'number', required: false },
-            { key: 'facing',       label: 'Facing',              type: 'select', required: false, options: ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'] },
-            { key: 'roadWidth',    label: 'Road Width (ft)',      type: 'number', required: false },
-            { key: 'boundaryWall', label: 'Boundary Wall',       type: 'toggle', required: false },
-            { key: 'gatedLayout',  label: 'Gated Layout',        type: 'toggle', required: false },
-            { key: 'cornerPlot',   label: 'Corner Plot',         type: 'toggle', required: false },
-            { key: 'approvedBy',   label: 'Approved By',         type: 'multi_select', required: false, options: ['NIT', 'NMC', 'NMRDA', 'MHADA'] },
-            { key: 'zoneType',     label: 'Zone Type',           type: 'select', required: false, options: ['Residential', 'Commercial', 'Industrial', 'Mixed'] },
-            { key: 'fsiAvailable', label: 'FSI Available',       type: 'number', required: false },
-            { key: 'ownershipType',label: 'Ownership Type',      type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
-          ],
+          fields: category === 'new'
+            ? [
+                { key: 'minPlotAreaSqFt', label: 'Min Plot Area (sq.ft)', type: 'number', required: true  },
+                { key: 'maxPlotAreaSqFt', label: 'Max Plot Area (sq.ft)', type: 'number', required: true  },
+                { key: 'plotLength',      label: 'Length (ft)',           type: 'number', required: false },
+                { key: 'plotWidth',       label: 'Width (ft)',            type: 'number', required: false },
+                { key: 'facing',          label: 'Facing',                type: 'select', required: false, options: ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'] },
+                { key: 'roadWidth',       label: 'Road Width (ft)',       type: 'number', required: false },
+                { key: 'boundaryWall',    label: 'Boundary Wall',         type: 'toggle', required: false },
+                { key: 'gatedLayout',     label: 'Gated Layout',          type: 'toggle', required: false },
+                { key: 'cornerPlot',      label: 'Corner Plot',           type: 'toggle', required: false },
+                { key: 'approvedBy',      label: 'Approved By',           type: 'multi_select', required: false, options: ['NIT', 'NMC', 'NMRDA-RL', 'MHADA'] },
+                { key: 'zoneType',        label: 'Zone Type',             type: 'select', required: false, options: ['Residential', 'Commercial', 'Industrial', 'Mixed'] },
+                { key: 'fsiAvailable',    label: 'FSI Available',         type: 'number', required: false },
+                { key: 'ownershipType',   label: 'Ownership Type',        type: 'select', required: false, options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+              ]
+            : [
+                { key: 'plotAreaSqFt', label: 'Plot Area (sq.ft)',  type: 'number', required: true  },
+                { key: 'plotAreaSqm',  label: 'Plot Area (sq.m)',   type: 'area_auto', required: false, autoCalcFrom: 'plotAreaSqFt', autoCalcLabel: '× 0.0929' },
+                { key: 'plotLength',   label: 'Length (ft)',         type: 'number', required: false },
+                { key: 'plotWidth',    label: 'Width (ft)',          type: 'number', required: false },
+                { key: 'facing',       label: 'Facing',              type: 'select', required: false, options: ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'] },
+                { key: 'roadWidth',    label: 'Road Width (ft)',      type: 'number', required: false },
+                { key: 'boundaryWall', label: 'Boundary Wall',       type: 'toggle', required: false },
+                { key: 'gatedLayout',  label: 'Gated Layout',        type: 'toggle', required: false },
+                { key: 'cornerPlot',   label: 'Corner Plot',         type: 'toggle', required: false },
+                { key: 'approvedBy',   label: 'Approved By',         type: 'multi_select', required: false, options: ['NIT', 'NMC', 'NMRDA-RL', 'MHADA'] },
+                { key: 'zoneType',     label: 'Zone Type',           type: 'select', required: false, options: ['Residential', 'Commercial', 'Industrial', 'Mixed'] },
+                { key: 'fsiAvailable', label: 'FSI Available',       type: 'number', required: false },
+                { key: 'ownershipType',label: 'Ownership Type',      type: 'select', required: true,  options: ['Freehold', 'Leasehold', 'Power of Attorney'] },
+              ],
         },
       ];
 

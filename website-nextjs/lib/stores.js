@@ -121,18 +121,43 @@ export const useViewed = create()(
   ),
 );
 
-// ─── Unlocked Brokers Store ───────────────────────────────────────────────────
+// ─── Unlocked Properties Store (Property-wise contact unlocking) ───────────────
 export const useUnlocked = create()(
   persist(
     (set, get) => ({
-      brokerIds: [],
-      unlock: (brokerId) =>
+      propertyIds: [],
+      contacts: {},
+      unlock: (propertyId, contact = null) => {
+        if (!propertyId) return;
+        const pidStr = String(propertyId);
+        const current = get().propertyIds || [];
+        const currentContacts = get().contacts || {};
         set({
-          brokerIds: Array.from(new Set([...get().brokerIds, brokerId])),
-        }),
-      isUnlocked: (brokerId) => get().brokerIds.includes(brokerId),
+          propertyIds: Array.from(new Set([...current, pidStr])),
+          contacts: contact
+            ? { ...currentContacts, [pidStr]: { ...currentContacts[pidStr], ...contact } }
+            : currentContacts,
+        });
+      },
+      saveContact: (propertyId, contact) => {
+        if (!propertyId || !contact) return;
+        const pidStr = String(propertyId);
+        const currentContacts = get().contacts || {};
+        set({
+          contacts: { ...currentContacts, [pidStr]: { ...currentContacts[pidStr], ...contact } },
+        });
+      },
+      getContact: (propertyId) => {
+        if (!propertyId) return null;
+        return (get().contacts || {})[String(propertyId)] || null;
+      },
+      isUnlocked: (propertyId) => {
+        if (!propertyId) return false;
+        const current = get().propertyIds || [];
+        return current.includes(String(propertyId));
+      },
     }),
-    { name: "nh-unlocked" },
+    { name: "nh-unlocked-properties" },
   ),
 );
 

@@ -211,9 +211,16 @@ const communicationService = {
   },
 
   /**
-   * Send push notification via Firebase.
+   * Send push notification via Firebase or Expo Push.
    */
   sendPush: async ({ fcmToken, title, body, data = {}, metadata = {} }) => {
+    if (!fcmToken) {
+      console.warn('[Push Service] ⚠️ Push skipped — no fcmToken provided');
+      return { success: false, message: 'No token' };
+    }
+
+    console.log(`[Push Service] 🚀 Initiating push notification: "${title}" -> ${fcmToken.slice(0, 30)}...`);
+
     const log = await CommunicationLog.create({
       type: 'push',
       recipient: fcmToken,
@@ -224,9 +231,47 @@ const communicationService = {
     });
 
     try {
+      const isExpoToken =
+        typeof fcmToken === 'string' &&
+        (fcmToken.startsWith('ExponentPushToken[') || fcmToken.startsWith('ExpoPushToken['));
+
+      if (isExpoToken) {
+        console.log(`[Push Service] 📤 Sending via Expo Push API...`);
+        const res = await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            {
+              to: fcmToken,
+              sound: 'default',
+              title,
+              body,
+              data: Object.keys(data).reduce((acc, key) => {
+                acc[key] = String(data[key]);
+                return acc;
+              }, {}),
+              priority: 'high',
+              _displayInForeground: true,
+            },
+          ]),
+        });
+        const respData = await res.json();
+        console.log(`[Push Service] 📬 Expo API Response:`, JSON.stringify(respData));
+        log.status = 'sent';
+        log.sentAt = new Date();
+        log.metadata = { ...log.metadata, apiResponse: respData };
+        await log.save();
+        return { success: true, logId: log._id };
+      }
+
+      console.log(`[Push Service] 📤 Sending via Firebase Admin SDK (FCM)...`);
       const { getMessaging } = await import('../../config/firebase.js');
       const messaging = getMessaging();
-      await messaging.send({
+      const response = await messaging.send({
         token: fcmToken,
         notification: { title, body },
         data: Object.keys(data).reduce((acc, key) => {
@@ -242,14 +287,17 @@ const communicationService = {
         },
         apns: { payload: { aps: { contentAvailable: true, badge: 1, sound: 'default' } } },
       });
+      console.log(`[Push Service] ✅ FCM push delivered successfully. Msg ID: ${response}`);
       log.status = 'sent';
       log.sentAt = new Date();
+      log.metadata = { ...log.metadata, messageId: response };
       await log.save();
-      return { success: true, logId: log._id };
+      return { success: true, logId: log._id, messageId: response };
     } catch (error) {
+      console.error('[Push Service] ❌ Push notification failed:', error.message);
       log.status = 'failed';
       log.failedAt = new Date();
-      log.errorMessage = error?.message ? String(error.message).slice(0, 500) : 'FCM service failure';
+      log.errorMessage = error?.message ? String(error.message).slice(0, 500) : 'Push notification service failure';
       await log.save();
       const err = new Error('Failed to send push notification');
       err.status = 500;

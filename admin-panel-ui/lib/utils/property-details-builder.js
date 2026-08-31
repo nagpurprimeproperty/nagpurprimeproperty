@@ -37,13 +37,21 @@ export function buildResidentialDetails(form) {
   // Residential base fields
   if (isFlat || isBuilderFloor || isPenthouse) {
     if (form.bhk != null) details.bhk = num(form.bhk);
+    if (form.minBhk != null) details.minBhk = num(form.minBhk);
+    if (form.maxBhk != null) details.maxBhk = num(form.maxBhk);
     if (form.bathrooms != null) details.bathrooms = num(form.bathrooms);
     if (form.balconies != null) details.balconies = num(form.balconies);
     if (form.floorNumber != null) details.floorNumber = num(form.floorNumber);
     if (form.totalFloors != null) details.totalFloors = num(form.totalFloors);
     if (form.carpetArea != null) details.carpetArea = num(form.carpetArea);
+    if (form.minCarpetArea != null) details.minCarpetArea = num(form.minCarpetArea);
+    if (form.maxCarpetArea != null) details.maxCarpetArea = num(form.maxCarpetArea);
     if (form.builtUpArea != null) details.builtUpArea = num(form.builtUpArea);
+    if (form.minBuiltUpArea != null) details.minBuiltUpArea = num(form.minBuiltUpArea);
+    if (form.maxBuiltUpArea != null) details.maxBuiltUpArea = num(form.maxBuiltUpArea);
     if (form.superBuiltUpArea != null) details.superBuiltUpArea = num(form.superBuiltUpArea);
+    if (form.minSuperBuiltUpArea != null) details.minSuperBuiltUpArea = num(form.minSuperBuiltUpArea);
+    if (form.maxSuperBuiltUpArea != null) details.maxSuperBuiltUpArea = num(form.maxSuperBuiltUpArea);
     if (form.furnishing) details.furnishing = form.furnishing;
     if (form.facing) details.facing = form.facing;
     if (form.ageOfProperty) details.ageOfProperty = form.ageOfProperty;
@@ -90,11 +98,19 @@ export function buildResidentialDetails(form) {
   // Villa
   if (isVilla) {
     if (form.bhk != null) details.bhk = num(form.bhk);
+    if (form.minBhk != null) details.minBhk = num(form.minBhk);
+    if (form.maxBhk != null) details.maxBhk = num(form.maxBhk);
     if (form.bathrooms != null) details.bathrooms = num(form.bathrooms);
     if (form.numberOfFloors != null) details.numberOfFloors = num(form.numberOfFloors);
     if (form.plotArea != null) details.plotArea = num(form.plotArea);
+    if (form.minPlotArea != null) details.minPlotArea = num(form.minPlotArea);
+    if (form.maxPlotArea != null) details.maxPlotArea = num(form.maxPlotArea);
     if (form.builtUpArea != null) details.builtUpArea = num(form.builtUpArea);
+    if (form.minBuiltUpArea != null) details.minBuiltUpArea = num(form.minBuiltUpArea);
+    if (form.maxBuiltUpArea != null) details.maxBuiltUpArea = num(form.maxBuiltUpArea);
     if (form.carpetArea != null) details.carpetArea = num(form.carpetArea);
+    if (form.minCarpetArea != null) details.minCarpetArea = num(form.minCarpetArea);
+    if (form.maxCarpetArea != null) details.maxCarpetArea = num(form.maxCarpetArea);
     if (form.parkingSlots != null) details.parkingSlots = num(form.parkingSlots);
     if (form.furnishing) details.furnishing = form.furnishing;
     if (form.facing) details.facing = form.facing;
@@ -129,6 +145,15 @@ export function buildCommercialDetails(form) {
 
   // Office Space
   if (isOffice) {
+    if (form.carpetArea != null) details.carpetArea = num(form.carpetArea);
+    if (form.minCarpetArea != null) details.minCarpetArea = num(form.minCarpetArea);
+    if (form.maxCarpetArea != null) details.maxCarpetArea = num(form.maxCarpetArea);
+    if (form.builtUpArea != null) details.builtUpArea = num(form.builtUpArea);
+    if (form.minBuiltUpArea != null) details.minBuiltUpArea = num(form.minBuiltUpArea);
+    if (form.maxBuiltUpArea != null) details.maxBuiltUpArea = num(form.maxBuiltUpArea);
+    if (form.superBuiltUpArea != null) details.superBuiltUpArea = num(form.superBuiltUpArea);
+    if (form.minSuperBuiltUpArea != null) details.minSuperBuiltUpArea = num(form.minSuperBuiltUpArea);
+    if (form.maxSuperBuiltUpArea != null) details.maxSuperBuiltUpArea = num(form.maxSuperBuiltUpArea);
     if (form.cabinCount) details.cabinCount = num(form.cabinCount);
     if (form.openDesks) details.openDesks = num(form.openDesks);
     if (form.washrooms) details.washrooms = num(form.washrooms);
@@ -144,7 +169,11 @@ export function buildCommercialDetails(form) {
   // Shop
   if (isShop) {
     if (form.carpetArea != null) details.carpetArea = num(form.carpetArea);
+    if (form.minCarpetArea != null) details.minCarpetArea = num(form.minCarpetArea);
+    if (form.maxCarpetArea != null) details.maxCarpetArea = num(form.maxCarpetArea);
     if (form.builtUpArea != null) details.builtUpArea = num(form.builtUpArea);
+    if (form.minBuiltUpArea != null) details.minBuiltUpArea = num(form.minBuiltUpArea);
+    if (form.maxBuiltUpArea != null) details.maxBuiltUpArea = num(form.maxBuiltUpArea);
     if (form.furnishing) details.furnishing = form.furnishing;
     if (form.shopFloor) details.shopFloor = form.shopFloor;
     if (form.frontage) details.frontage = num(form.frontage);
@@ -163,6 +192,8 @@ export function buildCommercialDetails(form) {
   // Showroom
   if (isShowroom) {
     if (form.showroomArea) details.showroomArea = num(form.showroomArea);
+    if (form.minShowroomArea) details.minShowroomArea = num(form.minShowroomArea);
+    if (form.maxShowroomArea) details.maxShowroomArea = num(form.maxShowroomArea);
     if (form.numberOfShowroomFloors) details.numberOfShowroomFloors = num(form.numberOfShowroomFloors);
     details.glassFront = form.glassFront;
     if (form.parkingAvailable) details.parkingAvailable = form.parkingAvailable;
@@ -172,6 +203,8 @@ export function buildCommercialDetails(form) {
   // Warehouse/Godown
   if (isWarehouse) {
     if (form.warehouseArea) details.warehouseArea = num(form.warehouseArea);
+    if (form.minWarehouseArea) details.minWarehouseArea = num(form.minWarehouseArea);
+    if (form.maxWarehouseArea) details.maxWarehouseArea = num(form.maxWarehouseArea);
     if (form.warehouseHeight) details.warehouseHeight = num(form.warehouseHeight);
     if (form.truckAccess) details.truckAccess = form.truckAccess;
     if (form.numberOfDocks) details.numberOfDocks = num(form.numberOfDocks);
@@ -197,6 +230,8 @@ export function buildLandDetails(form) {
   // Residential Plot
   if (isResPlot) {
     if (form.plotAreaSqFt) details.plotAreaSqFt = num(form.plotAreaSqFt);
+    if (form.minPlotAreaSqFt) details.minPlotAreaSqFt = num(form.minPlotAreaSqFt);
+    if (form.maxPlotAreaSqFt) details.maxPlotAreaSqFt = num(form.maxPlotAreaSqFt);
     if (form.plotLength) details.plotLength = num(form.plotLength);
     if (form.plotWidth) details.plotWidth = num(form.plotWidth);
     if (form.boundaryWall) details.boundaryWall = form.boundaryWall;

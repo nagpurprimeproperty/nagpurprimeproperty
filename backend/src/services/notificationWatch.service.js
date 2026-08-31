@@ -275,3 +275,4 @@ const sendFCM = async (token, { title, message, type, userId }) => {
     }
   }
 };
+

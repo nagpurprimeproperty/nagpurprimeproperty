@@ -22,3 +22,13 @@ export function useSubmitCallEnquiry() {
       }),
   });
 }
+
+export function useSubmitBrochureEnquiry() {
+  return useMutation({
+    mutationFn: ({ propertyId, token }) =>
+      clientFetch(`/api/properties/${propertyId}/brochure-lead`, {
+        method: 'POST',
+        auth: token,
+      }),
+  });
+}

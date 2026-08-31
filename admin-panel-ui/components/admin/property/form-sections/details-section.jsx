@@ -38,34 +38,64 @@ import {
 // Shared / reusable field groups
 // ---------------------------------------------------------------------------
 
-function ResidentialBaseFields({ form, set, errors, disabled }) {
+function ResidentialBaseFields({ form, set, errors, disabled, isNew }) {
   return (
     <>
-      <Field label="BHK" required error={errors.bhk}>
-        <NumInput value={form.bhk} onChange={(v) => set("bhk", v)} placeholder="3" min={0} max={8} disabled={disabled} error={!!errors.bhk} />
-      </Field>
-      <Field label="Bathrooms" required error={errors.bathrooms}>
+      {isNew ? (
+        <>
+          <Field label="Min BHK" required error={errors.minBhk}>
+            <NumInput value={form.minBhk} onChange={(v) => set("minBhk", v)} placeholder="2" min={0} max={8} disabled={disabled} error={!!errors.minBhk} />
+          </Field>
+          <Field label="Max BHK" required error={errors.maxBhk}>
+            <NumInput value={form.maxBhk} onChange={(v) => set("maxBhk", v)} placeholder="4" min={0} max={8} disabled={disabled} error={!!errors.maxBhk} />
+          </Field>
+        </>
+      ) : (
+        <Field label="BHK" required error={errors.bhk}>
+          <NumInput value={form.bhk} onChange={(v) => set("bhk", v)} placeholder="3" min={0} max={8} disabled={disabled} error={!!errors.bhk} />
+        </Field>
+      )}
+      <Field label="Bathrooms" required={!isNew} error={errors.bathrooms}>
         <NumInput value={form.bathrooms} onChange={(v) => set("bathrooms", v)} placeholder="2" min={0} max={15} disabled={disabled} error={!!errors.bathrooms} />
       </Field>
       <Field label="Balconies" error={errors.balconies}>
         <NumInput value={form.balconies} onChange={(v) => set("balconies", v)} placeholder="1" min={0} max={10} disabled={disabled} error={!!errors.balconies} />
       </Field>
-      <Field label="Floor Number" required error={errors.floorNumber}>
+      <Field label="Floor Number" required={!isNew} error={errors.floorNumber}>
         <NumInput value={form.floorNumber} onChange={(v) => set("floorNumber", v)} placeholder="3" min={0} max={99} disabled={disabled} error={!!errors.floorNumber} />
       </Field>
-      <Field label="Total Floors" required error={errors.totalFloors}>
+      <Field label="Total Floors" required={!isNew} error={errors.totalFloors}>
         <NumInput value={form.totalFloors} onChange={(v) => set("totalFloors", v)} placeholder="10" min={1} max={99} disabled={disabled} error={!!errors.totalFloors} />
       </Field>
-      <Field label="Carpet Area (sq.ft)" required error={errors.carpetArea}>
-        <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="1200" min={1} disabled={disabled} error={!!errors.carpetArea} />
-      </Field>
-      <Field label="Built-up Area (sq.ft)" error={errors.builtUpArea}>
-        <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="1400" min={1} disabled={disabled} />
-      </Field>
-      <Field label="Super Built-up Area (sq.ft)" error={errors.superBuiltUpArea}>
-        <NumInput value={form.superBuiltUpArea} onChange={(v) => set("superBuiltUpArea", v)} placeholder="1600" min={1} disabled={disabled} />
-      </Field>
-      <Sel label="Furnishing" required value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} error={errors.furnishing} />
+      {isNew ? (
+        <>
+          <Field label="Min Carpet Area (sq.ft)" required error={errors.minCarpetArea}>
+            <NumInput value={form.minCarpetArea} onChange={(v) => set("minCarpetArea", v)} placeholder="800" min={1} disabled={disabled} error={!!errors.minCarpetArea} />
+          </Field>
+          <Field label="Max Carpet Area (sq.ft)" required error={errors.maxCarpetArea}>
+            <NumInput value={form.maxCarpetArea} onChange={(v) => set("maxCarpetArea", v)} placeholder="1800" min={1} disabled={disabled} error={!!errors.maxCarpetArea} />
+          </Field>
+          <Field label="Min Super Built-up Area (sq.ft)" error={errors.minSuperBuiltUpArea}>
+            <NumInput value={form.minSuperBuiltUpArea} onChange={(v) => set("minSuperBuiltUpArea", v)} placeholder="1000" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Max Super Built-up Area (sq.ft)" error={errors.maxSuperBuiltUpArea}>
+            <NumInput value={form.maxSuperBuiltUpArea} onChange={(v) => set("maxSuperBuiltUpArea", v)} placeholder="2200" min={1} disabled={disabled} />
+          </Field>
+        </>
+      ) : (
+        <>
+          <Field label="Carpet Area (sq.ft)" required error={errors.carpetArea}>
+            <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="1200" min={1} disabled={disabled} error={!!errors.carpetArea} />
+          </Field>
+          <Field label="Built-up Area (sq.ft)" error={errors.builtUpArea}>
+            <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="1400" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Super Built-up Area (sq.ft)" error={errors.superBuiltUpArea}>
+            <NumInput value={form.superBuiltUpArea} onChange={(v) => set("superBuiltUpArea", v)} placeholder="1600" min={1} disabled={disabled} />
+          </Field>
+        </>
+      )}
+      <Sel label="Furnishing" required={!isNew} value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} error={errors.furnishing} />
       <Sel label="Facing" value={form.facing} onChange={(v) => set("facing", v)} options={FACING_OPTIONS} disabled={disabled} />
       <Sel label="Age of Property" value={form.ageOfProperty} onChange={(v) => set("ageOfProperty", v)} options={AGE_OF_PROPERTY} disabled={disabled} />
       <Sel label="Floor Type" value={form.floorType} onChange={(v) => set("floorType", v)} options={FLOOR_TYPE} disabled={disabled} />
@@ -115,9 +145,6 @@ function NewProjectCoreFields({ form, set, errors, disabled, hideUnits = false }
           </Field>
         </>
       )}
-      <Field label="Approved Banks">
-        <Input value={form.approvedBanks} onChange={(e) => set("approvedBanks", e.target.value)} placeholder="HDFC, SBI, ICICI" maxLength={200} disabled={disabled} />
-      </Field>
       <Sel label="CC/OC Status" value={form.ccOcReceived} onChange={(v) => set("ccOcReceived", v)} options={CC_OC_OPTIONS} disabled={disabled} />
     </>
   );
@@ -148,7 +175,7 @@ function PetDietFields({ form, set, disabled }) {
 function FlatFields({ form, set, errors, disabled, isNew, isResale, isRental }) {
   return (
     <>
-      <ResidentialBaseFields form={form} set={set} errors={errors} disabled={disabled} />
+      <ResidentialBaseFields form={form} set={set} errors={errors} disabled={disabled} isNew={isNew} />
       {isNew && <NewProjectCoreFields form={form} set={set} errors={errors} disabled={disabled} />}
       {isResale && <ResaleResidentialExtraFields form={form} set={set} errors={errors} disabled={disabled} />}
       {isRental && <PetDietFields form={form} set={set} disabled={disabled} />}
@@ -159,7 +186,7 @@ function FlatFields({ form, set, errors, disabled, isNew, isResale, isRental }) 
 function BuilderFloorFields({ form, set, errors, disabled, isNew, isResale, isRental }) {
   return (
     <>
-      <ResidentialBaseFields form={form} set={set} errors={errors} disabled={disabled} />
+      <ResidentialBaseFields form={form} set={set} errors={errors} disabled={disabled} isNew={isNew} />
       <Field label="Total Units in Building" error={errors.totalUnitsInBuilding}>
         <NumInput value={form.totalUnitsInBuilding} onChange={(v) => set("totalUnitsInBuilding", v)} placeholder="4" min={1} disabled={disabled} />
       </Field>
@@ -175,7 +202,7 @@ function BuilderFloorFields({ form, set, errors, disabled, isNew, isResale, isRe
 function PenthouseFields({ form, set, errors, disabled, isNew, isResale, isRental }) {
   return (
     <>
-      <ResidentialBaseFields form={form} set={set} errors={errors} disabled={disabled} />
+      <ResidentialBaseFields form={form} set={set} errors={errors} disabled={disabled} isNew={isNew} />
       <Field label="Terrace Area (sq.ft)" error={errors.terraceArea}>
         <NumInput value={form.terraceArea} onChange={(v) => set("terraceArea", v)} placeholder="500" min={1} disabled={disabled} />
       </Field>
@@ -195,13 +222,24 @@ const NUMBER_OF_FLOORS_OPTIONS = ["1", "1.5", "2", "2.5", "3", "3.5", "4+"];
 function VillaFields({ form, set, errors, disabled, isNew, isResale, isRental }) {
   return (
     <>
-      <Field label="BHK" required error={errors.bhk}>
-        <NumInput value={form.bhk} onChange={(v) => set("bhk", v)} placeholder="3" min={0} max={8} disabled={disabled} error={!!errors.bhk} />
-      </Field>
-      <Field label="Bathrooms" required error={errors.bathrooms}>
+      {isNew ? (
+        <>
+          <Field label="Min BHK" error={errors.minBhk}>
+            <NumInput value={form.minBhk} onChange={(v) => set("minBhk", v)} placeholder="3" min={0} max={8} disabled={disabled} error={!!errors.minBhk} />
+          </Field>
+          <Field label="Max BHK" error={errors.maxBhk}>
+            <NumInput value={form.maxBhk} onChange={(v) => set("maxBhk", v)} placeholder="5" min={0} max={8} disabled={disabled} error={!!errors.maxBhk} />
+          </Field>
+        </>
+      ) : (
+        <Field label="BHK" required error={errors.bhk}>
+          <NumInput value={form.bhk} onChange={(v) => set("bhk", v)} placeholder="3" min={0} max={8} disabled={disabled} error={!!errors.bhk} />
+        </Field>
+      )}
+      <Field label="Bathrooms" required={!isNew} error={errors.bathrooms}>
         <NumInput value={form.bathrooms} onChange={(v) => set("bathrooms", v)} placeholder="2" min={0} max={15} disabled={disabled} error={!!errors.bathrooms} />
       </Field>
-      <Field label="Number of Floors" required error={errors.numberOfFloors}>
+      <Field label="Number of Floors" required={!isNew} error={errors.numberOfFloors}>
         <Select value={form.numberOfFloors} onValueChange={(v) => set("numberOfFloors", v)} disabled={disabled}>
           <SelectTrigger className={errors.numberOfFloors ? "border-destructive" : ""}>
             <SelectValue placeholder="Select" />
@@ -214,18 +252,37 @@ function VillaFields({ form, set, errors, disabled, isNew, isResale, isRental })
         </Select>
         <FieldError message={errors.numberOfFloors} />
       </Field>
-      <Field label="Plot Area (sq.ft)" required error={errors.plotArea}>
-        <NumInput value={form.plotArea} onChange={(v) => set("plotArea", v)} placeholder="2000" min={1} disabled={disabled} error={!!errors.plotArea} />
-      </Field>
-      <Field label="Built-up Area (sq.ft)" required error={errors.builtUpArea}>
-        <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="1800" min={1} disabled={disabled} error={!!errors.builtUpArea} />
-      </Field>
-      <Field label="Carpet Area (sq.ft)" error={errors.carpetArea}>
-        <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="1600" min={1} disabled={disabled} />
-      </Field>
-      <Sel label="Furnishing" required value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} error={errors.furnishing} />
+      {isNew ? (
+        <>
+          <Field label="Min Plot Area (sq.ft)" error={errors.minPlotArea}>
+            <NumInput value={form.minPlotArea} onChange={(v) => set("minPlotArea", v)} placeholder="1500" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Max Plot Area (sq.ft)" error={errors.maxPlotArea}>
+            <NumInput value={form.maxPlotArea} onChange={(v) => set("maxPlotArea", v)} placeholder="3000" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Min Built-up Area (sq.ft)" error={errors.minBuiltUpArea}>
+            <NumInput value={form.minBuiltUpArea} onChange={(v) => set("minBuiltUpArea", v)} placeholder="1800" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Max Built-up Area (sq.ft)" error={errors.maxBuiltUpArea}>
+            <NumInput value={form.maxBuiltUpArea} onChange={(v) => set("maxBuiltUpArea", v)} placeholder="3500" min={1} disabled={disabled} />
+          </Field>
+        </>
+      ) : (
+        <>
+          <Field label="Plot Area (sq.ft)" required error={errors.plotArea}>
+            <NumInput value={form.plotArea} onChange={(v) => set("plotArea", v)} placeholder="2000" min={1} disabled={disabled} error={!!errors.plotArea} />
+          </Field>
+          <Field label="Built-up Area (sq.ft)" required error={errors.builtUpArea}>
+            <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="1800" min={1} disabled={disabled} error={!!errors.builtUpArea} />
+          </Field>
+          <Field label="Carpet Area (sq.ft)" error={errors.carpetArea}>
+            <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="1600" min={1} disabled={disabled} />
+          </Field>
+        </>
+      )}
+      <Sel label="Furnishing" required={!isNew} value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} error={errors.furnishing} />
       <Sel label="Facing" value={form.facing} onChange={(v) => set("facing", v)} options={FACING_OPTIONS} disabled={disabled} />
-      <Field label="Parking Slots" required error={errors.parkingSlots}>
+      <Field label="Parking Slots" required={!isNew} error={errors.parkingSlots}>
         <NumInput value={form.parkingSlots} onChange={(v) => set("parkingSlots", v)} placeholder="2" min={0} max={10} disabled={disabled} error={!!errors.parkingSlots} />
       </Field>
       <Field label="Road Width (ft)" error={errors.roadWidth}>
@@ -274,23 +331,42 @@ function VillaFields({ form, set, errors, disabled, isNew, isResale, isRental })
 function OfficeFields({ form, set, errors, disabled, isNew, isResale, isRental }) {
   return (
     <>
-      <Field label="Carpet Area (sq.ft)" required error={errors.carpetArea}>
-        <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="1000" min={1} disabled={disabled} error={!!errors.carpetArea} />
-      </Field>
-      <Field label="Built-up Area (sq.ft)" error={errors.builtUpArea}>
-        <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="1200" min={1} disabled={disabled} />
-      </Field>
-      <Field label="Super Built-up Area (sq.ft)" error={errors.superBuiltUpArea}>
-        <NumInput value={form.superBuiltUpArea} onChange={(v) => set("superBuiltUpArea", v)} placeholder="1400" min={1} disabled={disabled} />
-      </Field>
-      <Field label="Floor Number" required error={errors.floorNumber}>
+      {isNew ? (
+        <>
+          <Field label="Min Carpet Area (sq.ft)" required error={errors.minCarpetArea}>
+            <NumInput value={form.minCarpetArea} onChange={(v) => set("minCarpetArea", v)} placeholder="500" min={1} disabled={disabled} error={!!errors.minCarpetArea} />
+          </Field>
+          <Field label="Max Carpet Area (sq.ft)" required error={errors.maxCarpetArea}>
+            <NumInput value={form.maxCarpetArea} onChange={(v) => set("maxCarpetArea", v)} placeholder="2000" min={1} disabled={disabled} error={!!errors.maxCarpetArea} />
+          </Field>
+          <Field label="Min Super Built-up Area (sq.ft)" error={errors.minSuperBuiltUpArea}>
+            <NumInput value={form.minSuperBuiltUpArea} onChange={(v) => set("minSuperBuiltUpArea", v)} placeholder="700" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Max Super Built-up Area (sq.ft)" error={errors.maxSuperBuiltUpArea}>
+            <NumInput value={form.maxSuperBuiltUpArea} onChange={(v) => set("maxSuperBuiltUpArea", v)} placeholder="2500" min={1} disabled={disabled} />
+          </Field>
+        </>
+      ) : (
+        <>
+          <Field label="Carpet Area (sq.ft)" required error={errors.carpetArea}>
+            <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="1000" min={1} disabled={disabled} error={!!errors.carpetArea} />
+          </Field>
+          <Field label="Built-up Area (sq.ft)" error={errors.builtUpArea}>
+            <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="1200" min={1} disabled={disabled} />
+          </Field>
+          <Field label="Super Built-up Area (sq.ft)" error={errors.superBuiltUpArea}>
+            <NumInput value={form.superBuiltUpArea} onChange={(v) => set("superBuiltUpArea", v)} placeholder="1400" min={1} disabled={disabled} />
+          </Field>
+        </>
+      )}
+      <Field label="Floor Number" required={!isNew} error={errors.floorNumber}>
         <NumInput value={form.floorNumber} onChange={(v) => set("floorNumber", v)} placeholder="2" min={0} max={99} disabled={disabled} error={!!errors.floorNumber} />
       </Field>
       <Field label="Total Floors" error={errors.totalFloors}>
         <NumInput value={form.totalFloors} onChange={(v) => set("totalFloors", v)} placeholder="10" min={1} max={99} disabled={disabled} />
       </Field>
-      <Sel label="Furnishing" required value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} error={errors.furnishing} />
-      <Field label="Washrooms" required error={errors.washrooms}>
+      <Sel label="Furnishing" required={!isNew} value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} error={errors.furnishing} />
+      <Field label="Washrooms" required={!isNew} error={errors.washrooms}>
         <NumInput value={form.washrooms} onChange={(v) => set("washrooms", v)} placeholder="2" min={1} max={10} disabled={disabled} error={!!errors.washrooms} />
       </Field>
       <Field label="Cabin Count" error={errors.cabinCount}>
@@ -326,14 +402,27 @@ function OfficeFields({ form, set, errors, disabled, isNew, isResale, isRental }
 function ShopFields({ form, set, errors, disabled, isNew, isResale }) {
   return (
     <>
-      <Field label="Carpet Area (sq.ft)" required error={errors.carpetArea}>
-        <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="500" min={1} disabled={disabled} error={!!errors.carpetArea} />
-      </Field>
-      <Field label="Built-up Area (sq.ft)" error={errors.builtUpArea}>
-        <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="600" min={1} disabled={disabled} />
-      </Field>
+      {isNew ? (
+        <>
+          <Field label="Min Carpet Area (sq.ft)" required error={errors.minCarpetArea}>
+            <NumInput value={form.minCarpetArea} onChange={(v) => set("minCarpetArea", v)} placeholder="300" min={1} disabled={disabled} error={!!errors.minCarpetArea} />
+          </Field>
+          <Field label="Max Carpet Area (sq.ft)" required error={errors.maxCarpetArea}>
+            <NumInput value={form.maxCarpetArea} onChange={(v) => set("maxCarpetArea", v)} placeholder="1000" min={1} disabled={disabled} error={!!errors.maxCarpetArea} />
+          </Field>
+        </>
+      ) : (
+        <>
+          <Field label="Carpet Area (sq.ft)" required error={errors.carpetArea}>
+            <NumInput value={form.carpetArea} onChange={(v) => set("carpetArea", v)} placeholder="500" min={1} disabled={disabled} error={!!errors.carpetArea} />
+          </Field>
+          <Field label="Built-up Area (sq.ft)" error={errors.builtUpArea}>
+            <NumInput value={form.builtUpArea} onChange={(v) => set("builtUpArea", v)} placeholder="600" min={1} disabled={disabled} />
+          </Field>
+        </>
+      )}
       <Sel label="Furnishing" value={form.furnishing} onChange={(v) => set("furnishing", v)} options={FURNISHING_OPTIONS} disabled={disabled} />
-      <Sel label="Shop Floor" required value={form.shopFloor} onChange={(v) => set("shopFloor", v)} options={SHOP_FLOOR_OPTIONS} disabled={disabled} error={errors.shopFloor} />
+      <Sel label="Shop Floor" required={!isNew} value={form.shopFloor} onChange={(v) => set("shopFloor", v)} options={SHOP_FLOOR_OPTIONS} disabled={disabled} error={errors.shopFloor} />
       <Field label="Frontage (ft)" error={errors.frontage}>
         <NumInput value={form.frontage} onChange={(v) => set("frontage", v)} placeholder="20" min={1} disabled={disabled} />
       </Field>
@@ -363,9 +452,20 @@ function ShopFields({ form, set, errors, disabled, isNew, isResale }) {
 function ShowroomFields({ form, set, errors, disabled, isNew, isResale }) {
   return (
     <>
-      <Field label="Showroom Area (sq.ft)" required error={errors.showroomArea}>
-        <NumInput value={form.showroomArea} onChange={(v) => set("showroomArea", v)} placeholder="2000" min={1} disabled={disabled} error={!!errors.showroomArea} />
-      </Field>
+      {isNew ? (
+        <>
+          <Field label="Min Showroom Area (sq.ft)" required error={errors.minShowroomArea}>
+            <NumInput value={form.minShowroomArea} onChange={(v) => set("minShowroomArea", v)} placeholder="1000" min={1} disabled={disabled} error={!!errors.minShowroomArea} />
+          </Field>
+          <Field label="Max Showroom Area (sq.ft)" required error={errors.maxShowroomArea}>
+            <NumInput value={form.maxShowroomArea} onChange={(v) => set("maxShowroomArea", v)} placeholder="5000" min={1} disabled={disabled} error={!!errors.maxShowroomArea} />
+          </Field>
+        </>
+      ) : (
+        <Field label="Showroom Area (sq.ft)" required error={errors.showroomArea}>
+          <NumInput value={form.showroomArea} onChange={(v) => set("showroomArea", v)} placeholder="2000" min={1} disabled={disabled} error={!!errors.showroomArea} />
+        </Field>
+      )}
       <Field label="Number of Showroom Floors" error={errors.numberOfShowroomFloors}>
         <NumInput value={form.numberOfShowroomFloors} onChange={(v) => set("numberOfShowroomFloors", v)} placeholder="1" min={1} max={5} disabled={disabled} />
       </Field>
@@ -391,10 +491,21 @@ function ShowroomFields({ form, set, errors, disabled, isNew, isResale }) {
 function WarehouseFields({ form, set, errors, disabled, isNew, isResale }) {
   return (
     <>
-      <Field label="Warehouse Area (sq.ft)" required error={errors.warehouseArea}>
-        <NumInput value={form.warehouseArea} onChange={(v) => set("warehouseArea", v)} placeholder="5000" min={1} disabled={disabled} error={!!errors.warehouseArea} />
-      </Field>
-      <Field label="Warehouse Height (ft)" required error={errors.warehouseHeight}>
+      {isNew ? (
+        <>
+          <Field label="Min Warehouse Area (sq.ft)" required error={errors.minWarehouseArea}>
+            <NumInput value={form.minWarehouseArea} onChange={(v) => set("minWarehouseArea", v)} placeholder="2000" min={1} disabled={disabled} error={!!errors.minWarehouseArea} />
+          </Field>
+          <Field label="Max Warehouse Area (sq.ft)" required error={errors.maxWarehouseArea}>
+            <NumInput value={form.maxWarehouseArea} onChange={(v) => set("maxWarehouseArea", v)} placeholder="10000" min={1} disabled={disabled} error={!!errors.maxWarehouseArea} />
+          </Field>
+        </>
+      ) : (
+        <Field label="Warehouse Area (sq.ft)" required error={errors.warehouseArea}>
+          <NumInput value={form.warehouseArea} onChange={(v) => set("warehouseArea", v)} placeholder="5000" min={1} disabled={disabled} error={!!errors.warehouseArea} />
+        </Field>
+      )}
+      <Field label="Warehouse Height (ft)" required={!isNew} error={errors.warehouseHeight}>
         <NumInput value={form.warehouseHeight} onChange={(v) => set("warehouseHeight", v)} placeholder="20" min={1} disabled={disabled} error={!!errors.warehouseHeight} />
       </Field>
       <Field label="Number of Docks" error={errors.numberOfDocks}>
@@ -438,9 +549,20 @@ function WarehouseFields({ form, set, errors, disabled, isNew, isResale }) {
 function ResidentialPlotFields({ form, set, errors, disabled, isNew, isResale }) {
   return (
     <>
-      <Field label="Plot Area (sq.ft)" required error={errors.plotAreaSqFt}>
-        <NumInput value={form.plotAreaSqFt} onChange={(v) => set("plotAreaSqFt", v)} placeholder="1200" min={1} disabled={disabled} error={!!errors.plotAreaSqFt} />
-      </Field>
+      {isNew ? (
+        <>
+          <Field label="Min Plot Area (sq.ft)" required error={errors.minPlotAreaSqFt}>
+            <NumInput value={form.minPlotAreaSqFt} onChange={(v) => set("minPlotAreaSqFt", v)} placeholder="1000" min={1} disabled={disabled} error={!!errors.minPlotAreaSqFt} />
+          </Field>
+          <Field label="Max Plot Area (sq.ft)" required error={errors.maxPlotAreaSqFt}>
+            <NumInput value={form.maxPlotAreaSqFt} onChange={(v) => set("maxPlotAreaSqFt", v)} placeholder="3000" min={1} disabled={disabled} error={!!errors.maxPlotAreaSqFt} />
+          </Field>
+        </>
+      ) : (
+        <Field label="Plot Area (sq.ft)" required error={errors.plotAreaSqFt}>
+          <NumInput value={form.plotAreaSqFt} onChange={(v) => set("plotAreaSqFt", v)} placeholder="1200" min={1} disabled={disabled} error={!!errors.plotAreaSqFt} />
+        </Field>
+      )}
       <Field label="Plot Length (ft)">
         <NumInput value={form.plotLength} onChange={(v) => set("plotLength", v)} placeholder="40" min={1} disabled={disabled} />
       </Field>
@@ -615,6 +737,20 @@ export function DetailsSection({ form, set, errors = {}, disabled }) {
               </div>
             )}
           </div>
+          {lc !== "Rental" && form.isBankFinanceAvailable && (
+            <div className="mt-4">
+              <Field label="Approved / Available Banks">
+                <Input
+                  value={form.approvedBanks}
+                  onChange={(e) => set("approvedBanks", e.target.value)}
+                  placeholder="e.g. HDFC, SBI, ICICI, Axis Bank"
+                  maxLength={200}
+                  disabled={disabled}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Enter the names of banks that have approved or are available for financing this property (comma-separated).</p>
+              </Field>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

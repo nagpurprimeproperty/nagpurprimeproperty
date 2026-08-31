@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useAdminProfileStore } from "@/lib/store/admin-profile-store";
+import { doRefresh } from "@/lib/api/client";
+
 /** Decode a JWT and return its payload, or null if malformed. */
 function decodeJwtPayload(token) {
     try {
@@ -33,8 +35,6 @@ export function useAuthGuard() {
     const logout = useAuthStore((s) => s.logout);
     const profile = useAdminProfileStore((s) => s.profile);
     const fetchProfile = useAdminProfileStore((s) => s.fetchProfile);
-    // Wait for the component to mount so Zustand persist has time to
-    // rehydrate from localStorage before we make any auth decisions.
     const [hasMounted, setHasMounted] = useState(false);
     const [isReady, setIsReady] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -48,18 +48,18 @@ export function useAuthGuard() {
             return;
         const checkAuth = async () => {
             setIsLoading(true);
-            // No token at All → go to login
-            if (!token) {
-                router.replace("/login");
-                return;
+            let activeToken = token;
+            // If no token in memory or token is expired, try silent refresh with httpOnly cookie
+            if (!activeToken || isTokenExpired(activeToken)) {
+                try {
+                    activeToken = await doRefresh();
+                } catch {
+                    await logout();
+                    window.location.href = "/login";
+                    return;
+                }
             }
-            // Token exists but is expired → clear it and go to login
-            if (isTokenExpired(token)) {
-                logout();
-                router.replace("/login");
-                return;
-            }
-            // Token looks valid → fetch profile if not already loaded
+            // Token is valid → fetch profile if not already loaded
             if (!profile) {
                 await fetchProfile();
             }

@@ -34,6 +34,7 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
   const clearProfile = useAdminProfileStore((s) => s.clearProfile);
   const profile    = useAdminProfile();
   const { canRead } = usePermission("notifications");
+  const { canRead: canReadSettings } = usePermission("settings");
 
   const notifListParams = useMemo(() => ({ limit: 6 }), []);
   const { data: notifData }  = useNotifications(notifListParams);
@@ -42,7 +43,7 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
   const markAllAsRead = useMarkAllAsRead();
 
   const { on } = useSocket("/admin", profile?._id ?? null);
-  const notifList = notifData ?? [];
+  const notifList = Array.isArray(notifData) ? notifData : (notifData?.data ?? []);
 
   // Listen for real-time notifications via socket
   useEffect(() => {
@@ -54,10 +55,20 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
         queryClient.setQueriesData(
           { queryKey: ["notifications"] },
           (old) => {
-            if (!old) return [payload];
-            const exists = old.some((n) => n._id === payload._id);
+            if (!old) return { data: [payload], pagination: { total: 1, page: 1, limit: 10, totalPages: 1 } };
+            if (Array.isArray(old)) {
+              const exists = old.some((n) => n._id === payload._id);
+              if (exists) return old;
+              return [payload, ...old];
+            }
+            const oldList = old.data ?? [];
+            const exists = oldList.some((n) => n._id === payload._id);
             if (exists) return old;
-            return [payload, ...old];
+            return {
+              ...old,
+              data: [payload, ...oldList],
+              pagination: old.pagination ? { ...old.pagination, total: (old.pagination.total || 0) + 1 } : old.pagination,
+            };
           }
         );
 
@@ -141,11 +152,11 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
     );
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearProfile();
-    logout();
+    await logout();
     toast({ title: "Logged out", description: "You have been logged out of the admin panel" });
-    router.replace("/login");
+    window.location.href = "/login";
   };
 
   const initials  = profile ? `${profile.firstName[0] ?? ""}${profile.lastName[0] ?? ""}`.toUpperCase() : "AU";
@@ -316,12 +327,14 @@ export const AdminHeader = memo(function AdminHeader({ onMobileMenuToggle }) {
                 My Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/settings" className="cursor-pointer rounded-md">
-                <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
+            {canReadSettings && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin/settings" className="cursor-pointer rounded-md">
+                  <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuSeparator className="my-1" />
 

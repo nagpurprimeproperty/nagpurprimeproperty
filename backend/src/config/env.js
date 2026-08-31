@@ -50,7 +50,7 @@ const env = {
 
   // Auth
   JWT_SECRET: required('JWT_SECRET', isDev ? 'dev-secret-key-change-in-prod' : null),
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '30d',
   JWT_REFRESH_SECRET: required('JWT_REFRESH_SECRET', isDev ? 'dev-refresh-secret' : null),
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 
@@ -86,7 +86,7 @@ const env = {
   FIREBASE_PRIVATE_KEY:   process.env.FIREBASE_PRIVATE_KEY   || '',
 
   // Google Maps
-  GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '',
+  GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || process.env.GOOGLE_MAPS_KEY || '',
 
   // Razorpay
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
@@ -97,13 +97,20 @@ const env = {
   WHATSAPP_ENABLED: process.env.WHATSAPP_ENABLED === 'true',
   WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN || '',
   WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
-  WHATSAPP_VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN || 'NagpurPrimeWhatsAppWebhook2026',
+  WHATSAPP_VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN || '',
   WHATSAPP_OTP_TEMPLATE_NAME: process.env.WHATSAPP_OTP_TEMPLATE_NAME || '',
   WHATSAPP_LEAD_TEMPLATE_NAME: process.env.WHATSAPP_LEAD_TEMPLATE_NAME || 'new_lead_notification',
   WHATSAPP_LEAD_TEMPLATE_LANGUAGE: process.env.WHATSAPP_LEAD_TEMPLATE_LANGUAGE || process.env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en_US',
   WHATSAPP_API_VERSION: process.env.WHATSAPP_API_VERSION || 'v25.0',
   WHATSAPP_OTP_TEMPLATE_LANGUAGE: process.env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en_US',
   WHATSAPP_OTP_TEMPLATE_HAS_BUTTON: process.env.WHATSAPP_OTP_TEMPLATE_HAS_BUTTON === 'true',
+
+  // Test Accounts
+  TEST_NUMBERS: (process.env.TEST_NUMBERS || '9999999999,1234567890')
+    .split(',')
+    .map((num) => num.trim())
+    .filter(Boolean),
+  TEST_OTP: process.env.TEST_OTP || '1234',
 };
 
 export default env;

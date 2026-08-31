@@ -14,21 +14,28 @@ const getCachedAreaBySlug = cache(async (slug) => {
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nagpurprimeproperty.com'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({ searchParams }) {
-  const params = await searchParams
+  let params = {}
+  try {
+    params = (await searchParams) || {}
+  } catch {
+    params = {}
+  }
   
   // Resolve filter values for SEO-friendly labels
   let areaName = ''
-  if (params.areaSlug) {
+  if (params?.areaSlug) {
     try {
       const areaDoc = await getCachedAreaBySlug(params.areaSlug)
       if (areaDoc) areaName = areaDoc.name
     } catch {}
   }
 
-  const type = params.type || ''
-  const bhk = params.bhk ? `${params.bhk} BHK ` : ''
-  const cat = params.listingCategory || 'Properties'
+  const type = params?.type || ''
+  const bhk = params?.bhk ? `${params.bhk} BHK ` : ''
+  const cat = params?.listingCategory || 'Properties'
 
   // Build beautiful descriptive titles:
   // e.g. "2 BHK Flat/Apartment for Sale in Dighori, Nagpur"
@@ -62,8 +69,8 @@ export async function generateMetadata({ searchParams }) {
   }
 }
 
-async function getPropertiesForParams(params) {
-  const queryParams = { ...params }
+async function getPropertiesForParams(params = {}) {
+  const queryParams = { ...(params || {}) }
 
   if (!queryParams.limit) {
     queryParams.limit = 6
@@ -120,7 +127,12 @@ async function getPropertiesForParams(params) {
 }
 
 export default async function PropertiesPage({ searchParams }) {
-  const params = await searchParams
+  let params = {}
+  try {
+    params = (await searchParams) || {}
+  } catch {
+    params = {}
+  }
   
   let initialProperties = { data: [], totalPages: 1 }
   let initialAreas = []
@@ -132,8 +144,8 @@ export default async function PropertiesPage({ searchParams }) {
       areaService.listAreas(),
     ])
 
-    initialProperties = props.status === 'fulfilled' ? JSON.parse(JSON.stringify(props.value)) : { data: [], totalPages: 1 }
-    initialAreas = areas.status === 'fulfilled' ? JSON.parse(JSON.stringify(areas.value)) : []
+    initialProperties = props.status === 'fulfilled' && props.value ? JSON.parse(JSON.stringify(props.value)) : { data: [], totalPages: 1 }
+    initialAreas = areas.status === 'fulfilled' && Array.isArray(areas.value) ? JSON.parse(JSON.stringify(areas.value)) : []
   } catch (err) {
     console.error('[PropertiesPage] Failed to fetch server side data:', err?.message)
   }
@@ -147,11 +159,11 @@ export default async function PropertiesPage({ searchParams }) {
     url: `${BASE_URL}/properties`,
     mainEntity: {
       '@type': 'ItemList',
-      itemListElement: (initialProperties.data || []).slice(0, 20).map((p, index) => ({
+      itemListElement: (initialProperties?.data || []).slice(0, 20).map((p, index) => ({
         '@type': 'ListItem',
         position: index + 1,
-        name: p.title,
-        url: `${BASE_URL}/properties/${p.slug}`,
+        name: p?.title || 'Property',
+        url: `${BASE_URL}/properties/${p?.slug || p?._id || p?.id || ''}`,
       })),
     },
   }

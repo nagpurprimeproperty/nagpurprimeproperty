@@ -11,6 +11,7 @@ export { useSimilarProperties } from "./useSimilarProperties";
 export { useTogglePropertySave } from "./useTogglePropertySave";
 export { useCreatePropertyEnquiry } from "./useCreatePropertyEnquiry";
 export { useCreateCallEnquiry } from "./useCreateCallEnquiry";
+export { useCreateBrochureLead } from "./useCreateBrochureLead";
 export { useSearchSuggestions } from "./useSearchSuggestions";
 export { useMyProperties } from "./useMyProperties";
 export { useMyPropertyDetail } from "./useMyPropertyDetail";

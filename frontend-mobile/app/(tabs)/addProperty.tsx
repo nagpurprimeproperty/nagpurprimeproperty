@@ -148,10 +148,23 @@ export default function AddProperty() {
           : await uploadFile(state.step5.video);
       }
 
-      // 3. Build the normalized submission payload matching backend requirements
-      const payload = state.buildSubmitPayload(uploadedUrls, uploadedVideoUrl);
+      // 3. Resolve brochure PDF URL: use cached CDN URL if already uploaded, else upload now
+      let uploadedBrochureUrl: string | null = null;
+      if (state.step5.brochure) {
+        // If it's already a remote URL (loaded from existing property), use as-is
+        if (state.step5.brochure.startsWith('http://') || state.step5.brochure.startsWith('https://')) {
+          uploadedBrochureUrl = state.step5.brochure;
+        } else {
+          uploadedBrochureUrl = uploadCache.brochureUrl
+            ? uploadCache.brochureUrl
+            : await uploadFile(state.step5.brochure, { mimeType: 'application/pdf' });
+        }
+      }
 
-      // 4. Post/Put to the real backend endpoint using mutations
+      // 4. Build the normalized submission payload matching backend requirements
+      const payload = state.buildSubmitPayload(uploadedUrls, uploadedVideoUrl, uploadedBrochureUrl);
+
+      // 5. Post/Put to the real backend endpoint using mutations
       let success = false;
       if (state.editingPropertyId) {
         const response = await updateMutation.mutateAsync({ id: state.editingPropertyId, payload });

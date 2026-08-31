@@ -9,8 +9,9 @@ import { create } from 'zustand';
 export interface UploadCache {
   // key = local file URI, value = CDN URL returned by the upload API
   photoUrls: Record<string, string>;
-  videoUrl: string | null;  // CDN URL of the uploaded video
-  isUploading: boolean;     // true while any upload is in-flight
+  videoUrl: string | null;     // CDN URL of the uploaded video
+  brochureUrl: string | null;  // CDN URL of the uploaded brochure PDF
+  isUploading: boolean;        // true while any upload is in-flight
 }
 
 export interface PropertyUploadStore {
@@ -25,6 +26,9 @@ export interface PropertyUploadStore {
   // Store the CDN URL returned after a successful video upload
   setUploadedVideoUrl: (cdnUrl: string | null) => void;
 
+  // Store the CDN URL returned after a successful brochure PDF upload
+  setUploadedBrochureUrl: (cdnUrl: string | null) => void;
+
   // Toggle the global uploading flag
   setUploadingMedia: (val: boolean) => void;
 
@@ -35,6 +39,7 @@ export interface PropertyUploadStore {
 const initialUploadCache: UploadCache = {
   photoUrls: {},
   videoUrl: null,
+  brochureUrl: null,
   isUploading: false,
 };
 
@@ -57,6 +62,9 @@ export const usePropertyUploadStore = create<PropertyUploadStore>((set) => ({
 
   setUploadedVideoUrl: (cdnUrl) =>
     set((s) => ({ uploadCache: { ...s.uploadCache, videoUrl: cdnUrl } })),
+
+  setUploadedBrochureUrl: (cdnUrl) =>
+    set((s) => ({ uploadCache: { ...s.uploadCache, brochureUrl: cdnUrl } })),
 
   setUploadingMedia: (val) =>
     set((s) => ({ uploadCache: { ...s.uploadCache, isUploading: val } })),

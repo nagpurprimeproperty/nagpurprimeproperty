@@ -106,13 +106,16 @@ export function AdminSidebar({ mobileMenuOpen = false, onMobileMenuOpenChange } 
   const router   = useRouter();
   const { toast } = useToast();
 
-  const logout       = useAuthStore((s) => s.logout);
-  const clearProfile = useAdminProfileStore((s) => s.clearProfile);
-  const can          = usePermissionStore((s) => s.can);
-  const isAdmin      = usePermissionStore((s) => s.isAdmin);
+  const logout          = useAuthStore((s) => s.logout);
+  const clearProfile    = useAdminProfileStore((s) => s.clearProfile);
+  const can             = usePermissionStore((s) => s.can);
+  const isAdmin         = usePermissionStore((s) => s.isAdmin);
+  const getDefaultRoute = usePermissionStore((s) => s.getDefaultRoute);
 
   const [isCollapsed, setIsCollapsed]           = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const logoHref = isAdmin() || can("dashboard", "read") ? "/admin" : (getDefaultRoute() || "/admin/profile");
 
   const isActive = (href) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -128,12 +131,12 @@ export function AdminSidebar({ mobileMenuOpen = false, onMobileMenuOpenChange } 
     return can(item.module, "read");
   });
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setLogoutDialogOpen(false);
     clearProfile();
-    logout();
+    await logout();
     toast({ title: "Logged out successfully" });
-    router.replace("/login");
+    window.location.href = "/login";
   };
 
   const SidebarContent = ({ onNavClick }) => {
@@ -163,7 +166,7 @@ export function AdminSidebar({ mobileMenuOpen = false, onMobileMenuOpenChange } 
           )}
         >
           <Link
-            href="/admin"
+            href={logoHref}
             className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden"
             onClick={onNavClick}
           >

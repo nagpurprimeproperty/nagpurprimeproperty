@@ -1,4 +1,5 @@
 import PurchasedSubscription from './purchaseSubscription.model.js';
+import Plan from './subscription.model.js';
 
 const purchasePlanRepository = {
   getSubscriptionByUserId: (userId) =>

@@ -12,7 +12,7 @@ import { persist } from 'zustand/middleware';
 import { authApi } from '@/lib/api/auth.api';
 import { ApiError } from '@/lib/api/client';
 import { usePermissionStore } from '@/lib/store/permission-store';
-export const useAuthStore = create()(persist((set) => ({
+export const useAuthStore = create()((set) => ({
     token: null,
     isLoading: false,
     login: async (payload) => {
@@ -33,9 +33,17 @@ export const useAuthStore = create()(persist((set) => ({
             set({ isLoading: false });
         }
     },
-    logout: () => {
-        set({ token: null });
-        usePermissionStore.getState().clearPermissions();
+    logout: async () => {
+        try {
+            await fetch('/api/v1/admin/auth/logout', { method: 'POST', credentials: 'include' });
+        }
+        catch {
+            // Ignore error during logout API call
+        }
+        finally {
+            set({ token: null });
+            usePermissionStore.getState().clearPermissions();
+        }
     },
     forgotPassword: async (payload) => {
         set({ isLoading: true });
@@ -65,9 +73,6 @@ export const useAuthStore = create()(persist((set) => ({
             set({ isLoading: false });
         }
     },
-}), {
-    name: 'auth-store',
-    partialize: (state) => ({ token: state.token }),
 }));
 export const useToken = () => useAuthStore((s) => s.token);
 export const useIsAuthenticated = () => useAuthStore((s) => !!s.token);

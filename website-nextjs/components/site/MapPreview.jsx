@@ -29,22 +29,38 @@ export function MapPreview({
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
 
-  // Check if API Key is configured and Maps SDK loaded successfully
-  const useRealMap = loaded && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+  // Check if Maps SDK loaded successfully
+  const useRealMap = Boolean(loaded && typeof window !== 'undefined' && window.google?.maps?.Map);
 
   // ─── Real Google Map Initialization ──────────────────────────────────────────
   useEffect(() => {
-    if (!useRealMap || !mapRef.current) return;
+    if (!useRealMap || !mapRef.current || !window.google?.maps?.Map) return;
 
-    const map = new google.maps.Map(mapRef.current, {
-      center: NAGPUR_CENTER,
-      zoom: 12,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }],
-    });
-    mapInstance.current = map;
+    let map = null;
+    try {
+      map = new google.maps.Map(mapRef.current, {
+        center: NAGPUR_CENTER,
+        zoom: 12,
+        mapTypeId: 'hybrid',
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }],
+      });
+      mapInstance.current = map;
+    } catch (e) {
+      console.warn("Could not initialize MapPreview instance:", e?.message);
+      return;
+    }
+
+    if (!map) return;
+
+    // Trigger map resize event to handle dynamic layout calculations
+    const timer = setTimeout(() => {
+      if (window.google && mapInstance.current) {
+        google.maps.event.trigger(mapInstance.current, "resize");
+      }
+    }, 150);
 
     // Handle map click to resolve locality and notify parent filter
     map.addListener("click", (e) => {
@@ -70,6 +86,8 @@ export function MapPreview({
         }
       });
     });
+
+    return () => clearTimeout(timer);
   }, [useRealMap]);
 
   // Update markers and adjust map bounds whenever properties or highlight search changes
@@ -147,8 +165,8 @@ export function MapPreview({
 
   if (useRealMap) {
     return (
-      <div className={cn("relative overflow-hidden rounded-2xl border border-border bg-muted", height, className)}>
-        <div ref={mapRef} className="h-full w-full" />
+      <div className={cn("relative overflow-hidden rounded-2xl border border-border bg-muted min-h-[220px]", height, className)}>
+        <div ref={mapRef} className="h-full w-full min-h-[220px]" />
         {onExpandMap && (
           <button
             type="button"
@@ -164,6 +182,7 @@ export function MapPreview({
       </div>
     );
   }
+
 
   // ─── Fallback Faux Map (Clickable Pins) ──────────────────────────────────────
   return (

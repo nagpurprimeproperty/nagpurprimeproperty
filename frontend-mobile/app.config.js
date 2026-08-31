@@ -35,7 +35,7 @@ module.exports = ({ config }) => {
     ...config,
     name: "Nagpur Prime Property",
     slug: "nagpur-prime-property",
-    version: "1.0.1",
+    version: "1.0.4",
     orientation: "portrait",
     icon: "./assets/images/applogo.png",
     scheme: "nagpurprimeproperty",
@@ -82,7 +82,7 @@ module.exports = ({ config }) => {
     android: {
       ...(hasAndroidGoogleServices ? { googleServicesFile: androidGoogleServicesPath } : {}),
       adaptiveIcon: {
-        backgroundColor: "#000000",
+        backgroundColor: "#FFFFFF",
         foregroundImage: "./assets/images/applogo.png",
         monochromeImage: "./assets/images/applogo.png",
       },
@@ -126,10 +126,8 @@ module.exports = ({ config }) => {
           // Enable R8 code minification and resource shrinking for release builds
           enableMinifyInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
-          // Allow HTTP (cleartext) traffic to dev/staging backend.
-          // usesCleartextTraffic cannot be set directly in the android config
-          // object (schema violation) — this is the correct Expo approach.
-          usesCleartextTraffic: true,
+          // Allow HTTP (cleartext) traffic only in development; enforce HTTPS in production builds.
+          usesCleartextTraffic: process.env.NODE_ENV === "development" || process.env.APP_ENV === "development",
         },
       },
     ],

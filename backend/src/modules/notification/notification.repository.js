@@ -66,6 +66,7 @@ const notificationRepository = {
                     $dateToString: {
                       format: '%d %b',
                       date: { $ifNull: ['$createdAt', '$sentAt'] },
+                      timezone: '+05:30',
                     },
                   },
                 }, // 25 MAR

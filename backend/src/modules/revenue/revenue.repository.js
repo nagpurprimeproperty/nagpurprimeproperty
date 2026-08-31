@@ -1,5 +1,6 @@
 import Subscription from '../../models/purchaseSubscription.model.js';
 import Plan from '../../models/subscription.model.js';
+import { escapeRegex } from '../../utils/query-sanitizer.js';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -227,12 +228,13 @@ const revenueRepository = {
     ];
 
     if (search?.trim()) {
+      const safeSearch = escapeRegex(search.trim());
       basePipeline.push({
         $match: {
           $or: [
-            { 'user.name':   { $regex: search.trim(), $options: 'i' } },
-            { 'user.mobile': { $regex: search.trim(), $options: 'i' } },
-            { 'plan.name':   { $regex: search.trim(), $options: 'i' } },
+            { 'user.name':   { $regex: safeSearch, $options: 'i' } },
+            { 'user.mobile': { $regex: safeSearch, $options: 'i' } },
+            { 'plan.name':   { $regex: safeSearch, $options: 'i' } },
           ],
         },
       });

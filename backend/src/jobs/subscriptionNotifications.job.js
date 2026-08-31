@@ -80,48 +80,28 @@ async function sendExpiryReminders() {
   }
 }
 
-// ── Expired plan notification ─────────────────────────────────────────────────
+import purchasePlanService from '../modules/subscription/purchasePlan.service.js';
+
+// ── Expired plan notification & downgrade ─────────────────────────────────────
 
 async function sendExpiredNotifications() {
   const now = new Date();
 
+  // Find all active subscriptions whose end date has passed
   const expiredSubs = await Subscription.find({
     endDate: { $lte: now },
-    status: { $nin: ['Cancelled', 'Failed', 'Pending'] },
-    expiredNotificationSent: false,
+    isDurationUnlimited: false,
+    status: 'Active',
   });
 
-  console.log(`[CRON] Found ${expiredSubs.length} expired subscription(s)`);
+  console.log(`[CRON] Found ${expiredSubs.length} active subscription(s) ready for expiration & downgrade`);
 
   for (const sub of expiredSubs) {
     try {
-      const user = await User.findById(sub.userId).select('name mobile');
-      const userName = user?.name || user?.mobile || 'A user';
-
-      // Notify the user
-      await sendNotification({
-        userId: sub.userId,
-        title: 'Plan Expired',
-        message: `Your "${sub.planName}" plan has expired. Renew now to continue using premium features.`,
-        type: 'PLAN_EXPIRED',
-      });
-
-      // Notify admins
-      await sendAdminNotification({
-        title: 'User Plan Expired',
-        message: `${userName}'s "${sub.planName}" plan has expired.`,
-        type: 'PLAN_EXPIRED',
-        metadata: {
-          userId: sub.userId.toString(),
-          planName: sub.planName,
-          endDate: sub.endDate.toISOString(),
-        },
-      });
-
-      sub.expiredNotificationSent = true;
-      await sub.save();
+      await purchasePlanService.handleExpiredSubscription(sub);
+      console.log(`[CRON] Successfully expired and downgraded subscription ${sub._id} for user ${sub.userId}`);
     } catch (err) {
-      console.error(`[CRON] Failed to send expired notification for sub ${sub._id}:`, err.message);
+      console.error(`[CRON] Failed to process expired subscription ${sub._id}:`, err.message);
     }
   }
 }

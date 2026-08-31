@@ -41,16 +41,22 @@ jobs:
           cache-to: type=gha,mode=max
 
       # 2. Build & Push Public Website (Next.js)
+      - name: Generate Website Build Env Secret
+        run: |
+          cat << 'EOF' > /tmp/website_build.env
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://api.nagpurprimeproperty.com' }}
+          NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
+          NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://nagpurprimeproperty.com' }}
+          EOF
+
       - name: Build & Push Website Image
         uses: docker/build-push-action@v5
         with:
           context: ./website-nextjs
           file: ./website-nextjs/Dockerfile
           push: true
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://api.nagpurprimeproperty.com' }}
-            NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
-            NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://nagpurprimeproperty.com' }}
+          secret-files: |
+            "ENV_FILE=/tmp/website_build.env"
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/npp-website:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/npp-website:${{ github.sha }}
@@ -58,23 +64,29 @@ jobs:
           cache-to: type=gha,mode=max
 
       # 3. Build & Push Admin Panel (Next.js)
+      - name: Generate Admin Panel Build Env Secret
+        run: |
+          cat << 'EOF' > /tmp/admin_build.env
+          NEXT_PUBLIC_API_URL=${{ secrets.ADMIN_NEXT_PUBLIC_API_URL || '/api' }}
+          NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
+          NEXT_PUBLIC_WEBSITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://nagpurprimeproperty.com' }}
+          NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL || 'https://admin.nagpurprimeproperty.com' }}
+          NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_VAPID_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_VAPID_KEY }}
+          EOF
+
       - name: Build & Push Admin Panel Image
         uses: docker/build-push-action@v5
         with:
           context: ./admin-panel-ui
           file: ./admin-panel-ui/dockerfile
           push: true
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.ADMIN_NEXT_PUBLIC_API_URL || '/api' }}
-            NEXT_PUBLIC_GOOGLE_MAPS_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_KEY }}
-            NEXT_PUBLIC_WEBSITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://nagpurprimeproperty.com' }}
-            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL || 'https://admin.nagpurprimeproperty.com' }}
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-            NEXT_PUBLIC_FIREBASE_VAPID_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_VAPID_KEY }}
+          secret-files: |
+            "ENV_FILE=/tmp/admin_build.env"
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/npp-admin:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/npp-admin:${{ github.sha }}
@@ -94,13 +106,17 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+          timeout: 60s
+          command_timeout: 15m
           script: |
             set -e
             echo "🚀 Navigating to project directory..."
             cd ${{ secrets.VPS_TARGET_DIR }}
 
             echo "📥 Fetching latest docker-compose and configs..."
-            git pull origin main
+            git fetch origin main
+            git checkout main || git checkout -b main origin/main
+            git reset --hard origin/main
 
             echo "🔑 Logging in to Docker Hub on VPS..."
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin

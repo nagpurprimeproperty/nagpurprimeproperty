@@ -6,11 +6,13 @@ import { apiClient } from './client';
  * @param photos  - Image File objects (up to 15)
  * @param video   - Optional video File
  */
-export async function uploadMedia(photos, video) {
+export async function uploadMedia(photos = [], video = null, brochure = null) {
     const formData = new FormData();
     photos.forEach((f) => formData.append('photos', f));
     if (video)
         formData.append('video', video);
+    if (brochure)
+        formData.append('brochure', brochure);
     const res = await apiClient.post('/v1/admin/media', formData);
     return res.data;
 }

@@ -74,32 +74,57 @@ export function ResidentialFormSections({ form, set, errors }) {
                     <CardTitle>Basic Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Field 
-                        label="BHK" 
-                        required 
-                        error={errors.bhk}
-                    >
-                        <NumInput
-                            value={form.bhk ?? ""}
-                            onChange={(value) => set("bhk", value)}
-                            placeholder="e.g., 2"
-                            min={1}
-                            max={10}
-                            error={!!errors.bhk}
-                        />
-                    </Field>
+                    {form.listingCategory === "New" ? (
+                        <div className="grid grid-cols-2 gap-4">
+                            <Field label="Min BHK" required error={errors.minBhk}>
+                                <NumInput
+                                    value={form.minBhk ?? ""}
+                                    onChange={(value) => set("minBhk", value)}
+                                    placeholder="e.g., 2"
+                                    min={0}
+                                    max={8}
+                                    error={!!errors.minBhk}
+                                />
+                            </Field>
+                            <Field label="Max BHK" required error={errors.maxBhk}>
+                                <NumInput
+                                    value={form.maxBhk ?? ""}
+                                    onChange={(value) => set("maxBhk", value)}
+                                    placeholder="e.g., 4"
+                                    min={0}
+                                    max={8}
+                                    error={!!errors.maxBhk}
+                                />
+                            </Field>
+                        </div>
+                    ) : (
+                        <Field 
+                            label="BHK" 
+                            required 
+                            error={errors.bhk}
+                        >
+                            <NumInput
+                                value={form.bhk ?? ""}
+                                onChange={(value) => set("bhk", value)}
+                                placeholder="e.g., 2"
+                                min={0}
+                                max={8}
+                                error={!!errors.bhk}
+                            />
+                        </Field>
+                    )}
 
                     <Field 
                         label="Bathrooms" 
-                        required 
+                        required={form.listingCategory !== "New"} 
                         error={errors.bathrooms}
                     >
                         <NumInput
                             value={form.bathrooms ?? ""}
                             onChange={(value) => set("bathrooms", value)}
                             placeholder="e.g., 2"
-                            min={1}
-                            max={10}
+                            min={0}
+                            max={15}
                             error={!!errors.bathrooms}
                         />
                     </Field>
@@ -120,7 +145,7 @@ export function ResidentialFormSections({ form, set, errors }) {
 
                     <Field 
                         label="Floor Number" 
-                        required 
+                        required={form.listingCategory !== "New"} 
                         error={errors.floorNumber}
                     >
                         <NumInput
@@ -128,14 +153,14 @@ export function ResidentialFormSections({ form, set, errors }) {
                             onChange={(value) => set("floorNumber", value)}
                             placeholder="e.g., 3"
                             min={0}
-                            max={100}
+                            max={99}
                             error={!!errors.floorNumber}
                         />
                     </Field>
 
                     <Field 
                         label="Total Floors" 
-                        required 
+                        required={form.listingCategory !== "New"} 
                         error={errors.totalFloors}
                     >
                         <NumInput
@@ -143,7 +168,7 @@ export function ResidentialFormSections({ form, set, errors }) {
                             onChange={(value) => set("totalFloors", value)}
                             placeholder="e.g., 5"
                             min={1}
-                            max={100}
+                            max={99}
                             error={!!errors.totalFloors}
                         />
                     </Field>
@@ -156,28 +181,91 @@ export function ResidentialFormSections({ form, set, errors }) {
                     <CardTitle>Area Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Field 
-                        label="Carpet Area (sq ft)" 
-                        required 
-                        error={errors.carpetArea}
-                        hint="Built-up area that can be covered by carpet"
-                    >
-                        <NumInput
-                            value={form.carpetArea ?? ""}
-                            onChange={(value) => set("carpetArea", value)}
-                            placeholder="e.g., 1200"
-                            min={1}
-                            error={!!errors.carpetArea}
-                        />
-                    </Field>
+                    {form.listingCategory === "New" ? (
+                        <>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Field label="Min Carpet Area (sq ft)" required error={errors.minCarpetArea}>
+                                    <NumInput
+                                        value={form.minCarpetArea ?? ""}
+                                        onChange={(value) => set("minCarpetArea", value)}
+                                        placeholder="e.g., 800"
+                                        min={1}
+                                        error={!!errors.minCarpetArea}
+                                    />
+                                </Field>
+                                <Field label="Max Carpet Area (sq ft)" required error={errors.maxCarpetArea}>
+                                    <NumInput
+                                        value={form.maxCarpetArea ?? ""}
+                                        onChange={(value) => set("maxCarpetArea", value)}
+                                        placeholder="e.g., 1800"
+                                        min={1}
+                                        error={!!errors.maxCarpetArea}
+                                    />
+                                </Field>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Field label="Min Super Built-up Area (sq ft)" error={errors.minSuperBuiltUpArea}>
+                                    <NumInput
+                                        value={form.minSuperBuiltUpArea ?? ""}
+                                        onChange={(value) => set("minSuperBuiltUpArea", value)}
+                                        placeholder="e.g., 1000"
+                                        min={1}
+                                    />
+                                </Field>
+                                <Field label="Max Super Built-up Area (sq ft)" error={errors.maxSuperBuiltUpArea}>
+                                    <NumInput
+                                        value={form.maxSuperBuiltUpArea ?? ""}
+                                        onChange={(value) => set("maxSuperBuiltUpArea", value)}
+                                        placeholder="e.g., 2200"
+                                        min={1}
+                                    />
+                                </Field>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <Field 
+                                label="Carpet Area (sq ft)" 
+                                required 
+                                error={errors.carpetArea}
+                                hint="Built-up area that can be covered by carpet"
+                            >
+                                <NumInput
+                                    value={form.carpetArea ?? ""}
+                                    onChange={(value) => set("carpetArea", value)}
+                                    placeholder="e.g., 1200"
+                                    min={1}
+                                    error={!!errors.carpetArea}
+                                />
+                            </Field>
 
-                    <Field 
-                        label="Built-up Area (sq ft)" 
-                        error={errors.builtUpArea}
-                        hint="Total area including walls"
-                    >
-                        <NumInput
-                            value={form.builtUpArea ?? ""}
+                            <Field 
+                                label="Built-up Area (sq ft)" 
+                                error={errors.builtUpArea}
+                                hint="Total area including walls"
+                            >
+                                <NumInput
+                                    value={form.builtUpArea ?? ""}
+                                    onChange={(value) => set("builtUpArea", value)}
+                                    placeholder="e.g., 1400"
+                                    min={1}
+                                />
+                            </Field>
+
+                            <Field 
+                                label="Super Built-up Area (sq ft)" 
+                                error={errors.superBuiltUpArea}
+                                hint="Built-up area plus common spaces"
+                            >
+                                <NumInput
+                                    value={form.superBuiltUpArea ?? ""}
+                                    onChange={(value) => set("superBuiltUpArea", value)}
+                                    placeholder="e.g., 1600"
+                                    min={1}
+                                />
+                            </Field>
+                        </>
+                    )}
                             onChange={(value) => set("builtUpArea", value)}
                             placeholder="e.g., 1400"
                             min={1}

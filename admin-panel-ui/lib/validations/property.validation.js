@@ -29,7 +29,7 @@ const IRRIGATION_TYPES = ["Drip", "Sprinkler", "Canal", "Flood", "None"];
 const SOIL_TYPES = ["Black", "Red", "Alluvial", "Mixed"];
 const NA_ORDER_STATUS_OPTIONS = ["NA Order Received", "Applied", "Not Applied"];
 const WATER_SOURCE_OPTIONS = ["Well", "Borewell", "Canal", "River", "None"];
-const APPROVED_BY_OPTIONS = ["NIT", "NMC", "NMRDA", "MHADA", "Private Layout"];
+const APPROVED_BY_OPTIONS = ["NIT", "NMC", "NMRDA-RL", "MHADA", "Private Layout"];
 const ZONE_TYPES = ["Residential", "Mixed Use", "Commercial", "Industrial"];
 const CONSTRUCTION_STATUS_OPTIONS = [
     "Pre-launch", "Under Construction", "Ready to Move", "Ready", "Partially Ready", "Under Development",
@@ -117,6 +117,33 @@ function buildDetailsSchema(listingCategory, propertyType) {
         electricityStatus: optEnum(ELECTRICITY_STATUS, "Select a valid electricity status"),
     }).merge(commonOptionalDetails);
 
+    const residentialNewBase = z.object({
+        minBhk: intRange(0, 8, "Min BHK must be between 0 and 8"),
+        maxBhk: intRange(0, 8, "Max BHK must be between 0 and 8"),
+        bhk: optIntRange(0, 8, "BHK must be between 0 and 8"),
+        bathrooms: optIntRange(0, 15, "Bathrooms must be between 0 and 15"),
+        balconies: optIntRange(0, 10, "Balconies must be between 0 and 10"),
+        floorNumber: optIntRange(0, 99, "Floor number must be between 0 and 99"),
+        totalFloors: optIntRange(1, 99, "Total floors must be between 1 and 99"),
+        minCarpetArea: posNum("Min Carpet area is required and must be greater than 0"),
+        maxCarpetArea: posNum("Max Carpet area is required and must be greater than 0"),
+        carpetArea: optPosNum("Carpet area must be greater than 0"),
+        minBuiltUpArea: optPosNum("Min Built-up area must be greater than 0"),
+        maxBuiltUpArea: optPosNum("Max Built-up area must be greater than 0"),
+        builtUpArea: optPosNum("Built-up area must be greater than 0"),
+        minSuperBuiltUpArea: optPosNum("Min Super built-up area must be greater than 0"),
+        maxSuperBuiltUpArea: optPosNum("Max Super built-up area must be greater than 0"),
+        superBuiltUpArea: optPosNum("Super built-up area must be greater than 0"),
+        minSqft: optPosNum("Min Sqft must be greater than 0"),
+        maxSqft: optPosNum("Max Sqft must be greater than 0"),
+        furnishing: optEnum(FURNISHING_OPTIONS, "Select a furnishing option"),
+        facing: optEnum(FACING_OPTIONS, "Select a valid facing direction"),
+        ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
+        floorType: optEnum(FLOOR_TYPE, "Select a valid floor type"),
+        waterSupply: optEnum(WATER_SUPPLY, "Select a valid water supply"),
+        electricityStatus: optEnum(ELECTRICITY_STATUS, "Select a valid electricity status"),
+    }).merge(commonOptionalDetails);
+
     const villaBase = z.object({
         bhk: intRange(0, 8, "BHK must be between 0 and 8"),
         bathrooms: intRange(0, 15, "Bathrooms must be between 0 and 15"),
@@ -127,6 +154,32 @@ function buildDetailsSchema(listingCategory, propertyType) {
         furnishing: reqEnum(FURNISHING_OPTIONS, "Select a furnishing option"),
         facing: optEnum(FACING_OPTIONS, "Select a valid facing direction"),
         parkingSlots: intRange(0, 10, "Parking slots must be between 0 and 10"),
+        roadWidth: optPosNum("Road width must be greater than 0"),
+        waterSupply: optEnum(WATER_SUPPLY, "Select a valid water supply"),
+        floorType: optEnum(FLOOR_TYPE, "Select a valid floor type"),
+        ageOfProperty: optEnum(AGE_OF_PROPERTY, "Select a valid age of property"),
+    }).merge(commonOptionalDetails);
+
+    const villaNewBase = z.object({
+        minBhk: optIntRange(0, 8, "Min BHK must be between 0 and 8"),
+        maxBhk: optIntRange(0, 8, "Max BHK must be between 0 and 8"),
+        bhk: optIntRange(0, 8, "BHK must be between 0 and 8"),
+        bathrooms: optIntRange(0, 15, "Bathrooms must be between 0 and 15"),
+        numberOfFloors: optStr(),
+        minPlotArea: optPosNum("Min Plot area must be greater than 0"),
+        maxPlotArea: optPosNum("Max Plot area must be greater than 0"),
+        plotArea: optPosNum("Plot area must be greater than 0"),
+        minBuiltUpArea: optPosNum("Min Built-up area must be greater than 0"),
+        maxBuiltUpArea: optPosNum("Max Built-up area must be greater than 0"),
+        builtUpArea: optPosNum("Built-up area must be greater than 0"),
+        minCarpetArea: optPosNum("Min Carpet area must be greater than 0"),
+        maxCarpetArea: optPosNum("Max Carpet area must be greater than 0"),
+        carpetArea: optPosNum("Carpet area must be greater than 0"),
+        minSqft: optPosNum("Min Sqft must be greater than 0"),
+        maxSqft: optPosNum("Max Sqft must be greater than 0"),
+        furnishing: optEnum(FURNISHING_OPTIONS, "Select a furnishing option"),
+        facing: optEnum(FACING_OPTIONS, "Select a valid facing direction"),
+        parkingSlots: optIntRange(0, 10, "Parking slots must be between 0 and 10"),
         roadWidth: optPosNum("Road width must be greater than 0"),
         waterSupply: optEnum(WATER_SUPPLY, "Select a valid water supply"),
         floorType: optEnum(FLOOR_TYPE, "Select a valid floor type"),
@@ -239,6 +292,12 @@ function buildDetailsSchema(listingCategory, propertyType) {
         totalPlotsInLayout: optPosNum("Total plots must be greater than 0"),
         plotsAvailable: optPosNum("Plots available must be 0 or more"),
         developmentStatus: reqEnum(DEVELOPMENT_STATUS_OPTIONS, "Select development status"),
+        minPlotAreaSqFt: optPosNum("Min Plot area must be greater than 0"),
+        maxPlotAreaSqFt: optPosNum("Max Plot area must be greater than 0"),
+        minPlotArea: optPosNum("Min Plot area must be greater than 0"),
+        maxPlotArea: optPosNum("Max Plot area must be greater than 0"),
+        minSqft: optPosNum("Min Sqft must be greater than 0"),
+        maxSqft: optPosNum("Max Sqft must be greater than 0"),
     });
     // Resale residential extra
     const resaleResidentialExtra = z.object({
@@ -261,39 +320,51 @@ function buildDetailsSchema(listingCategory, propertyType) {
     switch (propertyType) {
         case "Flat/Apartment": {
             if (isNew)
-                return residentialBase.merge(newProjectCore);
+                return residentialNewBase.merge(newProjectCore);
             if (isResale)
                 return residentialBase.merge(resaleResidentialExtra);
             // Rental
             return residentialBase;
         }
         case "Builder Floor": {
-            const base = residentialBase.merge(builderFloorExtra);
             if (isNew)
-                return base.merge(newProjectCore);
+                return residentialNewBase.merge(builderFloorExtra).merge(newProjectCore);
             if (isResale)
-                return base.merge(resaleResidentialExtra);
-            return base;
+                return residentialBase.merge(builderFloorExtra).merge(resaleResidentialExtra);
+            return residentialBase.merge(builderFloorExtra);
         }
         case "Penthouse": {
-            const base = residentialBase.merge(penthouseExtra);
             if (isNew)
-                return base.merge(newProjectCore);
+                return residentialNewBase.merge(penthouseExtra).merge(newProjectCore);
             if (isResale)
-                return base.merge(resaleResidentialExtra);
-            return base;
+                return residentialBase.merge(penthouseExtra).merge(resaleResidentialExtra);
+            return residentialBase.merge(penthouseExtra);
         }
         case "Villa/Independent House": {
             if (isResale)
                 return villaBase.merge(villaResaleExtra);
             if (isNew)
-                return villaBase.merge(newVillaProjectCore);
+                return villaNewBase.merge(newVillaProjectCore);
             // Rental: villaBase includes petFriendly/nonVegAllowed, they are booleans
             return villaBase;
         }
         case "Office Space": {
             if (isNew)
-                return commercialOfficeBase.merge(newProjectCore);
+                return commercialOfficeBase.extend({
+                    carpetArea: optPosNum(),
+                    washrooms: optIntRange(1, 10, "Washrooms must be between 1 and 10"),
+                    furnishing: optEnum(FURNISHING_OPTIONS, "Select a furnishing option"),
+                    floorNumber: optIntRange(0, 99, "Floor number must be between 0 and 99"),
+                }).merge(newProjectCore).merge(z.object({
+                    minCarpetArea: optPosNum(),
+                    maxCarpetArea: optPosNum(),
+                    minBuiltUpArea: optPosNum(),
+                    maxBuiltUpArea: optPosNum(),
+                    minSuperBuiltUpArea: optPosNum(),
+                    maxSuperBuiltUpArea: optPosNum(),
+                    minSqft: optPosNum(),
+                    maxSqft: optPosNum(),
+                }));
             if (isResale)
                 return commercialOfficeBase.merge(commercialResaleExtra);
             // Rental: ownershipType optional
@@ -303,28 +374,55 @@ function buildDetailsSchema(listingCategory, propertyType) {
         }
         case "Shop": {
             if (isNew)
-                return shopBase.merge(newProjectCore);
+                return shopBase.extend({
+                    carpetArea: optPosNum(),
+                    shopFloor: optEnum(SHOP_FLOOR_OPTIONS, "Select the shop floor"),
+                }).merge(newProjectCore).merge(z.object({
+                    minCarpetArea: optPosNum(),
+                    maxCarpetArea: optPosNum(),
+                    minBuiltUpArea: optPosNum(),
+                    maxBuiltUpArea: optPosNum(),
+                    minSqft: optPosNum(),
+                    maxSqft: optPosNum(),
+                }));
             if (isResale)
                 return shopBase.merge(commercialResaleExtra);
             return shopBase;
         }
         case "Showroom": {
             if (isNew)
-                return showroomBase.merge(newProjectCore);
+                return showroomBase.extend({
+                    showroomArea: optPosNum(),
+                }).merge(newProjectCore).merge(z.object({
+                    minShowroomArea: optPosNum(),
+                    maxShowroomArea: optPosNum(),
+                    minSqft: optPosNum(),
+                    maxSqft: optPosNum(),
+                }));
             if (isResale)
                 return showroomBase.merge(commercialResaleExtra);
             return showroomBase;
         }
         case "Warehouse/Godown": {
             if (isNew)
-                return warehouseBase.merge(newWarehouseCore);
+                return warehouseBase.extend({
+                    warehouseArea: optPosNum(),
+                    warehouseHeight: optPosNum(),
+                }).merge(newWarehouseCore).merge(z.object({
+                    minWarehouseArea: optPosNum(),
+                    maxWarehouseArea: optPosNum(),
+                    minSqft: optPosNum(),
+                    maxSqft: optPosNum(),
+                }));
             if (isResale)
                 return warehouseBase.merge(commercialResaleExtra);
             return warehouseBase;
         }
         case "Residential Plot": {
             if (isNew)
-                return residentialPlotBase.merge(newResPlotCore);
+                return residentialPlotBase.extend({
+                    plotAreaSqFt: optPosNum(),
+                }).merge(newResPlotCore);
             if (isResale)
                 return residentialPlotBase.merge(plotResaleExtra);
             return residentialPlotBase;
@@ -469,12 +567,14 @@ export function validateStep(step, form) {
             }
             // ── numeric string fields ──────────────────────────────────────────────
             const numFields = [
-                "bhk", "bathrooms", "balconies", "floorNumber", "totalFloors",
-                "carpetArea", "builtUpArea", "superBuiltUpArea", "plotArea", "parkingSlots",
+                "bhk", "minBhk", "maxBhk", "bathrooms", "balconies", "floorNumber", "totalFloors",
+                "carpetArea", "minCarpetArea", "maxCarpetArea", "builtUpArea", "minBuiltUpArea", "maxBuiltUpArea",
+                "superBuiltUpArea", "minSuperBuiltUpArea", "maxSuperBuiltUpArea", "minSqft", "maxSqft",
+                "plotArea", "minPlotArea", "maxPlotArea", "parkingSlots",
                 "roadWidth", "terraceArea", "totalUnitsInBuilding", "cabinCount", "openDesks",
-                "washrooms", "frontage", "depth", "ceilingHeight", "showroomArea",
-                "numberOfShowroomFloors", "warehouseArea", "warehouseHeight", "numberOfDocks",
-                "openYardArea", "powerLoad", "plotAreaSqFt", "plotLength",
+                "washrooms", "frontage", "depth", "ceilingHeight", "showroomArea", "minShowroomArea", "maxShowroomArea",
+                "numberOfShowroomFloors", "warehouseArea", "minWarehouseArea", "maxWarehouseArea", "warehouseHeight", "numberOfDocks",
+                "openYardArea", "powerLoad", "plotAreaSqFt", "minPlotAreaSqFt", "maxPlotAreaSqFt", "plotLength",
                 "plotWidth", "fsiAvailable", "areaAcres", "areaHectares", "distanceFromCity",
                 "totalUnitsInProject", "unitsAvailable", "totalVillasInProject",
                 "totalPlotsInLayout", "plotsAvailable",

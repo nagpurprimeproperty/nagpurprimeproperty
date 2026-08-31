@@ -5,6 +5,7 @@ import { safeRegexFilter } from '../../utils/query-sanitizer.js';
 import SavedProperty from './savedProperty.model.js';
 import Lead from '../lead/leads.model.js';
 import { getOrSet } from '../../utils/cache.js';
+import { toISTISOString } from '../../utils/timezone.js';
 
 const formatPriceLabel = (value, isMonthly = false) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return value;
@@ -40,7 +41,7 @@ const cleanNulls = (value) => {
   }
 
   if (isDate(value)) {
-    return value.toISOString();
+    return toISTISOString(value);
   }
 
   if (isObjectIdLike(value)) {
@@ -277,8 +278,74 @@ const propertyRepository = {
     }
     if (featured === true || featured === 'true') filter.featured = true;
 
-    // NEW: BHK filter
-    if (bhk) filter['details.bhk'] = Number(bhk);
+    // BHK filter: matches single bhk OR minBhk-maxBhk range
+    if (bhk) {
+      const bhkNum = Number(bhk);
+      const bhkCondition = {
+        $or: [
+          { 'details.bhk': bhkNum },
+          {
+            $and: [
+              { 'details.minBhk': { $lte: bhkNum } },
+              { 'details.maxBhk': { $gte: bhkNum } },
+            ],
+          },
+        ],
+      };
+      if (filter.$and) {
+        filter.$and.push(bhkCondition);
+      } else if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, bhkCondition];
+        delete filter.$or;
+      } else {
+        filter.$or = bhkCondition.$or;
+      }
+    }
+
+    // Sqft filter: matches single sqft/carpetArea OR min/max range
+    if (sqftMin || sqftMax) {
+      const minVal = sqftMin ? Number(sqftMin) : 0;
+      const maxVal = sqftMax ? Number(sqftMax) : Infinity;
+
+      const sqftCondition = {
+        $or: [
+          ...(sqftMin && sqftMax ? [
+            { 'details.carpetArea': { $gte: minVal, $lte: maxVal } },
+            { 'details.builtUpArea': { $gte: minVal, $lte: maxVal } },
+            { 'details.superBuiltUpArea': { $gte: minVal, $lte: maxVal } },
+            { 'details.plotArea': { $gte: minVal, $lte: maxVal } },
+            { 'details.plotAreaSqFt': { $gte: minVal, $lte: maxVal } },
+          ] : sqftMin ? [
+            { 'details.carpetArea': { $gte: minVal } },
+            { 'details.builtUpArea': { $gte: minVal } },
+            { 'details.superBuiltUpArea': { $gte: minVal } },
+            { 'details.plotArea': { $gte: minVal } },
+            { 'details.plotAreaSqFt': { $gte: minVal } },
+          ] : [
+            { 'details.carpetArea': { $lte: maxVal } },
+            { 'details.builtUpArea': { $lte: maxVal } },
+            { 'details.superBuiltUpArea': { $lte: maxVal } },
+            { 'details.plotArea': { $lte: maxVal } },
+            { 'details.plotAreaSqFt': { $lte: maxVal } },
+          ]),
+          {
+            $and: [
+              ...(sqftMin ? [{ $or: [{ 'details.maxCarpetArea': { $gte: minVal } }, { 'details.maxSqft': { $gte: minVal } }, { 'details.maxSuperBuiltUpArea': { $gte: minVal } }, { 'details.maxPlotAreaSqFt': { $gte: minVal } }] }] : []),
+              ...(sqftMax ? [{ $or: [{ 'details.minCarpetArea': { $lte: maxVal } }, { 'details.minSqft': { $lte: maxVal } }, { 'details.minSuperBuiltUpArea': { $lte: maxVal } }, { 'details.minPlotAreaSqFt': { $lte: maxVal } }] }] : []),
+            ],
+          },
+        ],
+      };
+
+      if (filter.$and) {
+        filter.$and.push(sqftCondition);
+      } else if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, sqftCondition];
+        delete filter.$or;
+      } else {
+        filter.$or = sqftCondition.$or;
+      }
+    }
 
     // Amenities filter
     if (amenitiesArray.length > 0) {
@@ -471,7 +538,14 @@ const propertyRepository = {
                 localField: 'brokerId',
                 foreignField: '_id',
                 pipeline: [
-                  { $project: { name: 1, email: 1, mobile: 1, avatar: 1, profileImage: 1 } },
+                  {
+                    $project: {
+                      name: 1,
+                      avatar: 1,
+                      profileImage: 1,
+                      ...(params.brokerId ? { email: 1, mobile: 1 } : {}),
+                    },
+                  },
                 ],
                 as: 'broker',
               },
@@ -664,7 +738,7 @@ const propertyRepository = {
         .lean();
 
       if (bySlug) {
-        // Resolve isSaved and return
+        // Resolve isSaved
         if (userId && mongoose.Types.ObjectId.isValid(userId)) {
           const isSaved = await SavedProperty.exists({
             userId: new mongoose.Types.ObjectId(userId),
@@ -674,6 +748,27 @@ const propertyRepository = {
         } else {
           bySlug.isSaved = false;
         }
+
+        const broker = bySlug.brokerId;
+        const hasLeadForProperty = Boolean(
+          userId &&
+          broker &&
+          (await Lead.exists({
+            propertyId: bySlug._id,
+            userId,
+          }))
+        );
+
+        if (broker && !hasLeadForProperty) {
+          bySlug.brokerId = {
+            _id: broker._id,
+            name: broker.name ?? '',
+            avatar: broker.avatar ?? broker.profileImage ?? '',
+            city: broker.city ?? '',
+            area: broker.area ?? '',
+          };
+        }
+
         return formatPropertyDetail(bySlug);
       }
 
@@ -697,6 +792,26 @@ const propertyRepository = {
       property.isSaved = !!isSaved;
     } else {
       property.isSaved = false;
+    }
+
+    const broker = property.brokerId;
+    const hasLeadForProperty = Boolean(
+      userId &&
+      broker &&
+      (await Lead.exists({
+        propertyId: property._id,
+        userId,
+      }))
+    );
+
+    if (broker && !hasLeadForProperty) {
+      property.brokerId = {
+        _id: broker._id,
+        name: broker.name ?? '',
+        avatar: broker.avatar ?? broker.profileImage ?? '',
+        city: broker.city ?? '',
+        area: broker.area ?? '',
+      };
     }
 
     return formatPropertyDetail(property);

@@ -4,8 +4,8 @@ export const  loginUser = async (req, res, next) => {
   try {
     const { mobile, name } = req.body;
     const user = await UserService.findOrCreateByMobile(mobile, name);
-    const otp = await UserService.generateOTP(user);
-    res.json({ success: true,message: 'OTP sent successfully', data: otp });
+    await UserService.generateOTP(user);
+    res.json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
     next(error);
   }
@@ -14,8 +14,8 @@ export const  loginUser = async (req, res, next) => {
 export const resendOTP = async (req, res, next) => {
   try {
     const { mobile } = req.body;
-    const otp = await UserService.resendOTP(mobile);
-    res.json({ success: true, message: 'OTP resent successfully', data: otp });
+    await UserService.resendOTP(mobile);
+    res.json({ success: true, message: 'OTP resent successfully' });
   } catch (error) {
     next(error);
   }
@@ -23,17 +23,24 @@ export const resendOTP = async (req, res, next) => {
 
 export const verifyOTP = async (req, res, next) => {
   try {
-    const { mobile, otp, fcmToken } = req.body;
+    const { mobile, otp, fcmToken, appleToken, pushToken } = req.body;
     const response = await UserService.verifyOTP(mobile, otp);
     const user = response?.user;
     const token = response?.token;
 
-    // Save FCM token if provided (optional — used for push notifications)
-    if (fcmToken && user?._id) {
-      await UserService.updateFcmToken(user._id, fcmToken);
+    // Save push token if provided (supports fcmToken, pushToken, or appleToken)
+    const tokenToSave = fcmToken || pushToken || appleToken;
+    if (tokenToSave && user?._id) {
+      await UserService.updateFcmToken(user._id, tokenToSave);
     }
 
-    res.cookie('userToken', token, { httpOnly: true });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('userToken', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
     res.json({ success: true, message: 'OTP verified successfully', data: user, token });
   } catch (error) {
     next(error);

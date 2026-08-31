@@ -6,6 +6,7 @@ import purchasePlanRepository from './purchasePlan.repository.js';
 import planRepository from './plan.repository.js';
 import userRepository from '../user/user.repository.js';
 import User from '../user/user.model.js';
+import PurchasedSubscription from './purchaseSubscription.model.js';
 import logger from '../../utils/logger.js';
 
 // ── Razorpay client ──────────────────────────────────────────────────────────
@@ -361,10 +362,181 @@ handleWebhook: async (rawBody, razorpaySignature) => {
   },
 
   /**
+   * Expire an active subscription whose endDate has passed, downgrade user to Free Plan,
+   * deactivate excess active properties, un-feature excess featured properties, and notify.
+   */
+  handleExpiredSubscription: async (subscriptionOrId) => {
+    const sub = typeof subscriptionOrId === 'object' && subscriptionOrId?._id
+      ? subscriptionOrId
+      : await purchasePlanRepository.findSubscriptionById(subscriptionOrId);
+
+    if (!sub) return null;
+
+    const userId = sub.userId?._id || sub.userId;
+
+    // 1. Mark expired subscription as 'Expired'
+    await purchasePlanRepository.updateSubscription(sub._id, {
+      status: 'Expired',
+      expiredNotificationSent: true,
+    });
+
+    // 2. Send PLAN_EXPIRED notifications to user & admin if not already sent
+    if (!sub.expiredNotificationSent) {
+      try {
+        const { sendNotification, sendAdminNotification } = await import('../../services/notificationDelivery.service.js');
+        const user = await User.findById(userId).select('name mobile');
+        const userName = user?.name || user?.mobile || 'A user';
+
+        await sendNotification({
+          userId,
+          title: 'Plan Expired',
+          message: `Your "${sub.planName}" plan has expired. Your account has been moved to the Free Plan. Renew now to continue using premium features.`,
+          type: 'PLAN_EXPIRED',
+        });
+
+        await sendAdminNotification({
+          title: 'User Plan Expired',
+          message: `${userName}'s "${sub.planName}" plan has expired and was moved to the Free Plan.`,
+          type: 'PLAN_EXPIRED',
+          metadata: {
+            userId: userId.toString(),
+            planName: sub.planName,
+            endDate: sub.endDate ? new Date(sub.endDate).toISOString() : new Date().toISOString(),
+          },
+        });
+      } catch (notifErr) {
+        console.error('[Subscription] Failed to send expiration notification:', notifErr.message);
+      }
+    }
+
+    // 3. Fallback to Free Plan
+    const freePlan = await planRepository.getFreePlan();
+    let freeSub = null;
+
+    if (freePlan) {
+      // Check if user already has an active Free Plan
+      const existingFree = await PurchasedSubscription.findOne({
+        userId,
+        status: 'Active',
+        isFree: true,
+      });
+
+      if (existingFree) {
+        freeSub = existingFree;
+      } else {
+        const startDate = new Date();
+        const endDate = calcEndDate(startDate, freePlan.duration, freePlan.durationUnit, freePlan.isDurationUnlimited);
+
+        freeSub = await purchasePlanRepository.createSubscription({
+          userId,
+          planId: freePlan._id,
+          planName: freePlan.name,
+          startDate,
+          endDate,
+          status: 'Active',
+          isFree: true,
+          price: 0,
+          duration: freePlan.duration,
+          durationUnit: freePlan.durationUnit,
+          isDurationUnlimited: freePlan.isDurationUnlimited,
+          limits: freePlan.limits,
+          usage: {
+            propertiesPosted: 0,
+            leadsUnlocked: 0,
+            featuredPropertiesUsed: 0,
+          },
+        });
+      }
+    }
+
+    // 4. Downgrade properties & featured status according to Free Plan limits
+    const maxAllowedUploads = freePlan?.limits?.isPropertyUploadUnlimited
+      ? Infinity
+      : (freePlan?.limits?.propertyUploads ?? 0);
+
+    const maxAllowedFeatured = freePlan?.limits?.isFeaturedPropertiesUnlimited
+      ? Infinity
+      : (freePlan?.limits?.featuredProperties ?? 0);
+
+    try {
+      const Property = (await import('../property/property.model.js')).default;
+
+      // 4a. Handle property listings limit: keep the newest up to the limit, deactivate older ones
+      const activeProperties = await Property.find({ brokerId: userId, status: 'Active' })
+        .sort({ createdAt: -1 });
+
+      let keptActiveCount = activeProperties.length;
+      if (activeProperties.length > maxAllowedUploads) {
+        const propertiesToKeep = activeProperties.slice(0, maxAllowedUploads);
+        const propertiesToDeactivate = activeProperties.slice(maxAllowedUploads);
+        const deactivateIds = propertiesToDeactivate.map((p) => p._id);
+
+        if (deactivateIds.length > 0) {
+          await Property.updateMany(
+            { _id: { $in: deactivateIds } },
+            { $set: { status: 'Inactive' } }
+          );
+          console.log(`[Subscription Expire] Deactivated ${deactivateIds.length} excess properties for user ${userId}`);
+        }
+        keptActiveCount = propertiesToKeep.length;
+      }
+
+      // 4b. Handle featured properties limit: keep the newest up to the limit, unfeature excess
+      const featuredProperties = await Property.find({ brokerId: userId, featured: true })
+        .sort({ createdAt: -1 });
+
+      let keptFeaturedCount = featuredProperties.length;
+      if (featuredProperties.length > maxAllowedFeatured) {
+        const featuredToKeep = featuredProperties.slice(0, maxAllowedFeatured);
+        const featuredToUnfeature = featuredProperties.slice(maxAllowedFeatured);
+        const unfeatureIds = featuredToUnfeature.map((p) => p._id);
+
+        if (unfeatureIds.length > 0) {
+          await Property.updateMany(
+            { _id: { $in: unfeatureIds } },
+            { $set: { featured: false } }
+          );
+          console.log(`[Subscription Expire] Un-featured ${unfeatureIds.length} excess properties for user ${userId}`);
+        }
+        keptFeaturedCount = featuredToKeep.length;
+      }
+
+      // 4c. Synchronize usage counts on the Free Plan subscription
+      if (freeSub) {
+        await purchasePlanRepository.updateSubscription(freeSub._id, {
+          'usage.propertiesPosted': keptActiveCount,
+          'usage.featuredPropertiesUsed': keptFeaturedCount,
+        });
+      }
+
+      // 5. Invalidate property caches
+      const { invalidateCache } = await import('../../utils/cache.js');
+      await invalidateCache(['property:*']);
+    } catch (downgradeErr) {
+      console.error('[Subscription Expire] Error while downgrading properties:', downgradeErr.message);
+    }
+
+    return freeSub || null;
+  },
+
+  /**
    * Get the currently active subscription for a user.
    */
   getMySubscription: async (userId) => {
-    const subscription = await purchasePlanRepository.findActiveByUser(userId);
+    let subscription = await purchasePlanRepository.findActiveByUser(userId);
+
+    // If no valid active subscription found, check if an expired active paid sub exists
+    if (!subscription) {
+      const rawSub = await PurchasedSubscription.findOne({
+        userId,
+        status: 'Active',
+      }).sort({ createdAt: -1 });
+
+      if (rawSub && !rawSub.isDurationUnlimited && rawSub.endDate && rawSub.endDate <= new Date()) {
+        subscription = await purchasePlanService.handleExpiredSubscription(rawSub);
+      }
+    }
+
     return subscription || null;
   },
 
@@ -475,6 +647,7 @@ handleWebhook: async (rawBody, razorpaySignature) => {
     const user = await userRepository.findById(userId);
     const invoiceNo = subscription.invoiceNumber || `INV-${subscription._id.toString().slice(-8).toUpperCase()}`;
     const dateStr = new Date(subscription.createdAt || subscription.startDate).toLocaleDateString('en-IN', {
+      timeZone: 'Asia/Kolkata',
       day: '2-digit', month: 'short', year: 'numeric'
     });
 

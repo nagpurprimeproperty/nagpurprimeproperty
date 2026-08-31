@@ -47,7 +47,7 @@ async function compressVideo(buffer) {
       .outputOptions([
         '-c:v libx264',   // H.264 codec — widest compatibility
         '-crf 28',        // Quality factor: 18=lossless, 28=good compression, 51=worst
-        '-preset fast',   // Encoding speed vs compression ratio
+        '-preset veryfast', // Fast encoding speed to minimize server CPU time
         '-c:a aac',       // AAC audio
         '-b:a 128k',      // 128 kbps audio
         '-movflags +faststart', // Move moov atom to start for streaming

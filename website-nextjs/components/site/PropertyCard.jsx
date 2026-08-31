@@ -24,7 +24,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import { useFavorites, useAuth, useUnlocked, useLeads, getPersistedAuth, useHasHydrated } from "@/lib/stores";
-import { useSubmitEnquiry } from "@/lib/hooks/useEnquiry";
+import { useSubmitEnquiry, useSubmitCallEnquiry } from "@/lib/hooks/useEnquiry";
 import { useSaveToggle } from "@/lib/hooks/useProperties";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -38,17 +38,57 @@ function getPropertySpecs(p) {
   const type = p.propertyType || p.type || "";
 
   if (type === "Flat/Apartment" || type === "Penthouse" || type === "Builder Floor") {
-    const superArea = p.area && p.area !== "N/A" ? p.area : (details.superBuiltUpArea ? `${details.superBuiltUpArea} sqft` : details.builtUpArea ? `${details.builtUpArea} sqft` : details.carpetArea ? `${details.carpetArea} sqft` : p.sqft ? `${p.sqft} sqft` : "N/A");
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : p.bhk ? `${p.bhk} BHK` : "N/A";
+    const superArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSuperBuiltUpArea && details.maxSuperBuiltUpArea)
+      ? `${details.minSuperBuiltUpArea} - ${details.maxSuperBuiltUpArea} sqft`
+      : (details.minSqft && details.maxSqft)
+      ? `${details.minSqft} - ${details.maxSqft} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : details.superBuiltUpArea
+      ? `${details.superBuiltUpArea} sqft`
+      : details.builtUpArea
+      ? `${details.builtUpArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : p.bhk
+      ? `${p.bhk} BHK`
+      : "N/A";
     const furnishing = details.furnishing ?? "N/A";
     return [
-      { icon: Ruler, value: superArea, label: details.superBuiltUpArea ? "Super Area" : "Area" },
+      { icon: Ruler, value: superArea, label: details.minCarpetArea ? "Carpet Area" : details.superBuiltUpArea ? "Super Area" : "Area" },
       { icon: BedDouble, value: bedrooms, label: "Bedrooms" },
       { icon: Armchair, value: furnishing, label: "Furnishing" },
     ];
   } else if (type === "Villa/Independent House") {
-    const plotArea = details.plotArea ? `${details.plotArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
-    const bedrooms = details.bhk ? `${details.bhk} BHK` : p.bhk ? `${p.bhk} BHK` : "N/A";
+    const plotArea = (details.minPlotArea && details.maxPlotArea)
+      ? `${details.minPlotArea} - ${details.maxPlotArea} sqft`
+      : (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : (details.minSqft && details.maxSqft)
+      ? `${details.minSqft} - ${details.maxSqft} sqft`
+      : details.plotArea
+      ? `${details.plotArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
+    const bedrooms = (details.minBhk != null && details.maxBhk != null)
+      ? (details.minBhk === details.maxBhk ? `${details.minBhk} BHK` : `${details.minBhk} - ${details.maxBhk} BHK`)
+      : details.bhk
+      ? `${details.bhk} BHK`
+      : p.bhk
+      ? `${p.bhk} BHK`
+      : "N/A";
     const furnishing = details.furnishing ?? "N/A";
     return [
       { icon: Ruler, value: plotArea, label: "Plot Area" },
@@ -56,7 +96,15 @@ function getPropertySpecs(p) {
       { icon: Armchair, value: furnishing, label: "Furnishing" },
     ];
   } else if (type === "Office Space") {
-    const carpetArea = details.carpetArea ? `${details.carpetArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const carpetArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const capacity = details.cabinCount !== undefined && details.cabinCount > 0 ? `${details.cabinCount} Cabins` : details.openDesks !== undefined ? `${details.openDesks} Seats` : "N/A";
     const power = details.dgBackup === true ? "DG Backup" : details.dgBackup === false ? "No Backup" : "N/A";
     return [
@@ -65,7 +113,15 @@ function getPropertySpecs(p) {
       { icon: Zap, value: power, label: "Power Backup" },
     ];
   } else if (type === "Shop") {
-    const shopArea = p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A";
+    const shopArea = (details.minCarpetArea && details.maxCarpetArea)
+      ? `${details.minCarpetArea} - ${details.maxCarpetArea} sqft`
+      : details.carpetArea
+      ? `${details.carpetArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const floor = details.shopFloor ?? "N/A";
     const corner = details.cornerShop === true ? "Corner Shop" : "Regular";
     return [
@@ -74,7 +130,15 @@ function getPropertySpecs(p) {
       { icon: Compass, value: corner, label: "Position" },
     ];
   } else if (type === "Showroom") {
-    const showroomArea = details.showroomArea ? `${details.showroomArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const showroomArea = (details.minShowroomArea && details.maxShowroomArea)
+      ? `${details.minShowroomArea} - ${details.maxShowroomArea} sqft`
+      : details.showroomArea
+      ? `${details.showroomArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const floors = details.numberOfShowroomFloors ? `${details.numberOfShowroomFloors} Floors` : "N/A";
     const parking = details.parkingAvailable === true ? "Available" : "N/A";
     return [
@@ -83,7 +147,15 @@ function getPropertySpecs(p) {
       { icon: Car, value: parking, label: "Parking" },
     ];
   } else if (type === "Warehouse/Godown") {
-    const warehouseArea = details.warehouseArea ? `${details.warehouseArea} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const warehouseArea = (details.minWarehouseArea && details.maxWarehouseArea)
+      ? `${details.minWarehouseArea} - ${details.maxWarehouseArea} sqft`
+      : details.warehouseArea
+      ? `${details.warehouseArea} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const height = details.warehouseHeight ? `${details.warehouseHeight} ft` : "N/A";
     const midc = details.midc === true ? "MIDC Appr." : "Regular";
     return [
@@ -92,7 +164,15 @@ function getPropertySpecs(p) {
       { icon: ShieldCheck, value: midc, label: "Approval" },
     ];
   } else if (type === "Residential Plot" || type.toLowerCase().includes("plot")) {
-    const plotArea = details.plotAreaSqFt ? `${details.plotAreaSqFt} sqft` : (p.area && p.area !== "N/A" ? p.area : p.sqft ? `${p.sqft} sqft` : "N/A");
+    const plotArea = (details.minPlotAreaSqFt && details.maxPlotAreaSqFt)
+      ? `${details.minPlotAreaSqFt} - ${details.maxPlotAreaSqFt} sqft`
+      : details.plotAreaSqFt
+      ? `${details.plotAreaSqFt} sqft`
+      : p.area && p.area !== "N/A"
+      ? p.area
+      : p.sqft
+      ? `${p.sqft} sqft`
+      : "N/A";
     const dims = details.plotLength && details.plotWidth ? `${details.plotLength}×${details.plotWidth} ft` : "N/A";
     const isGated = details.gatedLayout === true ? "Gated Layout" : "Open Layout";
     return [
@@ -145,7 +225,8 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
 
   const saveToggleMutation = useSaveToggle();
   const submitEnquiry = useSubmitEnquiry();
-  const unlockedStore = useUnlocked((s) => s.isUnlocked(p.broker?._id || p.brokerId));
+  const submitCallEnquiry = useSubmitCallEnquiry();
+  const unlockedStore = useUnlocked((s) => s.isUnlocked(pid));
   // Gate with hydrated so SSR (false) matches client first render
   const isUnlocked = hydrated && unlockedStore;
 
@@ -192,68 +273,63 @@ export const PropertyCard = React.memo(function PropertyCard({ p, index = 0 }) {
     if (!token || !user) { useAuth.getState().openAuth(); return; }
 
     const brokerId = p.broker?._id || p.brokerId;
-    if (!brokerId) return;
 
-    const rawMobile = p.broker?.mobile || p.broker?.phone || '';
-    if (!rawMobile) {
-      toast.error('Broker contact number not available');
-      return;
-    }
-    const cleanMobile = rawMobile.replace(/\D/g, '');
-    const formatted = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
+    const executeAction = (mobileNumber) => {
+      if (!mobileNumber) {
+        toast.error('Broker contact number not available');
+        return;
+      }
+      const cleanMobile = mobileNumber.replace(/\D/g, '');
+      const formatted = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
 
-    const isUnlocked = useUnlocked.getState().isUnlocked(brokerId);
-    if (isUnlocked) {
       if (type === 'call') {
         window.location.href = `tel:+${formatted}`;
       } else {
         const msg = encodeURIComponent(`Hi, I am interested in your property "${p.title}" listed on Nagpur Prime Property.`);
         window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
       }
-    } else {
-      // Perform background submission using user profile details
-      const { token, user } = useAuth.getState();
-      const { unlock, add: addLead } = useUnlocked.getState();
-      const addLeadFn = useLeads.getState().add;
-      const leadDetails = {
-        name: user?.name || 'Verified User',
-        mobile: user?.mobile || '9876543210',
-        message: `Requested contact details for: ${p.title}`,
-        brokerId,
-        propertyId: pid,
-      };
+    };
 
-      // Optimistically update local store and unlock
-      addLeadFn(leadDetails);
-      useUnlocked.getState().unlock(brokerId);
-
-      // Submit enquiry to backend in background
-      submitEnquiry.mutate(
-        { 
-          propertyId: pid, 
-          data: { name: leadDetails.name, mobile: leadDetails.mobile, message: leadDetails.message }, 
-          token 
+    // Always trigger call enquiry to ensure lead creation & WhatsApp message / notification to broker
+    submitCallEnquiry.mutate(
+      { propertyId: pid, token },
+      {
+        onSuccess: (res) => {
+          const brokerDetails = res?.brokerDetails || res?.data?.brokerDetails;
+          const rawMobile = brokerDetails?.mobile || brokerDetails?.phone || p.broker?.mobile || p.broker?.phone || '';
+          if (pid) {
+            useUnlocked.getState().unlock(pid, {
+              phone: rawMobile,
+              whatsapp: rawMobile,
+              name: brokerDetails?.name || p.broker?.name,
+            });
+          }
+          executeAction(rawMobile);
         },
-        {
-          onError: (err) => {
-            console.warn('Enquiry background mutation error:', err.message);
-          },
-        }
-      );
-
-      toast.success('Contact unlocked!', {
-        description: 'Broker details are now visible using your registered profile.',
-      });
-
-      // Now trigger the action after unlocking
-      if (type === 'call') {
-        window.location.href = `tel:+${formatted}`;
-      } else {
-        const msg = encodeURIComponent(`Hi, I am interested in your property "${p.title}" listed on Nagpur Prime Property.`);
-        window.open(`https://wa.me/${formatted}?text=${msg}`, '_blank', 'noopener,noreferrer');
+        onError: (err) => {
+          console.warn('Call enquiry mutation error:', err.message);
+          const rawMobile = p.broker?.mobile || p.broker?.phone || '';
+          if (rawMobile) {
+            if (pid) useUnlocked.getState().unlock(pid, { phone: rawMobile });
+            executeAction(rawMobile);
+          } else {
+            toast.error('Could not connect to broker. Please try again.');
+          }
+        },
       }
-    }
-  }, [pid, p, submitEnquiry]);
+    );
+
+    // Save local lead record
+    const addLeadFn = useLeads.getState().add;
+    const leadDetails = {
+      name: user?.name || 'Verified User',
+      mobile: user?.mobile || '',
+      message: `Requested contact details for: ${p.title}`,
+      brokerId,
+      propertyId: pid,
+    };
+    addLeadFn(leadDetails);
+  }, [pid, p, submitCallEnquiry]);
 
   return (
     <article

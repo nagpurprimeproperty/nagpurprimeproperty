@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, Tag, CheckCircle, XCircle,
@@ -23,9 +23,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { PermissionGate, Unauthorized } from "@/components/utils/permission-gate";
 import { usePermission } from "@/hooks/use-permissions";
+import { ServerPagination } from "@/components/admin/common/server-pagination";
 
 const WEBSITE_BASE = process.env.NEXT_PUBLIC_WEBSITE_URL || "http://localhost:3001";
 const CATEGORIES = ["All", "Property Type", "Budget", "Intent", "Area", "General"];
+const ITEMS_PER_PAGE = 10;
 
 export default function KeywordsAdminPage() {
   const token = useAuthStore((s) => s.token);
@@ -38,6 +40,7 @@ export default function KeywordsAdminPage() {
   const [deleteName, setDeleteName] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Suggestions state
   const [suggestions, setSuggestions] = useState([]);
@@ -77,6 +80,12 @@ export default function KeywordsAdminPage() {
     const matchCat = categoryFilter === "All" || kw.category === categoryFilter;
     return matchSearch && matchCat;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const paginatedKeywords = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
 
   // Category counts
   const categoryCounts = keywords.reduce((acc, kw) => {
@@ -299,7 +308,10 @@ export default function KeywordsAdminPage() {
             <Input
               placeholder="Search keywords or URLs…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-9"
             />
           </div>
@@ -307,7 +319,10 @@ export default function KeywordsAdminPage() {
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setCategoryFilter(cat)}
+                onClick={() => {
+                  setCategoryFilter(cat);
+                  setCurrentPage(1);
+                }}
                 className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
                   categoryFilter === cat
                     ? "border-primary bg-primary text-primary-foreground"
@@ -375,7 +390,7 @@ export default function KeywordsAdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((kw) => (
+                    {paginatedKeywords.map((kw) => (
                       <tr key={kw._id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                         {/* Keyword */}
                         <td className="px-4 py-3">
@@ -480,6 +495,18 @@ export default function KeywordsAdminPage() {
                     ))}
                   </tbody>
                 </table>
+                {totalPages > 1 && (
+                  <div className="p-4 border-t">
+                    <ServerPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={filtered.length}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      onPageChange={setCurrentPage}
+                      countSuffix=" keywords"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

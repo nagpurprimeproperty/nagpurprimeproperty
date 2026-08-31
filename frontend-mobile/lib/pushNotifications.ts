@@ -139,6 +139,128 @@ export const getDevicePushToken = async (): Promise<string | null> => {
 };
 
 /**
+ * Returns platform-specific native push tokens for login/registration.
+ *
+ * ── WHY getDevicePushTokenAsync (not getExpoPushTokenAsync) ────────────────
+ *  getExpoPushTokenAsync() → ExponentPushToken[...]  (unified, routes via Expo gateway)
+ *  getDevicePushTokenAsync() →
+ *    Android → raw FCM registration token  (send as `fcmToken`)
+ *    iOS     → raw APNs device token       (send as `appleToken`)
+ *
+ *  Backend stores tokens by type.  Sending the wrong token in the wrong field
+ *  (e.g. a unified token in `fcmToken` on iOS) causes the backend to save it
+ *  as the wrong type → notifications delivered to the wrong gateway → failure.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Returns { fcmToken: null, appleToken: null } if:
+ *  - Permission denied
+ *  - Running inside Expo Go
+ *  - Any native error (e.g. emulator without Play Services)
+ */
+export const getPlatformPushTokens = async (): Promise<{
+  fcmToken: string | null;
+  appleToken: string | null;
+}> => {
+  const empty = { fcmToken: null, appleToken: null };
+
+  const Notifications = getNotificationsModule();
+  if (!Notifications) {
+    if (__DEV__) {
+      console.warn('[PushNotifications] getPlatformPushTokens: not supported in Expo Go.');
+    }
+    return empty;
+  }
+
+  try {
+    // ── Step 1: Request permission ──────────────────────────────────────────
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowAnnouncements: true,
+          provideAppNotificationSettings: true,
+        },
+      });
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      if (__DEV__) {
+        console.warn('[PushNotifications] getPlatformPushTokens: permission denied:', finalStatus);
+      }
+      return empty;
+    }
+
+    // ── Step 2: Android channel ─────────────────────────────────────────────
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    // ── Step 3: Get token based on platform ─────────────────────────────────
+    if (Platform.OS === 'android') {
+      // Android: getDevicePushTokenAsync returns raw FCM registration token
+      const tokenData = await Notifications.getDevicePushTokenAsync();
+      if (__DEV__) {
+        console.log('[PushNotifications] Device token type:', tokenData.type);
+        console.log('[PushNotifications] Device token data:', tokenData.data);
+      }
+      return { fcmToken: tokenData.data ?? null, appleToken: null };
+    } else {
+      // iOS: getDevicePushTokenAsync returns raw APNs token.
+      // Backend uses Expo Push API to deliver to iOS (APNs), which requires an ExponentPushToken.
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        (Constants as any).easConfig?.projectId ??
+        '24483faf-3d08-49c3-a8f5-0a96eac1b0cb';
+
+      let expoToken: string | null = null;
+      try {
+        const expoTokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+        expoToken = expoTokenData?.data ?? null;
+        if (__DEV__) {
+          console.log('[PushNotifications] iOS Expo Push Token:', expoToken);
+        }
+      } catch (expoErr: any) {
+        if (__DEV__) {
+          console.warn('[PushNotifications] Failed to get iOS Expo Push Token:', expoErr?.message ?? expoErr);
+        }
+      }
+
+      let apnsToken: string | null = null;
+      try {
+        const rawTokenData = await Notifications.getDevicePushTokenAsync();
+        apnsToken = rawTokenData?.data ?? null;
+        if (__DEV__) {
+          console.log('[PushNotifications] iOS APNs Device token:', apnsToken);
+        }
+      } catch (_) {}
+
+      // Prefer Expo Push Token so backend can deliver via Expo's APNs gateway
+      const pushToken = expoToken || apnsToken || null;
+      return {
+        fcmToken: pushToken,
+        appleToken: apnsToken ?? expoToken ?? null,
+      };
+    }
+  } catch (err: any) {
+    if (__DEV__) {
+      console.error('[PushNotifications] getPlatformPushTokens failed:', err?.message ?? err);
+    }
+    return empty;
+  }
+};
+
+/**
  * Configure foreground notification handling behaviour.
  * Call once at app startup (e.g. in _layout.tsx).
  */

@@ -62,6 +62,7 @@ export type Step4Data = Record<string, any>;
 export interface Step5Data {
   photos: string[];        // local URIs; index 0 = cover photo
   video: string | null;
+  brochure: string | null; // local URI of PDF brochure (optional)
 }
 
 export interface Step6Data {
@@ -157,7 +158,7 @@ export interface PropertyWizardStore {
   setSubmitting: (val: boolean) => void;
 
   // Payload builder — accepts pre-uploaded CDN URLs from propertyUploadStore
-  buildSubmitPayload: (uploadedPhotos?: string[], uploadedVideoUrl?: string | null) => any;
+  buildSubmitPayload: (uploadedPhotos?: string[], uploadedVideoUrl?: string | null, uploadedBrochureUrl?: string | null) => any;
 
   // Edit actions
   loadPropertyForEdit: (property: any, origin?: string) => void;
@@ -200,7 +201,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
   step2: initialStep2,
   step3: {},
   step4: {},
-  step5: { photos: [], video: null },
+  step5: { photos: [], video: null, brochure: null },
   step6: { amenities: [], customAmenities: [] },
   errors: {},
   isSubmitting: false,
@@ -349,7 +350,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
 
   // ─── Payload builder ───────────────────────────────────────────────────────
 
-  buildSubmitPayload: (uploadedPhotos, uploadedVideoUrl) => {
+  buildSubmitPayload: (uploadedPhotos, uploadedVideoUrl, uploadedBrochureUrl) => {
     const s = get();
 
     // 1. Listing Category mapping
@@ -399,19 +400,41 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
 
     // Parse numeric fields in details
     const numFields = [
-      "bhk", "bathrooms", "balconies", "floorNumber", "totalFloors",
-      "carpetArea", "builtUpArea", "superBuiltUpArea", "plotArea", "parkingSlots",
+      "bhk", "minBhk", "maxBhk", "bathrooms", "balconies", "floorNumber", "totalFloors",
+      "carpetArea", "minCarpetArea", "maxCarpetArea", "builtUpArea", "minBuiltUpArea", "maxBuiltUpArea",
+      "superBuiltUpArea", "minSuperBuiltUpArea", "maxSuperBuiltUpArea", "plotArea", "minPlotArea", "maxPlotArea",
+      "minSqft", "maxSqft", "parkingSlots",
       "roadWidth", "terraceArea", "totalUnitsInBuilding", "cabinCount", "openDesks",
-      "washrooms", "frontage", "depth", "ceilingHeight", "showroomArea",
-      "numberOfShowroomFloors", "warehouseArea", "warehouseHeight", "numberOfDocks",
-      "openYardArea", "powerLoad", "plotAreaSqFt", "plotLength",
+      "washrooms", "frontage", "depth", "ceilingHeight", "showroomArea", "minShowroomArea", "maxShowroomArea",
+      "numberOfShowroomFloors", "warehouseArea", "minWarehouseArea", "maxWarehouseArea", "warehouseHeight", "numberOfDocks",
+      "openYardArea", "powerLoad", "plotAreaSqFt", "minPlotAreaSqFt", "maxPlotAreaSqFt", "plotLength",
       "plotWidth", "fsiAvailable", "areaAcres", "areaHectares", "distanceFromCity",
       "totalUnitsInProject", "unitsAvailable", "totalVillasInProject",
       "totalPlotsInLayout", "plotsAvailable"
     ];
     for (const f of numFields) {
       if (f in details) {
-        details[f] = parseNum(details[f]);
+        const parsed = parseNum(details[f]);
+        if (parsed === undefined) {
+          delete details[f];
+        } else {
+          details[f] = parsed;
+        }
+      }
+    }
+
+    // Strip fields that belong exclusively to the other category branch for res_plot.
+    // Without this, stale step3 data from a previous session (or category switch)
+    // leaks into the payload and the backend receives e.g. plotAreaSqFt=undefined
+    // for a new-project listing, which it serialises as NaN.
+    if (s.step1.propertyType === 'res_plot') {
+      if (s.step1.listingCategory === 'new') {
+        // new-project res_plot only uses minPlotAreaSqFt / maxPlotAreaSqFt
+        delete details.plotAreaSqFt;
+      } else {
+        // resale/rental res_plot only uses plotAreaSqFt
+        delete details.minPlotAreaSqFt;
+        delete details.maxPlotAreaSqFt;
       }
     }
 
@@ -509,6 +532,13 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       }
     }
 
+    // Clean up any remaining empty strings, undefined, or NaN keys in details
+    for (const key of Object.keys(details)) {
+      if (details[key] === undefined || details[key] === '' || (typeof details[key] === 'number' && isNaN(details[key]))) {
+        delete details[key];
+      }
+    }
+
     // 5. Step 4 (Pricing) normalization
     const pricing: Record<string, any> = { ...s.step4 };
 
@@ -519,13 +549,25 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
     ];
     for (const f of pricingNumFields) {
       if (f in pricing) {
-        pricing[f] = parseNum(pricing[f]);
+        const parsed = parseNum(pricing[f]);
+        if (parsed === undefined) {
+          delete pricing[f];
+        } else {
+          pricing[f] = parsed;
+        }
       }
     }
 
     // Delete temporary slider fields to satisfy backend schema validation
     delete pricing.priceRangeMin;
     delete pricing.priceRangeMax;
+
+    // Clean up any remaining empty strings, undefined, or NaN keys in pricing
+    for (const key of Object.keys(pricing)) {
+      if (pricing[key] === undefined || pricing[key] === '' || (typeof pricing[key] === 'number' && isNaN(pricing[key]))) {
+        delete pricing[key];
+      }
+    }
 
     // Copy/default possessionDate for new projects under pricing to satisfy backend schema
     if (s.step1.listingCategory === 'new') {
@@ -616,6 +658,10 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       video: uploadedVideoUrl !== undefined
         ? uploadedVideoUrl
         : (s.step5.video ?? null),
+      // Prefer pre-uploaded CDN URL; fall back to caller-supplied URL; then raw step5 URI
+      brochure: uploadedBrochureUrl !== undefined
+        ? uploadedBrochureUrl
+        : (s.step5.brochure ?? null),
       amenities: s.step6.amenities,
     };
   },
@@ -631,7 +677,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       step2: initialStep2,
       step3: {},
       step4: {},
-      step5: { photos: [], video: null },
+      step5: { photos: [], video: null, brochure: null },
       step6: { amenities: [], customAmenities: [] },
       errors: {},
       isSubmitting: false,
@@ -793,6 +839,7 @@ export const usePropertyWizardStore = create<PropertyWizardStore>((set, get) => 
       step5: {
         photos: Array.isArray(property.photos) ? property.photos : [],
         video: property.video || null,
+        brochure: property.brochure || null,
       },
       step6: {
         amenities: Array.isArray(property.amenities) ? property.amenities : [],

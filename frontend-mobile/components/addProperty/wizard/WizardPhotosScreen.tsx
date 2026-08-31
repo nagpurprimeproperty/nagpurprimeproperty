@@ -13,13 +13,14 @@ import {
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
 import { usePropertyWizardStore, PREDEFINED_AMENITIES } from '@/store/propertyWizardStore';
 import { usePropertyUploadStore } from '@/store/propertyUploadStore';
 import { uploadFile } from '@/services/uploadService';
 import { prepareImageForUpload } from '@/shared/utils/imagePrep';
 import { toast } from 'react-hot-toast/headless';
 import { validateStepPhotos } from '@/lib/validation';
-import { Camera, Image as ImageIcon, Trash2, Star, Plus, List, ArrowRight, Check, AlertCircle, Video, CheckCircle, CloudUpload } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, Trash2, Star, Plus, List, ArrowRight, Check, AlertCircle, Video, CheckCircle, CloudUpload, FileText } from 'lucide-react-native';
 import colors from '@/theme/colors';
 import shadows from '@/theme/shadows';
 import ImageCropModal from '@/components/addProperty/ImageCropModal';
@@ -88,20 +89,38 @@ export default function WizardPhotosScreen() {
   const uploadCache           = usePropertyUploadStore((s) => s.uploadCache);
   const setUploadedPhotoUrl   = usePropertyUploadStore((s) => s.setUploadedPhotoUrl);
   const setUploadedVideoUrl   = usePropertyUploadStore((s) => s.setUploadedVideoUrl);
+  const setUploadedBrochureUrl = usePropertyUploadStore((s) => s.setUploadedBrochureUrl);
   const setUploadingMedia     = usePropertyUploadStore((s) => s.setUploadingMedia);
   const removeUploadedPhotoUrl = usePropertyUploadStore((s) => s.removeUploadedPhotoUrl);
 
-  // removePhoto must purge both stores atomically
+  // ── AbortController refs — one per photo URI, one for video, one for brochure ──
+  const photoAbortControllers = useRef<Map<string, AbortController>>(new Map());
+  const videoAbortController  = useRef<AbortController | null>(null);
+  const brochureAbortController = useRef<AbortController | null>(null);
+
+  // removePhoto must purge both stores atomically AND cancel any in-flight upload
   const removePhotoFromStore = usePropertyWizardStore((s) => s.removePhoto);
   const removePhoto = (uri: string) => {
+    // Abort the upload for this URI if it is still running
+    photoAbortControllers.current.get(uri)?.abort();
+    photoAbortControllers.current.delete(uri);
     removePhotoFromStore(uri);
     removeUploadedPhotoUrl(uri);
+    // Clean up local state immediately so the spinner stops
+    setUploadingUris((prev) => { const next = new Set(prev); next.delete(uri); return next; });
+    setFailedUris((prev) => { const next = new Set(prev); next.delete(uri); return next; });
   };
 
   // Local set of URIs currently being uploaded (for per-card spinner)
   const [uploadingUris, setUploadingUris] = useState<Set<string>>(new Set());
+  // Local set of URIs that failed to upload (for per-card error indicator)
+  const [failedUris, setFailedUris] = useState<Set<string>>(new Set());
   // Track video upload state
   const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadFailed, setVideoUploadFailed] = useState(false);
+  // Track brochure upload state
+  const [brochureUploading, setBrochureUploading] = useState(false);
+  const [brochureUploadFailed, setBrochureUploadFailed] = useState(false);
   // Ref to count in-flight uploads so setUploadingMedia is accurate
   const inFlightCount = useRef(0);
 
@@ -123,17 +142,32 @@ export default function WizardPhotosScreen() {
       if (uri.startsWith('http://') || uri.startsWith('https://')) return;
       if (uploadCache.photoUrls[uri]) return;
 
+      // Abort any existing in-flight upload for this URI (e.g. retry)
+      photoAbortControllers.current.get(uri)?.abort();
+      const controller = new AbortController();
+      photoAbortControllers.current.set(uri, controller);
+
+      // Clear any prior failure for this URI on retry
+      setFailedUris((prev) => { const next = new Set(prev); next.delete(uri); return next; });
       setUploadingUris((prev) => new Set(prev).add(uri));
       markInFlight(1);
       try {
-        const cdnUrl = await uploadFile(uri);
+        const cdnUrl = await uploadFile(uri, { signal: controller.signal });
         setUploadedPhotoUrl(uri, cdnUrl);
       } catch (err) {
+        // Silently ignore aborts — user intentionally deleted the photo
+        if (err instanceof Error && err.name === 'AbortError') return;
         if (__DEV__) {
           console.warn('[WizardPhotos] Photo upload failed:', err);
         }
-        // Non-fatal: submit will retry
+        setFailedUris((prev) => new Set(prev).add(uri));
+        const isNetwork = err instanceof TypeError && String(err.message).toLowerCase().includes('network');
+        toast.error(isNetwork
+          ? 'No internet connection. Tap the photo to retry.'
+          : 'Photo upload failed. Tap to retry.'
+        );
       } finally {
+        photoAbortControllers.current.delete(uri);
         setUploadingUris((prev) => {
           const next = new Set(prev);
           next.delete(uri);
@@ -150,17 +184,30 @@ export default function WizardPhotosScreen() {
   const uploadVideoInBackground = useCallback(
     async (uri: string) => {
       if (uri.startsWith('http://') || uri.startsWith('https://')) return;
+      // Abort any previous video upload (retry scenario)
+      videoAbortController.current?.abort();
+      const controller = new AbortController();
+      videoAbortController.current = controller;
+
+      setVideoUploadFailed(false);
       setVideoUploading(true);
       markInFlight(1);
       try {
-        const cdnUrl = await uploadFile(uri);
+        const cdnUrl = await uploadFile(uri, { signal: controller.signal });
         setUploadedVideoUrl(cdnUrl);
         toast.success('Video uploaded successfully');
       } catch (err) {
+        // Silently ignore aborts — user intentionally deleted the video
+        if (err instanceof Error && err.name === 'AbortError') return;
         if (__DEV__) {
           console.warn('[WizardPhotos] Video upload failed:', err);
         }
-        // Non-fatal: submit will retry
+        setVideoUploadFailed(true);
+        const isNetwork = err instanceof TypeError && String((err as Error).message).toLowerCase().includes('network');
+        toast.error(isNetwork
+          ? 'No internet connection. Check your connection and retry.'
+          : 'Video upload failed. Please try again.'
+        );
       } finally {
         setVideoUploading(false);
         markInFlight(-1);
@@ -170,7 +217,77 @@ export default function WizardPhotosScreen() {
     [setUploadedVideoUrl]
   );
 
-  const { photos, video } = step5;
+  /** Upload the brochure PDF in the background and cache the CDN URL */
+  const uploadBrochureInBackground = useCallback(
+    async (uri: string, filename?: string) => {
+      if (uri.startsWith('http://') || uri.startsWith('https://')) return;
+      // Abort any previous brochure upload (retry scenario)
+      brochureAbortController.current?.abort();
+      const controller = new AbortController();
+      brochureAbortController.current = controller;
+
+      setBrochureUploadFailed(false);
+      setBrochureUploading(true);
+      markInFlight(1);
+      try {
+        const cdnUrl = await uploadFile(uri, {
+          mimeType: 'application/pdf',
+          filename: filename || 'brochure.pdf',
+          signal: controller.signal,
+        });
+        setUploadedBrochureUrl(cdnUrl);
+        toast.success('Brochure uploaded successfully');
+      } catch (err) {
+        // Silently ignore aborts — user intentionally deleted the brochure
+        if (err instanceof Error && err.name === 'AbortError') return;
+        if (__DEV__) {
+          console.warn('[WizardPhotos] Brochure upload failed:', err);
+        }
+        setBrochureUploadFailed(true);
+        const isNetwork = err instanceof TypeError && String((err as Error).message).toLowerCase().includes('network');
+        toast.error(isNetwork
+          ? 'No internet connection. Check your connection and retry.'
+          : 'Brochure upload failed. Please try again.'
+        );
+      } finally {
+        setBrochureUploading(false);
+        markInFlight(-1);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setUploadedBrochureUrl]
+  );
+
+  /** Pick a PDF brochure from the device document library */
+  const handlePickBrochure = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+      const asset = result.assets[0];
+
+      // Size check — backend allows max 50 MB for PDFs
+      const MAX_PDF_BYTES = 50 * 1024 * 1024;
+      if (asset.size && asset.size > MAX_PDF_BYTES) {
+        toast.error(`PDF is ${(asset.size / (1024 * 1024)).toFixed(1)} MB. Max allowed is 50 MB.`);
+        return;
+      }
+
+      updateStep5({ brochure: asset.uri });
+      // Clear any previously cached CDN URL for a different brochure
+      setUploadedBrochureUrl(null);
+      // Eagerly upload the brochure in the background
+      uploadBrochureInBackground(asset.uri, asset.name);
+    } catch (err) {
+      if (__DEV__) console.error('[handlePickBrochure] Error:', err);
+      toast.error('Could not select brochure PDF.');
+    }
+  }, [updateStep5, setUploadedBrochureUrl, uploadBrochureInBackground]);
+
+  const { photos, video, brochure } = step5;
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAmenityName, setNewAmenityName] = useState('');
@@ -404,6 +521,43 @@ export default function WizardPhotosScreen() {
       toast.error('Please wait while your photos/video finish uploading before continuing.');
       return;
     }
+
+    // Warn if any photos failed to upload
+    const failedPhotoCount = failedUris.size;
+    if (failedPhotoCount > 0) {
+      Alert.alert(
+        'Some Photos Failed to Upload',
+        `${failedPhotoCount} photo${failedPhotoCount > 1 ? 's' : ''} could not be uploaded. Please check your internet connection and retry before continuing.`,
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    // For optional media failures, confirm before proceeding
+    if (videoUploadFailed || brochureUploadFailed) {
+      const failedItems = [
+        videoUploadFailed && 'video',
+        brochureUploadFailed && 'brochure',
+      ].filter(Boolean).join(' and ');
+      Alert.alert(
+        'Upload Failed',
+        `Your ${failedItems} could not be uploaded. You can retry, or continue without it.`,
+        [
+          { text: 'Retry', style: 'default', onPress: () => {
+            if (videoUploadFailed && video) uploadVideoInBackground(video);
+            if (brochureUploadFailed && brochure) uploadBrochureInBackground(brochure, brochure.split('/').pop());
+          }},
+          { text: 'Continue Anyway', style: 'destructive', onPress: () => {
+            const stepErrors = validateStepPhotos(photos);
+            if (Object.keys(stepErrors).length > 0) { setErrors(stepErrors); return; }
+            setErrors({});
+            goToPhase('review');
+          }},
+        ]
+      );
+      return;
+    }
+
     const stepErrors = validateStepPhotos(photos);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
@@ -560,6 +714,15 @@ export default function WizardPhotosScreen() {
                     <ActivityIndicator size="small" color={colors.primary} />
                   ) : uploadCache.photoUrls[uri] ? (
                     <CheckCircle size={15} color={colors.success ?? '#22c55e'} />
+                  ) : failedUris.has(uri) ? (
+                    <TouchableOpacity
+                      onPress={() => uploadPhotoInBackground(uri)}
+                      activeOpacity={0.7}
+                      className="flex-row items-center gap-1"
+                    >
+                      <AlertCircle size={13} color={colors.error} />
+                      <Text className="text-red-500 text-[9px] font-black">Retry</Text>
+                    </TouchableOpacity>
                   ) : null}
 
                   {/* Delete Button */}
@@ -611,15 +774,15 @@ export default function WizardPhotosScreen() {
               <View
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderColor: '#E2E8F0',
-                  borderWidth: 1,
+                  borderColor: videoUploadFailed ? '#FCA5A5' : '#E2E8F0',
+                  borderWidth: videoUploadFailed ? 1.5 : 1,
                   ...shadows.card,
                 }}
                 className="rounded-xl p-4 flex-row items-center justify-between"
               >
                 <View className="flex-row items-center gap-3 flex-1 mr-2">
-                  <View className="w-10 h-10 rounded-lg bg-orange-50 items-center justify-center">
-                    <Video size={18} color={colors.primary} />
+                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${videoUploadFailed ? 'bg-red-50' : 'bg-orange-50'}`}>
+                    <Video size={18} color={videoUploadFailed ? colors.error : colors.primary} />
                   </View>
                   <View className="flex-1">
                     <Text className="text-slate-800 text-xs font-bold" numberOfLines={1}>
@@ -636,6 +799,15 @@ export default function WizardPhotosScreen() {
                         <CheckCircle size={11} color={colors.success ?? '#22c55e'} />
                         <Text style={{ color: colors.success ?? '#22c55e' }} className="text-[10px] font-bold">Uploaded</Text>
                       </View>
+                    ) : videoUploadFailed ? (
+                      <TouchableOpacity
+                        onPress={() => uploadVideoInBackground(video)}
+                        activeOpacity={0.7}
+                        className="flex-row items-center gap-1.5 mt-0.5"
+                      >
+                        <AlertCircle size={11} color={colors.error} />
+                        <Text className="text-red-500 text-[10px] font-bold">Upload failed — Tap to retry</Text>
+                      </TouchableOpacity>
                     ) : (
                       <Text className="text-slate-400 text-[10px] font-semibold mt-0.5">Ready for upload</Text>
                     )}
@@ -644,8 +816,13 @@ export default function WizardPhotosScreen() {
 
                 <TouchableOpacity
                   onPress={() => {
+                    // Abort in-flight upload immediately so the spinner stops
+                    videoAbortController.current?.abort();
+                    videoAbortController.current = null;
                     updateStep5({ video: null });
                     setUploadedVideoUrl(null);
+                    setVideoUploadFailed(false);
+                    setVideoUploading(false);
                   }}
                   activeOpacity={0.7}
                   className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 items-center justify-center"
@@ -670,6 +847,94 @@ export default function WizardPhotosScreen() {
               <Video size={24} color={colors.primary} strokeWidth={2.5} />
               <Text className="text-orange-600 text-xs font-black uppercase mt-2 tracking-wider">
                 Select Video Walkthrough
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Brochure PDF Upload Section */}
+        <View className="mt-8 border-t border-slate-100 pt-6">
+          <Text className="text-slate-800 font-extrabold text-xs mb-2 uppercase tracking-wider">
+            Property Brochure PDF (Optional)
+          </Text>
+          <Text className="text-slate-400 text-xs font-semibold mb-4 leading-4">
+            Upload a brochure PDF to let interested buyers download it. Viewers must log in — generating a lead for you automatically.
+          </Text>
+
+          {brochure ? (
+            <View
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderColor: brochureUploadFailed ? '#FCA5A5' : '#E2E8F0',
+                borderWidth: brochureUploadFailed ? 1.5 : 1,
+                ...shadows.card,
+              }}
+              className="rounded-xl p-4 flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center gap-3 flex-1 mr-2">
+                <View className={`w-10 h-10 rounded-lg items-center justify-center ${brochureUploadFailed ? 'bg-red-50' : 'bg-blue-50'}`}>
+                  <FileText size={18} color={brochureUploadFailed ? colors.error : '#3B82F6'} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-slate-800 text-xs font-bold" numberOfLines={1}>
+                    {/* Show filename from URI or a friendly fallback */}
+                    {(() => {
+                      const name = brochure.split('/').pop() || 'brochure.pdf';
+                      return name.length > 35 ? name.slice(0, 32) + '…' : name;
+                    })()}
+                  </Text>
+                  {/* Upload status */}
+                  {brochureUploading ? (
+                    <View className="flex-row items-center gap-1.5 mt-0.5">
+                      <ActivityIndicator size="small" color={colors.primary} />
+                      <Text className="text-orange-500 text-[10px] font-bold">Uploading…</Text>
+                    </View>
+                  ) : uploadCache.brochureUrl || brochure.startsWith('https://') ? (
+                    <View className="flex-row items-center gap-1.5 mt-0.5">
+                      <CheckCircle size={11} color={colors.success ?? '#22c55e'} />
+                      <Text style={{ color: colors.success ?? '#22c55e' }} className="text-[10px] font-bold">Uploaded</Text>
+                    </View>
+                  ) : brochureUploadFailed ? (
+                    <TouchableOpacity
+                      onPress={() => uploadBrochureInBackground(brochure, brochure.split('/').pop())}
+                      activeOpacity={0.7}
+                      className="flex-row items-center gap-1.5 mt-0.5"
+                    >
+                      <AlertCircle size={11} color={colors.error} />
+                      <Text className="text-red-500 text-[10px] font-bold">Upload failed — Tap to retry</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <Text className="text-slate-400 text-[10px] font-semibold mt-0.5">Ready for upload</Text>
+                  )}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => {
+                  // Abort in-flight upload immediately so the spinner stops
+                  brochureAbortController.current?.abort();
+                  brochureAbortController.current = null;
+                  updateStep5({ brochure: null });
+                  setUploadedBrochureUrl(null);
+                  setBrochureUploadFailed(false);
+                  setBrochureUploading(false);
+                }}
+                activeOpacity={0.7}
+                className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 items-center justify-center"
+              >
+                <Trash2 size={14} color={colors.error} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={handlePickBrochure}
+              activeOpacity={0.8}
+              style={{ borderColor: '#3B82F6', borderStyle: 'dashed', borderWidth: 1.5 }}
+              className="rounded-xl py-6 items-center justify-center bg-blue-50/10"
+            >
+              <FileText size={24} color="#3B82F6" strokeWidth={2.5} />
+              <Text className="text-blue-600 text-xs font-black uppercase mt-2 tracking-wider">
+                Select Brochure PDF
               </Text>
             </TouchableOpacity>
           )}

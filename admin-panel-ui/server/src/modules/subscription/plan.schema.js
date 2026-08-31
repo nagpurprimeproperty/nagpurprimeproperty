@@ -19,6 +19,7 @@ export const createPlanSchema = z.object({
   duration:            z.coerce.number().int().min(0).optional(),
   durationUnit:        z.enum(['days', 'months', 'years']).optional(),
   isDurationUnlimited: z.boolean().default(false),
+  sortOrder:           z.coerce.number().int().min(0).default(1),
   description:         z.string().max(500).optional(),
   features:            z.array(z.string().max(100)).optional().default([]),
   limits:              limitsSchema,
