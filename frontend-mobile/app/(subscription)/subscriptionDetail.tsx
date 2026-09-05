@@ -172,7 +172,9 @@ function ConfirmModal({ visible, planName, price, gstRate = 18, isFree = false, 
         </View>
 
         <Text style={cm.note}>
-          {isIos
+          {isFree
+            ? "This plan is completely free. No payment required."
+            : isIos
             ? "You'll complete your payment securely via Apple In-App Purchase."
             : "You'll be redirected to Razorpay to complete your payment securely."}
         </Text>
@@ -254,7 +256,7 @@ export default function SubscriptionDetailScreen() {
     if (!isAuthenticated) { openAuth("subscription"); return; }
     setConfirmVisible(false);
 
-    if (Platform.OS === "ios") {
+    if (Platform.OS === "ios" && !plan?.isFree) {
       setIsIapLoading(true);
       try {
         if (user?._id) {
