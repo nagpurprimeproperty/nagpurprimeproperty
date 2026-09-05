@@ -9,7 +9,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-dev_secure_db_password_123}
     ports:
       - "127.0.0.1:27018:27017"
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/data/db/mongodb.key"]
     volumes:
       - mongo-dev-data:/data/db
     networks:
