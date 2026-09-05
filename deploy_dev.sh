@@ -28,11 +28,11 @@ fi
 
 echo ""
 echo "--- Step 3: Pulling updated Dev Docker images from Docker Hub ---"
-DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose --env-file .env.development -f docker-compose.dev.yml pull
+DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose -p npp-dev --env-file .env.development -f docker-compose.dev.yml pull
 
 echo ""
 echo "--- Step 4: Starting updated Dev containers ---"
-DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose --env-file .env.development -f docker-compose.dev.yml up -d --remove-orphans
+DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose -p npp-dev --env-file .env.development -f docker-compose.dev.yml up -d --remove-orphans
 
 echo ""
 echo "--- Step 5: Cleaning up old Docker images & build caches ---"
@@ -43,4 +43,4 @@ echo ""
 echo "================================================="
 echo "   ✅ DEV Deployment Finished! Container Status: "
 echo "================================================="
-docker compose --env-file .env.development -f docker-compose.dev.yml ps
+docker compose -p npp-dev --env-file .env.development -f docker-compose.dev.yml ps

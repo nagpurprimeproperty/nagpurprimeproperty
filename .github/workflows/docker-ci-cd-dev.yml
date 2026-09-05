@@ -122,10 +122,10 @@ jobs:
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
             echo "🐳 Pulling latest dev images from Docker Hub..."
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} docker compose --env-file .env.development -f docker-compose.dev.yml pull
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} docker compose -p npp-dev --env-file .env.development -f docker-compose.dev.yml pull
 
             echo "🔄 Deploying updated dev containers..."
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} docker compose --env-file .env.development -f docker-compose.dev.yml up -d --remove-orphans
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} docker compose -p npp-dev --env-file .env.development -f docker-compose.dev.yml up -d --remove-orphans
 
             echo "🧹 Cleaning up dangling Docker images..."
             docker image prune -f
