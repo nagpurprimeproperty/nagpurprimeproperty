@@ -28,11 +28,11 @@ fi
 
 echo ""
 echo "--- Step 3: Pulling updated Docker images from Docker Hub ---"
-DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose -p npp-prod --env-file .env.production -f docker-compose.prod.yml pull
+DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose --env-file .env.production -f docker-compose.prod.yml pull
 
 echo ""
 echo "--- Step 4: Starting updated containers ---"
-DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose -p npp-prod --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans
+DOCKERHUB_USERNAME=$DOCKERHUB_USER docker compose --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans
 
 echo ""
 echo "--- Step 5: Cleaning up old Docker images, build caches & host build files ---"
@@ -46,4 +46,4 @@ echo ""
 echo "================================================="
 echo "   ✅ Deployment & Cleanup Finished! Status:    "
 echo "================================================="
-docker compose -p npp-prod --env-file .env.production -f docker-compose.prod.yml ps
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
