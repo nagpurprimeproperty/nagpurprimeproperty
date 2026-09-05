@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { PermissionGate, Unauthorized } from "@/components/utils/permission-gate";
 import { usePermission } from "@/hooks/use-permissions";
+import { ServerPagination } from "@/components/admin/common/server-pagination";
 
 const WEBSITE_BASE = process.env.NEXT_PUBLIC_WEBSITE_URL || "http://localhost:3001";
 
@@ -23,17 +24,20 @@ export default function AreasPage() {
   const { toast } = useToast();
   const { canWrite, canDelete } = usePermission("areas");
   const [areas, setAreas] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deleteSlug, setDeleteSlug] = useState(null);
 
-  const fetchAreas = async () => {
+  const fetchAreas = async (page = currentPage) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/admin/areas", {
+      const res = await fetch(`/api/v1/admin/areas?page=${page}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setAreas(data.data || []);
+      setPagination(data.pagination || null);
     } catch {
       toast({ title: "Error", description: "Failed to load areas", variant: "destructive" });
     } finally {
@@ -41,7 +45,7 @@ export default function AreasPage() {
     }
   };
 
-  useEffect(() => { fetchAreas(); }, []);
+  useEffect(() => { fetchAreas(currentPage); }, [currentPage]);
 
   const handleDelete = async () => {
     if (!deleteSlug) return;
@@ -85,7 +89,7 @@ export default function AreasPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <p className="text-sm text-muted-foreground">{areas.length} area{areas.length !== 1 ? "s" : ""}</p>
+            <p className="text-sm text-muted-foreground">{pagination?.total ?? areas.length} area{(pagination?.total ?? areas.length) !== 1 ? "s" : ""}</p>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
@@ -218,6 +222,18 @@ export default function AreasPage() {
                     ))}
                   </tbody>
                 </table>
+                {pagination && pagination.totalPages > 1 && (
+                  <div className="p-4 border-t">
+                    <ServerPagination
+                      currentPage={pagination.page}
+                      totalPages={pagination.totalPages}
+                      totalItems={pagination.total}
+                      itemsPerPage={pagination.limit}
+                      onPageChange={setCurrentPage}
+                      countSuffix=" areas"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

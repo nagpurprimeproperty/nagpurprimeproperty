@@ -9,7 +9,15 @@ export function useNotifications(params = {}) {
         queryKey: [NOTIFICATION_KEY, params],
         queryFn: async () => {
             const res = await notificationApi.list(params);
-            return res.data;
+            return {
+                data: res.data ?? [],
+                pagination: res.pagination ?? {
+                    total: (res.data ?? []).length,
+                    page: params.page ?? 1,
+                    limit: params.limit ?? 10,
+                    totalPages: 1,
+                },
+            };
         },
         staleTime: 30000,
         placeholderData: (prev) => prev,

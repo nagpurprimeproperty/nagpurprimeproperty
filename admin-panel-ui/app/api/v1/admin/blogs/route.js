@@ -13,8 +13,30 @@ export async function GET(req) {
     if (permErr) return permErr;
 
     await connectDB();
-    const blogs = await Blog.find().sort({ date: -1 }).lean();
-    return NextResponse.json({ success: true, data: blogs });
+    const { searchParams } = req.nextUrl;
+    const rawPage = parseInt(searchParams.get('page') || '1', 10);
+    const rawLimit = parseInt(searchParams.get('limit') || '10', 10);
+    const page = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+    const limit = Number.isNaN(rawLimit) || rawLimit < 1 ? 10 : Math.min(rawLimit, 100);
+
+    const total = await Blog.countDocuments();
+    const totalPages = Math.ceil(total / limit) || 1;
+    const blogs = await Blog.find()
+      .sort({ date: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    return NextResponse.json({
+      success: true,
+      data: blogs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    });
   } catch (err) {
     return handleApiError(err);
   }
